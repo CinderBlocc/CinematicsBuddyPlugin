@@ -149,11 +149,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CinematicsBuddy.h" />
-    <ClInclude Include="HelperFunctions.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CinematicsBuddy.cpp" />
-    <ClCompile Include="HelperFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="G:\Games\steamapps\common\rocketleague\Binaries\Win64\bakkesmod\plugins\settings\CinematicsBuddy.set" />
