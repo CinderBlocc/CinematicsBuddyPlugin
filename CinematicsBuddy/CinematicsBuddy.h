@@ -8,10 +8,10 @@ class CinematicsBuddy : public BakkesMod::Plugin::BakkesModPlugin
 {
 private:
 	//Cvars
-	std::shared_ptr<string> cvarFileName;
-	std::shared_ptr<string> cvarCameraName;
+	std::shared_ptr<std::string> cvarFileName;
+	std::shared_ptr<std::string> cvarCameraName;
 	std::shared_ptr<float> cvarBufferSize;
-	std::shared_ptr<string> cvarImportFileName;
+	std::shared_ptr<std::string> cvarImportFileName;
 	std::shared_ptr<bool> useCamVelocity;
 	std::shared_ptr<float> cvarCamSpeed;
 	std::shared_ptr<float> cvarCamRotationSpeed;
@@ -20,7 +20,7 @@ private:
 	//Structs
 	struct TimeInfo
 	{
-		chrono::steady_clock::time_point timeCaptured;
+		std::chrono::steady_clock::time_point timeCaptured;
 		int replayFrame;
 	};
 	struct CameraInfo
@@ -51,7 +51,7 @@ private:
 	};
 	struct CarsSeen
 	{
-		chrono::steady_clock::time_point timeSeen;
+		std::chrono::steady_clock::time_point timeSeen;
 		SteamID ID;
 		int body;
 		float wheels01Radius;
@@ -59,23 +59,23 @@ private:
 	};
 	struct FrameInfo
 	{
-		chrono::steady_clock::time_point timeCaptured;
-		string replayID = "NULL";
+		std::chrono::steady_clock::time_point timeCaptured;
+		std::string replayID = "NULL";
 		TimeInfo timeInfo;
 		CameraInfo cameraInfo;
 		BallInfo ballInfo;
-		vector<CarInfo> carInfo;
-		vector<CarsSeen> carsSeenInfo;
+		std::vector<CarInfo> carInfo;
+		std::vector<CarsSeen> carsSeenInfo;
 	};
 
 	//Vectors
-	vector<FrameInfo> recordingFrames;
-	vector<FrameInfo> bufferFrames;
-	vector<string> warnings;
+	std::vector<FrameInfo> recordingFrames;
+	std::vector<FrameInfo> bufferFrames;
+	std::vector<std::string> warnings;
 
 public:
-	virtual void onLoad();
-	virtual void onUnload();
+	void onLoad() override;
+	void onUnload() override;
 	
 	//Input override
 	//void PlayerInputTick(ActorWrapper camInput, void * params, string funcName);
@@ -95,13 +95,16 @@ public:
 	void CamPathClear();
 
 	//File writing
-	string FormatFrameData(int index, FrameInfo firstFrame, FrameInfo currentFrame, vector<CarsSeen> carsList);
-	string GetBufferFilenameTime();
-	void WriteToFile(vector<FrameInfo> data, string filename);
+	std::string FormatFrameData(int index, FrameInfo firstFrame, FrameInfo currentFrame, std::vector<CarsSeen> carsList);
+	std::string GetBufferFilenameTime();
+	void WriteToFile(std::vector<FrameInfo> data, std::string filename);
 
 	//Utility
-	Quat RotatorToQuat(Rotator convertToQuat);
+	//Quat RotatorToQuat(Rotator convertToQuat);
 	ServerWrapper GetCurrentGameState();
 	void Render(CanvasWrapper canvas);
+    std::string PrintFloat(const float InFloat, const int InDecimals);
+    std::string PrintVector(const Vector& InVector, const int InDecimals);
+    std::string PrintQuat(const Quat& InQuat, const int InDecimals);
 };
 
