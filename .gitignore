@@ -3,6 +3,9 @@
 UPLOAD/
 x64/
 
+#Built and copied dll
+bakkesmod/plugins/CinematicsBuddy.dll
+
 #All files within the animation folders
 **/AnimationImports/*
 **/AnimationExports/*
