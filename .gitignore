@@ -3,5 +3,11 @@
 UPLOAD/
 x64/
 
+#All files within the animation folders
+**/AnimationImports/*
+**/AnimationExports/*
+!**/AnimationImports/.gitkeep
+!**/AnimationExports/.gitkeep
+
 #Files
 *.user
