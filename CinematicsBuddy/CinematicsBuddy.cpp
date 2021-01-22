@@ -163,14 +163,14 @@ void CinematicsBuddy::RecordingFunction()
 
 		CarsSeen thisCarSeen;
 		thisCarSeen.timeSeen = steady_clock::now();
-		thisCarSeen.ID = car.GetPRI().GetUniqueId();
+		thisCarSeen.ID = car.GetPRI().GetUniqueIdWrapper();
 		thisCarSeen.body = car.GetLoadoutBody();
 
 		CarInfo thisCarInfo;
 		thisCarInfo.isBoosting = car.IsBoostCheap();
 		thisCarInfo.location = car.GetLocation();
 		thisCarInfo.orientation = RotatorToQuat(car.GetRotation());
-		thisCarInfo.ID = car.GetPRI().GetUniqueId();
+		thisCarInfo.ID = car.GetPRI().GetUniqueIdWrapper();
 		
 		//Wheels
 		ArrayWrapper<WheelWrapper> wheels = car.GetVehicleSim().GetWheels();
@@ -401,7 +401,7 @@ void CinematicsBuddy::WriteToFile(std::vector<FrameInfo> frames, std::string fil
 			bool isThisCarInList = false;
 			for(int k=0; k<carsSeenInThisRecording.size(); k++)//list of unique cars seen
 			{
-				if(thisCar.ID.ID == carsSeenInThisRecording[k].ID.ID)
+				if(thisCar.ID == carsSeenInThisRecording[k].ID)
 				{
 					isThisCarInList = true;
 					break;
@@ -414,8 +414,7 @@ void CinematicsBuddy::WriteToFile(std::vector<FrameInfo> frames, std::string fil
 	}
 
 	/* WRITE HEADER INFO */
-	duration<double> recordingDuration = duration_cast<duration<double>>(frames[frames.size()-1].timeCaptured - frames[0].timeCaptured);
-	float durationLength = recordingDuration.count();//Convert to seconds
+	auto durationLength = duration_cast<duration<float>>(frames[frames.size()-1].timeCaptured - frames[0].timeCaptured).count();
 
 	outputFile << "Version: " << cppVersion << std::endl;
 	outputFile << "Camera: " << *cvarCameraName << std::endl;
@@ -443,7 +442,7 @@ void CinematicsBuddy::WriteToFile(std::vector<FrameInfo> frames, std::string fil
 	outputFile << "BEGIN CAR LIST" << std::endl;
 	for(int i=0; i<carsSeenInThisRecording.size(); i++)
 	{
-		outputFile << std::to_string(i) << "| ID[" << std::to_string(carsSeenInThisRecording[i].ID.ID) << "]"
+		outputFile << std::to_string(i) << "| ID[" << carsSeenInThisRecording[i].ID.GetIdString() << "]"
 		<< ", Body[" << std::to_string(carsSeenInThisRecording[i].body) << "]"
 		<< ", Wheel radii[01:" << PrintFloat(carsSeenInThisRecording[i].wheels01Radius, 1) << "|23:" << PrintFloat(carsSeenInThisRecording[i].wheels23Radius, 1) << "]" << std::endl;
 	}
@@ -485,7 +484,7 @@ std::string CinematicsBuddy::FormatFrameData(int index, FrameInfo firstFrame, Fr
 		int carIndex = -1;
 		for(int j=0; j<carsList.size(); j++)
 		{
-			if(cars[i].ID.ID == carsList[j].ID.ID)
+			if(cars[i].ID == carsList[j].ID)
 			{
 				carIndex = j;
 				break;
@@ -564,8 +563,8 @@ void CinematicsBuddy::CamPathImport()
 		std::vector<float> tempDataVector;
 		while(getline(lineToParse, value, ' '))
 		{
-			if(value != "")
-				tempDataVector.push_back(atof(value.c_str()));
+			if(!value.empty())
+				tempDataVector.push_back(stof(value));
 		}
 		importDataVector.push_back(tempDataVector);
 	}
@@ -667,7 +666,7 @@ void CinematicsBuddy::Render(CanvasWrapper canvas)
 
 
 
-	canvas.SetColor(0,255,0,255);
+    canvas.SetColor(LinearColor{0,255,0,255});
 	Vector2 base = {50,50};
 	for(int i=0; i<drawStrings.size(); i++)
 	{

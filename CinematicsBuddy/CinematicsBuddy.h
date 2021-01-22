@@ -1,5 +1,5 @@
 #pragma once
-#pragma comment(lib, "BakkesMod.lib")
+#pragma comment(lib, "PluginSDK.lib")
 #include "bakkesmod/plugin/bakkesmodplugin.h"
 #include <chrono>
 
@@ -43,7 +43,7 @@ private:
 	};
 	struct CarInfo
 	{
-		SteamID ID;
+		UniqueIDWrapper ID;
 		bool isBoosting;
 		Vector location;
 		Quat orientation;
@@ -52,7 +52,7 @@ private:
 	struct CarsSeen
 	{
 		std::chrono::steady_clock::time_point timeSeen;
-		SteamID ID;
+		UniqueIDWrapper ID;
 		int body;
 		float wheels01Radius;
 		float wheels23Radius;
