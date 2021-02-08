@@ -1,26 +1,68 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Plugin">
+    <Filter Include="Source">
       <UniqueIdentifier>{eba3345a-0af1-4231-aa62-9a51ef398ebc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Plugin\UI">
+    <Filter Include="Source\UI">
       <UniqueIdentifier>{4741e19a-de5f-41b2-b638-ce4c1b808f13}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="CinematicsBuddy.h">
-      <Filter>Plugin</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="CinematicsBuddy.cpp">
-      <Filter>Plugin</Filter>
-    </ClCompile>
+    <Filter Include="Source\Classes">
+      <UniqueIdentifier>{3b961c5e-14ee-4fce-adc3-ba35191e1237}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Support Files">
+      <UniqueIdentifier>{c04296ca-9978-49a5-adb8-9fa8542f3c7b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Main">
+      <UniqueIdentifier>{5f8ccc67-e791-4cd0-a499-aa0b0946b8a8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\bakkesmod\plugins\settings\CinematicsBuddy.set">
-      <Filter>Plugin\UI</Filter>
+      <Filter>Source\UI</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Main\CinematicsBuddy.cpp">
+      <Filter>Source\Main</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\SupportFiles\SettingsFileGenerator.cpp">
+      <Filter>Source\Support Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\SupportFiles\CBUtils.cpp">
+      <Filter>Source\Support Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\SupportFiles\Rendering.cpp">
+      <Filter>Source\Support Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Classes\AnimationImporter.cpp">
+      <Filter>Source\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Classes\AnimationExporter.cpp">
+      <Filter>Source\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Classes\CameraManager.cpp">
+      <Filter>Source\Classes</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Main\CinematicsBuddy.h">
+      <Filter>Source\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SupportFiles\MacrosStructsEnums.h">
+      <Filter>Source\Support Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SupportFiles\CBUtils.h">
+      <Filter>Source\Support Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Classes\AnimationImporter.h">
+      <Filter>Source\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Classes\AnimationExporter.h">
+      <Filter>Source\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Classes\CameraManager.h">
+      <Filter>Source\Classes</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

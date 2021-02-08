@@ -39,8 +39,9 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -53,13 +54,24 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="CinematicsBuddy.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="CinematicsBuddy.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="..\bakkesmod\plugins\settings\CinematicsBuddy.set" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Classes\AnimationExporter.cpp" />
+    <ClCompile Include="Source\Classes\AnimationImporter.cpp" />
+    <ClCompile Include="Source\Classes\CameraManager.cpp" />
+    <ClCompile Include="Source\Main\CinematicsBuddy.cpp" />
+    <ClCompile Include="Source\SupportFiles\CBUtils.cpp" />
+    <ClCompile Include="Source\SupportFiles\Rendering.cpp" />
+    <ClCompile Include="Source\SupportFiles\SettingsFileGenerator.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Classes\AnimationExporter.h" />
+    <ClInclude Include="Source\Classes\AnimationImporter.h" />
+    <ClInclude Include="Source\Classes\CameraManager.h" />
+    <ClInclude Include="Source\Main\CinematicsBuddy.h" />
+    <ClInclude Include="Source\SupportFiles\CBUtils.h" />
+    <ClInclude Include="Source\SupportFiles\MacrosStructsEnums.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
