@@ -1,13 +1,23 @@
 #include "CinematicsBuddy.h"
 #include "bakkesmod\wrappers\includes.h"
-//#include "HelperFunctions.h"
-#include <fstream>
-#include <iomanip>
+#include "SupportFiles/CBUtils.h"
+#include "Classes/AnimationImporter.h"
+#include "Classes/AnimationExporter.h"
 #include <sstream>
-//#define _USE_MATH_DEFINES
-//#include <math.h>
+#include <fstream>
 
 using namespace std::chrono;
+
+/*
+    NEW @TODO
+
+    - If the file path is blank, use the default Import/Export folders
+        - Grey out the text box and have a checkbox to enable it so they need to read instructions before applying an unnecessary path
+    - Change all cvar names (not notifiers) so that default values are guaranteed to apply on first download
+        - This is to reset the path cvar to default
+    - Stop the recording on Soccar_TA destroyed to ensure only one replay gets recorded in a file
+
+*/
 
 
 /*
@@ -73,57 +83,64 @@ TO-DO:
 //1.0.0 - car mesh export? Definitely wrap things up like error rendering before 1.0.0
 //		- REMOVE VERSION DEPENDENCIES IN 1.0.0!!! Completely lock in the formatting of the text file before version 1 so all future updates dont rely on a broken version
 //				- Still include version numbers in the file though in case those need to be referenced in troubleshooting
-std::string cppVersion = "0.9.7";
-BAKKESMOD_PLUGIN(CinematicsBuddy, "Cinematics Buddy Plugin", cppVersion.c_str(), PLUGINTYPE_REPLAY)
+BAKKESMOD_PLUGIN(CinematicsBuddy, "Cinematics Buddy Plugin", PLUGIN_VERSION, PLUGINTYPE_REPLAY)
 
-std::string defaultExportPath = "./bakkesmod/data/CinematicsBuddy/AnimationExports/";
-std::string defaultImportPath = "./bakkesmod/data/CinematicsBuddy/AnimationImports/";
+std::shared_ptr<CVarManagerWrapper> GlobalCvarManager;
+std::shared_ptr<GameWrapper>        GlobalGameWrapper;
+
 void CinematicsBuddy::onLoad()
 {
-	cvarFileName         = std::make_shared<std::string>("");
-	cvarCameraName       = std::make_shared<std::string>("");
-	cvarBufferSize       = std::make_shared<float>(0.f);
-	cvarImportFileName   = std::make_shared<std::string>("");
-	useCamVelocity       = std::make_shared<bool>(false);
-	cvarCamSpeed         = std::make_shared<float>(1.0f);
-	cvarCamRotationSpeed = std::make_shared<float>(1.0f);
-	cvarShowVersionInfo  = std::make_shared<bool>(false);
+    GlobalCvarManager = cvarManager;
+    GlobalGameWrapper = gameWrapper;
 
-	cvarManager->registerCvar("cb_file_name", "", "Set the output file name", true, false, 0, false, 0).bindTo(cvarFileName);
-	cvarManager->registerCvar("cb_camera_name", "", "Set the camera name", true, false, 0, false, 0).bindTo(cvarCameraName);
-	cvarManager->registerCvar("cb_buffer_size", "160", "Number of seconds to buffer", true, true, 0, true, 6000).bindTo(cvarBufferSize);
-	cvarManager->registerCvar("cb_import_file_name", "", "Set the output file name", true, false, 0, false, 0).bindTo(cvarImportFileName);
-	cvarManager->registerCvar("cb_use_cam_velocity", "0", "Smooth camera movements", true, false, 0, false, 0).bindTo(useCamVelocity);
-	cvarManager->registerCvar("cb_cam_speed", "1", "Camera speed multiplier", true, true, 0, true, 1).bindTo(cvarCamSpeed);
-	cvarManager->registerCvar("cb_cam_speed_rotation", "1", "Camera rotation speed multiplier", true, true, 0, true, 1).bindTo(cvarCamRotationSpeed);
-	cvarManager->registerCvar("cb_show_version_info", "0", "Display version information on screen", true, false, 0, false, 0).bindTo(cvarShowVersionInfo);
+    Importer = std::make_shared<AnimationImporter>();
+    Exporter = std::make_shared<AnimationExporter>();
+
+    ExportSpecialFilePath = std::make_shared<std::string>("");
+	ExportFileName        = std::make_shared<std::string>("");
+	ExportCameraName      = std::make_shared<std::string>("");
+	ImportFileName        = std::make_shared<std::string>("");
+	BufferSize            = std::make_shared<float>(0.f);
+	CamSpeed              = std::make_shared<float>(0.f);
+	CamRotationSpeed      = std::make_shared<float>(0.f);
+	bShowVersionInfo      = std::make_shared<bool>(false);
+	bUseCamVelocity       = std::make_shared<bool>(false);
+
+	cvarManager->registerCvar("cb_file_path", "", "Set the special output file path. Leave blank for default", true, false, 0, false, 0).bindTo(ExportSpecialFilePath);
+	cvarManager->registerCvar("cb_file_name", "", "Set the output file name", true, false, 0, false, 0).bindTo(ExportFileName);
+	cvarManager->registerCvar("cb_camera_name", "", "Set the camera name", true, false, 0, false, 0).bindTo(ExportCameraName);
+	cvarManager->registerCvar("cb_buffer_size", "160", "Number of seconds to buffer", true, true, 0, true, 6000).bindTo(BufferSize);
+	cvarManager->registerCvar("cb_import_file_name", "", "Set the output file name", true, false, 0, false, 0).bindTo(ImportFileName);
+	cvarManager->registerCvar("cb_cam_speed", "1", "Camera speed multiplier", true, true, 0, true, 1).bindTo(CamSpeed);
+	cvarManager->registerCvar("cb_cam_speed_rotation", "1", "Camera rotation speed multiplier", true, true, 0, true, 1).bindTo(CamRotationSpeed);
+	cvarManager->registerCvar("cb_show_version_info", "0", "Display version information on screen", true, false, 0, false, 0).bindTo(bShowVersionInfo);
+	cvarManager->registerCvar("cb_use_cam_velocity", "0", "Smooth camera movements", true, false, 0, false, 0).bindTo(bUseCamVelocity);
 	
-	cvarManager->registerNotifier("cbRecordStart",     [this](std::vector<std::string> params){RecordStart();}, "Starts capturing animation data.", PERMISSION_ALL);
-	cvarManager->registerNotifier("cbRecordStop",      [this](std::vector<std::string> params){RecordStop();}, "Stops capturing animation data", PERMISSION_ALL);
-	cvarManager->registerNotifier("cbBufferStart",     [this](std::vector<std::string> params){BufferStart();}, "Starts the perpetual animation capture buffer", PERMISSION_ALL);
+	cvarManager->registerNotifier("cbRecordStart",     [this](std::vector<std::string> params){RecordStart();},   "Starts capturing animation data.", PERMISSION_ALL);
+	cvarManager->registerNotifier("cbRecordStop",      [this](std::vector<std::string> params){RecordStop();},    "Stops capturing animation data", PERMISSION_ALL);
+	cvarManager->registerNotifier("cbBufferStart",     [this](std::vector<std::string> params){BufferStart();},   "Starts the perpetual animation capture buffer", PERMISSION_ALL);
 	cvarManager->registerNotifier("cbBufferCapture",   [this](std::vector<std::string> params){BufferCapture();}, "Captures the data in the buffer", PERMISSION_ALL);
-	cvarManager->registerNotifier("cbBufferCancel",    [this](std::vector<std::string> params){BufferCancel();}, "Cancels the perpetual animation buffer", PERMISSION_ALL);
+	cvarManager->registerNotifier("cbBufferCancel",    [this](std::vector<std::string> params){BufferCancel();},  "Cancels the perpetual animation buffer", PERMISSION_ALL);
 	cvarManager->registerNotifier("cbAnimationImport", [this](std::vector<std::string> params){CamPathImport();}, "Imports a camera animation from a file", PERMISSION_ALL);
-	cvarManager->registerNotifier("cbAnimationClear",  [this](std::vector<std::string> params){CamPathClear();}, "Clears the imported camera animation", PERMISSION_ALL);
+	cvarManager->registerNotifier("cbAnimationClear",  [this](std::vector<std::string> params){CamPathClear();},  "Clears the imported camera animation", PERMISSION_ALL);
 
 	gameWrapper->HookEvent("Function Engine.GameViewportClient.Tick", std::bind(&CinematicsBuddy::RecordingFunction, this));
 	gameWrapper->HookEvent("Function TAGame.PlayerInput_TA.PlayerInput", std::bind(&CinematicsBuddy::PlayerInputTick, this));
 	//gameWrapper->HookEventWithCallerPost<ActorWrapper>("Function TAGame.PlayerInput_TA.PlayerInput", bind(&CinematicsBuddy::PlayerInputTick, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
 	gameWrapper->RegisterDrawable(bind(&CinematicsBuddy::Render, this, std::placeholders::_1));
+
+    GenerateSettingsFile();
 }
 void CinematicsBuddy::onUnload(){}
 
 
-/* RECORDING */
-bool recording = false;
-bool bufferIsActive = false;
 
 //RECORDING FUNCTION
 void CinematicsBuddy::RecordingFunction()
 {
-	if(!recording && !bufferIsActive) return;
-	ServerWrapper gameState = GetCurrentGameState();
+	if(!bRecording && !bBufferIsActive) return;
+	ServerWrapper gameState = gameWrapper->GetCurrentGameState();
 	CameraWrapper camera = gameWrapper->GetCamera();
 	if(camera.IsNull() || gameState.IsNull()) return;
 		
@@ -232,7 +249,7 @@ void CinematicsBuddy::RecordingFunction()
 	frameInfo.carsSeenInfo = carsSeenThisFrame;
 
 	//Formatting for recording
-	if(recording)
+	if(bRecording)
 	{		
 		recordingFrames.push_back(frameInfo);
 
@@ -242,12 +259,12 @@ void CinematicsBuddy::RecordingFunction()
 	}
 
 	//Formatting for buffer
-	if(bufferIsActive)
+	if(bBufferIsActive)
 	{
 		bufferFrames.push_back(frameInfo);
 
 		duration<double> currentBufferSize = duration_cast<duration<double>>(steady_clock::now() - bufferFrames[0].timeCaptured);
-		if(currentBufferSize.count() >= *cvarBufferSize)
+		if(currentBufferSize.count() >= *BufferSize)
 			bufferFrames.erase(bufferFrames.begin());
 	}
 }
@@ -255,29 +272,30 @@ void CinematicsBuddy::RecordingFunction()
 //NORMAL RECORDING
 void CinematicsBuddy::RecordStart()
 {
-	if(recording) return;
+	if(bRecording) return;
 
 	bool canStartRecording = true;
-	if (*cvarFileName == "")
+	if (ExportFileName->empty())
 	{
-		warnings.push_back("INVALID FILE NAME");
+		WarningStrings.emplace_back("INVALID FILE NAME");
 		canStartRecording = false;
 	}
-	if (*cvarCameraName == "")
+	if (ExportCameraName->empty())
 	{
-		warnings.push_back("INVALID CAMERA NAME");
+		WarningStrings.emplace_back("INVALID CAMERA NAME");
 		canStartRecording = false;
 	}
 
 	if(canStartRecording)
-		recording = true;
+		bRecording = true;
 }
 void CinematicsBuddy::RecordStop()
 {
-	std::string filename = defaultExportPath + *cvarFileName + ".txt";
+
+	std::string filename = defaultExportPath + *ExportFileName + ".txt";
 
 	duration<double> recordingDuration = duration_cast<duration<double>>(steady_clock::now() - recordingFrames[0].timeCaptured);
-	warnings.push_back("Recording stopped: " + std::to_string(recordingDuration.count()) + " seconds, " + std::to_string(recordingFrames.size()) + " frames");
+	WarningStrings.push_back("Recording stopped: " + std::to_string(recordingDuration.count()) + " seconds, " + std::to_string(recordingFrames.size()) + " frames");
 
 	WriteToFile(recordingFrames, filename);
 }
@@ -285,21 +303,21 @@ void CinematicsBuddy::RecordStop()
 //BUFFER RECORDING
 void CinematicsBuddy::BufferStart()
 {
-	if(!bufferIsActive) bufferFrames.clear();
-	bufferIsActive = true;
+	if(!bBufferIsActive) bufferFrames.clear();
+	bBufferIsActive = true;
 }
 void CinematicsBuddy::BufferCapture()
 {
-	std::string filename = defaultExportPath + "cbBuffer_" + GetBufferFilenameTime() + ".txt";
+	std::string filename = defaultExportPath + "cbBuffer_" + CBUtils::GetCurrentTimeAsString() + ".txt";
 
 	duration<double> bufferDuration = duration_cast<duration<double>>(steady_clock::now() - bufferFrames[0].timeCaptured);
-	warnings.push_back("Buffer captured: " + std::to_string(bufferDuration.count()) + " seconds, " + std::to_string(bufferFrames.size()) + " frames");
+	WarningStrings.push_back("Buffer captured: " + std::to_string(bufferDuration.count()) + " seconds, " + std::to_string(bufferFrames.size()) + " frames");
 
 	WriteToFile(bufferFrames, filename);
 }
 void CinematicsBuddy::BufferCancel()
 {
-	bufferIsActive = false;
+	bBufferIsActive = false;
 	bufferFrames.clear();
 }
 
@@ -310,7 +328,7 @@ void CinematicsBuddy::PlayerInputTick()
 {
 	if(!gameWrapper->IsInReplay()) return;
 	
-	if(*useCamVelocity)
+	if(*bUseCamVelocity)
 	{
 		/*
 		struct CameraMovement
@@ -379,7 +397,7 @@ void CinematicsBuddy::PlayerInputTick()
 const std::string tab = " ", n = "\n";
 void CinematicsBuddy::WriteToFile(std::vector<FrameInfo> frames, std::string filename)
 {
-	std::ofstream outputFile(defaultExportPath + *cvarFileName + ".txt");
+	std::ofstream outputFile(defaultExportPath + *ExportFileName + ".txt");
 
 	//Scan frames list for replay and car info
 	bool wasEntirelyInReplay = true;
@@ -416,9 +434,9 @@ void CinematicsBuddy::WriteToFile(std::vector<FrameInfo> frames, std::string fil
 	/* WRITE HEADER INFO */
 	auto durationLength = duration_cast<duration<float>>(frames[frames.size()-1].timeCaptured - frames[0].timeCaptured).count();
 
-	outputFile << "Version: " << cppVersion << std::endl;
-	outputFile << "Camera: " << *cvarCameraName << std::endl;
-	outputFile << "Duration: " << PrintFloat(durationLength, 3) << " seconds" << std::endl;
+	outputFile << "Version: " << PLUGIN_VERSION << std::endl;
+	outputFile << "Camera: " << *ExportCameraName << std::endl;
+	outputFile << "Duration: " << CBUtils::PrintFloat(durationLength, 3) << " seconds" << std::endl;
 	outputFile << std::endl;
 
 	//If the recording was all within the same replay, write the replay metadata to the header
@@ -444,7 +462,7 @@ void CinematicsBuddy::WriteToFile(std::vector<FrameInfo> frames, std::string fil
 	{
 		outputFile << std::to_string(i) << "| ID[" << carsSeenInThisRecording[i].ID.GetIdString() << "]"
 		<< ", Body[" << std::to_string(carsSeenInThisRecording[i].body) << "]"
-		<< ", Wheel radii[01:" << PrintFloat(carsSeenInThisRecording[i].wheels01Radius, 1) << "|23:" << PrintFloat(carsSeenInThisRecording[i].wheels23Radius, 1) << "]" << std::endl;
+		<< ", Wheel radii[01:" << CBUtils::PrintFloat(carsSeenInThisRecording[i].wheels01Radius, 1) << "|23:" << CBUtils::PrintFloat(carsSeenInThisRecording[i].wheels23Radius, 1) << "]" << std::endl;
 	}
 	outputFile << "END CAR LIST" << std::endl;
 	outputFile << std::endl;
@@ -470,11 +488,11 @@ std::string CinematicsBuddy::FormatFrameData(int index, FrameInfo firstFrame, Fr
 
 	//Camera
 	CameraInfo camera = currentFrame.cameraInfo;
-	output += tab+ "C[" + PrintVector(camera.location, 2) + "|" + PrintQuat(camera.orientation, 6) + "|" + PrintFloat(camera.FOV, 3) + "]" + n;
+	output += tab+ "C[" + CBUtils::PrintVector(camera.location, 2) + "|" + CBUtils::PrintQuat(camera.orientation, 6) + "|" + CBUtils::PrintFloat(camera.FOV, 3) + "]" + n;
 	
 	//Ball
 	BallInfo ball = currentFrame.ballInfo;
-	output += tab+ "B[" + PrintVector(ball.location, 2) + "|" + PrintQuat(ball.orientation, 6) + "]" + n;
+	output += tab+ "B[" + CBUtils::PrintVector(ball.location, 2) + "|" + CBUtils::PrintQuat(ball.orientation, 6) + "]" + n;
 	
 	//Cars
 	std::vector<CarInfo> cars = currentFrame.carInfo;
@@ -491,14 +509,14 @@ std::string CinematicsBuddy::FormatFrameData(int index, FrameInfo firstFrame, Fr
 			}
 		}
 		output += tab+tab+ std::to_string(carIndex) + "(" + n;
-		output += tab+tab+tab+ "BLR[" + std::to_string(cars[i].isBoosting) + "|" + PrintVector(cars[i].location, 2) + "|" + PrintQuat(cars[i].orientation, 6) + "]" + n;
+		output += tab+tab+tab+ "BLR[" + std::to_string(cars[i].isBoosting) + "|" + CBUtils::PrintVector(cars[i].location, 2) + "|" + CBUtils::PrintQuat(cars[i].orientation, 6) + "]" + n;
 		output += tab+tab+tab+ "WHL(" + n;
 		for(int j=0; j<4; j++)
 		{
 			output += tab+tab+tab+tab+ std::to_string(j) + "[" + 
-			PrintFloat(cars[i].wheels[j].steer, 3) + "|" +
-			PrintFloat(cars[i].wheels[j].suspensionDistance, 3) + "|" +
-			PrintFloat(cars[i].wheels[j].spinSpeed, 3) + "]" + n;
+			CBUtils::PrintFloat(cars[i].wheels[j].steer, 3) + "|" +
+			CBUtils::PrintFloat(cars[i].wheels[j].suspensionDistance, 3) + "|" +
+			CBUtils::PrintFloat(cars[i].wheels[j].spinSpeed, 3) + "]" + n;
 		}
 		output += tab+tab+tab+ ")" + n;
 		output += tab+tab+ ")" + n;
@@ -507,17 +525,6 @@ std::string CinematicsBuddy::FormatFrameData(int index, FrameInfo firstFrame, Fr
 	output += "}" + n;
 
 	return output;
-}
-std::string CinematicsBuddy::GetBufferFilenameTime()
-{
-	time_t rawtime;
-	struct tm *timestamp;
-	char buffer [80];
-	time(&rawtime);
-	timestamp = localtime(&rawtime);
-	strftime(buffer,80,"%Y-%m-%d_%H-%M-%S",timestamp);
-
-	return std::string(buffer);
 }
 
 
@@ -531,7 +538,7 @@ void CinematicsBuddy::CamPathImport()
 	if(!gameWrapper->IsInReplay()) return;
 	ReplayWrapper replay = gameWrapper->GetGameEventAsReplay().GetReplay();
 	if(replay.memory_address == NULL) return;
-	std::ifstream inFile(defaultImportPath + "AnimationImports/" + *cvarImportFileName + ".txt");
+	std::ifstream inFile(defaultImportPath + "AnimationImports/" + *ImportFileName + ".txt");
 	if(!inFile) return;
 
 	importDataVector.clear();
@@ -615,84 +622,4 @@ void CinematicsBuddy::CamPathClear()
 	hasDataVector = false;
 	stopApplyingAnimation = true;
 	importDataVector.clear();
-}
-
-
-/* UTILITY FUNCTIONS */
-//Quat CinematicsBuddy::RotatorToQuat(Rotator convertToQuat) //pulled from here with some modifications: https://github.com/ncsoft/Unreal.js/issues/132)
-//{
-//	float uRotToDeg = 182.044449;
-//	float DegToRadDiv2 = (M_PI/180)/2;
-//	float sinPitch = sin((convertToQuat.Pitch/uRotToDeg)*DegToRadDiv2);
-//	float cosPitch = cos((convertToQuat.Pitch/uRotToDeg)*DegToRadDiv2);
-//	float sinYaw = sin((convertToQuat.Yaw/uRotToDeg)*DegToRadDiv2);
-//	float cosYaw = cos((convertToQuat.Yaw/uRotToDeg)*DegToRadDiv2);
-//	float sinRoll = sin((convertToQuat.Roll/uRotToDeg)*DegToRadDiv2);
-//	float cosRoll = cos((convertToQuat.Roll/uRotToDeg)*DegToRadDiv2);
-//	
-//	Quat convertedQuat;
-//	convertedQuat.X = (cosRoll*sinPitch*sinYaw) - (sinRoll*cosPitch*cosYaw);
-//	convertedQuat.Y = ((-cosRoll)*sinPitch*cosYaw) - (sinRoll*cosPitch*sinYaw);
-//	convertedQuat.Z = (cosRoll*cosPitch*sinYaw) - (sinRoll*sinPitch*cosYaw);
-//	convertedQuat.W = (cosRoll*cosPitch*cosYaw) + (sinRoll*sinPitch*sinYaw);
-//
-//	return convertedQuat;
-//}
-ServerWrapper CinematicsBuddy::GetCurrentGameState()
-{
-	if(gameWrapper->IsInReplay())
-		return gameWrapper->GetGameEventAsReplay().memory_address;
-	else if(gameWrapper->IsInOnlineGame())
-		return gameWrapper->GetOnlineGame();
-	else
-		return gameWrapper->GetGameEventAsServer();
-}
-void CinematicsBuddy::Render(CanvasWrapper canvas)
-{
-	if(recording) return;
-	if(gameWrapper->IsInOnlineGame()) return;
-
-	std::vector<std::string> drawStrings;
-
-	if(*cvarShowVersionInfo)
-	{
-		drawStrings.push_back("CinematicsBuddy version: " + cppVersion);
-		drawStrings.push_back("");
-	}
-
-	for(int i=0; i<warnings.size(); i++)
-		drawStrings.push_back(warnings[i]);
-
-
-
-
-    canvas.SetColor(LinearColor{0,255,0,255});
-	Vector2 base = {50,50};
-	for(int i=0; i<drawStrings.size(); i++)
-	{
-		canvas.SetPosition(base);
-		canvas.DrawString(drawStrings[i]);
-		base.Y += 20;
-	}
-}
-
-std::string CinematicsBuddy::PrintFloat(const float InFloat, const int InDecimals)
-{
-    std::ostringstream Output;
-	Output << std::fixed << std::setprecision(InDecimals) << InFloat;
-	return Output.str();
-}
-
-std::string CinematicsBuddy::PrintVector(const Vector& InVector, const int InDecimals)
-{
-    std::ostringstream Output;
-	Output << std::fixed << std::setprecision(InDecimals) << InVector.X << ", " << InVector.Y << ", " << InVector.Z;
-	return Output.str();
-}
-
-std::string CinematicsBuddy::PrintQuat(const Quat& InQuat, const int InDecimals)
-{
-    std::ostringstream Output;
-	Output << std::fixed << std::setprecision(InDecimals) << InQuat.W << ", " << InQuat.X << ", " << InQuat.Y << ", " << InQuat.Z;
-	return Output.str();
 }
