@@ -28,6 +28,12 @@
     <Filter Include="Source\Classes\DataCollectors">
       <UniqueIdentifier>{9506ff32-4f28-4ba5-9ec0-eaaf7ebac746}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Vendor">
+      <UniqueIdentifier>{f77fb920-9973-4280-b5bb-7a7047935e45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vendor\SimpleJSON">
+      <UniqueIdentifier>{f18b6365-18c7-4c6e-97c4-9f4f7a3f53e6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\bakkesmod\plugins\settings\CinematicsBuddy.set">
@@ -99,6 +105,9 @@
     </ClInclude>
     <ClInclude Include="Source\Classes\DataCollectors\FrameInfoCollectors.h">
       <Filter>Source\Classes\DataCollectors</Filter>
+    </ClInclude>
+    <ClInclude Include="Vendor\SimpleJSON\json.hpp">
+      <Filter>Vendor\SimpleJSON</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

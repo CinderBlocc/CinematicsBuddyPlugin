@@ -80,6 +80,7 @@
     <ClInclude Include="Source\Main\CinematicsBuddy.h" />
     <ClInclude Include="Source\SupportFiles\CBUtils.h" />
     <ClInclude Include="Source\SupportFiles\MacrosStructsEnums.h" />
+    <ClInclude Include="Vendor\SimpleJSON\json.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
