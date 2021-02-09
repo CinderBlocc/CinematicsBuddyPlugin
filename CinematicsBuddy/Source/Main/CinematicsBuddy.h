@@ -32,6 +32,7 @@ public:
 	void onLoad() override;
 	void onUnload() override;
     void GenerateSettingsFile();
+    void TestExportFormat();
 	
 	//Input override
 	//void PlayerInputTick(ActorWrapper camInput, void * params, string funcName);

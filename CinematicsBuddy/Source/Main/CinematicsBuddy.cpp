@@ -1,8 +1,9 @@
 #include "CinematicsBuddy.h"
 #include "bakkesmod\wrappers\includes.h"
 #include "SupportFiles/CBUtils.h"
-#include "Classes/AnimationImporter.h"
-#include "Classes/AnimationExporter.h"
+#include "Classes/DataCollectors/FrameInfo.h"
+#include "Classes/Importing/AnimationImporter.h"
+#include "Classes/Exporting/AnimationExporter.h"
 #include <sstream>
 #include <fstream>
 
@@ -124,6 +125,8 @@ void CinematicsBuddy::onLoad()
 	cvarManager->registerNotifier("cbAnimationImport", [this](std::vector<std::string> params){CamPathImport();}, "Imports a camera animation from a file", PERMISSION_ALL);
 	cvarManager->registerNotifier("cbAnimationClear",  [this](std::vector<std::string> params){CamPathClear();},  "Clears the imported camera animation", PERMISSION_ALL);
 
+	cvarManager->registerNotifier("cbTestExportFormat", [this](std::vector<std::string> params){TestExportFormat();},  "Prints data from current frame", PERMISSION_ALL);
+
 	gameWrapper->HookEvent("Function Engine.GameViewportClient.Tick", std::bind(&CinematicsBuddy::RecordingFunction, this));
 	gameWrapper->HookEvent("Function TAGame.PlayerInput_TA.PlayerInput", std::bind(&CinematicsBuddy::PlayerInputTick, this));
 	//gameWrapper->HookEventWithCallerPost<ActorWrapper>("Function TAGame.PlayerInput_TA.PlayerInput", bind(&CinematicsBuddy::PlayerInputTick, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
@@ -133,6 +136,15 @@ void CinematicsBuddy::onLoad()
     GenerateSettingsFile();
 }
 void CinematicsBuddy::onUnload(){}
+
+void CinematicsBuddy::TestExportFormat()
+{
+    //Gets the info of the current frame, and prints it in its final format to the console
+    FrameInfo ThisFrame = FrameInfo::Get();
+    auto ThisFrameTime = ThisFrame.GetTimeInfoForTest();
+    auto CarsSeenThisFrame = ThisFrame.GetCarsSeenForTest();
+    GlobalCvarManager->log("\n" + ThisFrame.Print(ThisFrameTime, CarsSeenThisFrame));
+}
 
 
 

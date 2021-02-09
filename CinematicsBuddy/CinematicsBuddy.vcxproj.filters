@@ -16,6 +16,18 @@
     <Filter Include="Source\Main">
       <UniqueIdentifier>{5f8ccc67-e791-4cd0-a499-aa0b0946b8a8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Classes\Camera">
+      <UniqueIdentifier>{14748635-25e4-4073-a0f6-ba1abab24d4f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Classes\Exporting">
+      <UniqueIdentifier>{56745874-5905-4850-be50-ce2c12d1109d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Classes\Importing">
+      <UniqueIdentifier>{bf3f830a-eeed-4965-86e9-30e9991b845e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Classes\DataCollectors">
+      <UniqueIdentifier>{9506ff32-4f28-4ba5-9ec0-eaaf7ebac746}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\bakkesmod\plugins\settings\CinematicsBuddy.set">
@@ -35,14 +47,26 @@
     <ClCompile Include="Source\SupportFiles\Rendering.cpp">
       <Filter>Source\Support Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Classes\AnimationImporter.cpp">
-      <Filter>Source\Classes</Filter>
+    <ClCompile Include="Source\Classes\Camera\CameraManager.cpp">
+      <Filter>Source\Classes\Camera</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Classes\AnimationExporter.cpp">
-      <Filter>Source\Classes</Filter>
+    <ClCompile Include="Source\Classes\Exporting\AnimationBuffer.cpp">
+      <Filter>Source\Classes\Exporting</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Classes\CameraManager.cpp">
-      <Filter>Source\Classes</Filter>
+    <ClCompile Include="Source\Classes\Exporting\AnimationExporter.cpp">
+      <Filter>Source\Classes\Exporting</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Classes\Exporting\AnimationRecorder.cpp">
+      <Filter>Source\Classes\Exporting</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Classes\Importing\AnimationImporter.cpp">
+      <Filter>Source\Classes\Importing</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Classes\DataCollectors\FrameInfo.cpp">
+      <Filter>Source\Classes\DataCollectors</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Classes\DataCollectors\FrameInfoCollectors.cpp">
+      <Filter>Source\Classes\DataCollectors</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -55,14 +79,26 @@
     <ClInclude Include="Source\SupportFiles\CBUtils.h">
       <Filter>Source\Support Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Classes\AnimationImporter.h">
-      <Filter>Source\Classes</Filter>
+    <ClInclude Include="Source\Classes\Camera\CameraManager.h">
+      <Filter>Source\Classes\Camera</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Classes\AnimationExporter.h">
-      <Filter>Source\Classes</Filter>
+    <ClInclude Include="Source\Classes\Exporting\AnimationBuffer.h">
+      <Filter>Source\Classes\Exporting</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Classes\CameraManager.h">
-      <Filter>Source\Classes</Filter>
+    <ClInclude Include="Source\Classes\Exporting\AnimationExporter.h">
+      <Filter>Source\Classes\Exporting</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Classes\Exporting\AnimationRecorder.h">
+      <Filter>Source\Classes\Exporting</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Classes\Importing\AnimationImporter.h">
+      <Filter>Source\Classes\Importing</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Classes\DataCollectors\FrameInfo.h">
+      <Filter>Source\Classes\DataCollectors</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Classes\DataCollectors\FrameInfoCollectors.h">
+      <Filter>Source\Classes\DataCollectors</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
