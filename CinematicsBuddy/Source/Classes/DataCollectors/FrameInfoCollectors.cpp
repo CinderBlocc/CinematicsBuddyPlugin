@@ -21,7 +21,7 @@ TimeInfo TimeInfo::Get(ReplayServerWrapper Replay)
     return Output;
 }
 
-void TimeInfo::AddToJSON(json::JSON& JSONState, const TimeInfo& FirstFrame)
+void TimeInfo::AddToJSON(json::JSON& JSONState, const TimeInfo& FirstFrame) const
 {
     //FirstFrameTime is so that the time can be trimmed to the start time
     //  get the difference between this frame's CaptureTime and FirstFrame's CaptureTime
@@ -49,7 +49,7 @@ CameraInfo CameraInfo::Get(CameraWrapper Camera)
     return Output;
 }
 
-void CameraInfo::AddToJSON(json::JSON& JSONState)
+void CameraInfo::AddToJSON(json::JSON& JSONState) const
 {
 
 }
@@ -75,7 +75,7 @@ BallInfo BallInfo::Get(ServerWrapper Server)
     return Output;
 }
 
-void BallInfo::AddToJSON(json::JSON& JSONState)
+void BallInfo::AddToJSON(json::JSON& JSONState) const
 {
 
 }
@@ -104,7 +104,7 @@ WheelInfo WheelInfo::Get(WheelWrapper Wheel)
     return Output;
 }
 
-void WheelInfo::AddToJSON(json::JSON& JSONState)
+void WheelInfo::AddToJSON(json::JSON& JSONState) const
 {
 
 }
@@ -148,7 +148,7 @@ CarInfo CarInfo::Get(CarWrapper Car)
     return Output;
 }
 
-void CarInfo::AddToJSON(json::JSON& JSONState, const std::vector<struct CarSeen>& AllCarsSeen)
+void CarInfo::AddToJSON(json::JSON& JSONState, const std::vector<struct CarSeen>& AllCarsSeen) const
 {
     //AllCarsSeen should be provided by the AnimationExporter when writing to file
     //  That way the header identifies each unique car and gives it a number by index in this vector
@@ -163,7 +163,6 @@ CarSeen CarSeen::Get(CarWrapper Car)
 
     //Assign defaults
     Output.bIsNull = true;
-    Output.TimeSeen = steady_clock::now();
     Output.Body = -1;
     Output.FrontWheelRadius = 0.f;
     Output.BackWheelRadius = 0.f;

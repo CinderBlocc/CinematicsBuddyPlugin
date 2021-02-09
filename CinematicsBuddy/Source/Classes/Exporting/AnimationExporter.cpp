@@ -1,5 +1,9 @@
 #include "AnimationExporter.h"
 #include "SupportFiles/CBUtils.h"
+#include "DataCollectors/FrameInfo.h"
+#include "SupportFiles/MacrosStructsEnums.h"
+#include <filesystem>
+#include <vector>
 
 
 /*
@@ -11,33 +15,6 @@
                 - i.e. number of frames, name of replay (get in StartRecording), all the player cars seen during the recording, etc
 
 */
-
-
-// PATH VALIDATION //
-std::filesystem::path AnimationExporter::GetExportPathFromString(const std::string& InPathName)
-{
-    std::filesystem::path OutputFilePath;
-
-    if(InPathName.empty())
-    {
-        GlobalCvarManager->log("No special file path specified. Outputting to /bakkesmod/data/CinematicsBuddy/AnimationExports/");
-        OutputFilePath = GlobalGameWrapper->GetBakkesModPath() / "data" / "CinematicsBuddy" / "AnimationExports";
-    }
-    else
-    {
-        //Ensure file path ends with a slash
-        std::string FinalPathName = InPathName;
-        if(InPathName.back() != '/' && InPathName.back() != '\'')
-        {
-            FinalPathName.append(1, '/');
-        }
-
-        GlobalCvarManager->log("Special file path specified. Outputting to " + FinalPathName);
-        OutputFilePath = FinalPathName;
-    }
-
-    return OutputFilePath;
-}
 
 
 //  NORMAL RECORDING //
@@ -53,7 +30,7 @@ void AnimationExporter::StartRecording(const std::string& InPathName, const std:
     bool bCanStartRecording = true;
 
     //Get the path
-    std::filesystem::path OutputFilePath = GetExportPathFromString(InPathName);
+    std::filesystem::path OutputFilePath = CBUtils::GetExportPathFromString(InPathName);
 
     //Get the file name. Open the file if a name is provided
     if(InFileName.empty())
@@ -87,91 +64,22 @@ void AnimationExporter::StartRecording(const std::string& InPathName, const std:
 
 void AnimationExporter::StopRecording()
 {
+    /*
+    
+        Need to close temp file, then swap all data to the specified file and delete temp file
+    
+    */
+
     ActiveFile << "END" << std::endl;
     ActiveFile.close();
 
     ActiveCameraName = "";
 }
 
-
-// BUFFER RECORDING //
-void AnimationExporter::StartBuffer()
+void AnimationExporter::AddData(const FrameInfo& FrameData)
 {
-    if(bBufferIsActive)
-    {
-        return;
-    }
-
-    BufferData.clear();
-    bBufferIsActive = true;
-}
-
-void AnimationExporter::PauseBuffer()
-{
-    bBufferIsActive = false;
-}
-
-void AnimationExporter::StopBuffer()
-{
-    PauseBuffer();
-    BufferData.clear();
-}
-
-void AnimationExporter::CaptureBuffer(const std::string& InPathName)
-{
-    //Open the file
-    std::filesystem::path OutputFilePath = GetExportPathFromString(InPathName);
-    OutputFilePath += "Buffer_" + CBUtils::GetCurrentTimeAsString() + EXTENSION_NAME;
-    std::ofstream BufferFile(OutputFilePath);
-
-    //Write to the file
-    if(BufferFile.is_open())
-    {
-        //Create file header
-        FileHeaderInfo FileHeader;
-
-        /*
-        
-            FILL FILE HEADER INFO HERE
-        
-        */
-
-        BufferFile << FileHeader.Print() << '\n';
-
-        //Write the buffer data to the file
-        for(const auto& DataPoint : BufferData)
-        {
-            BufferFile << DataPoint.Print() << '\n';
-        }
-        BufferFile << "END" << std::endl;
-    }
-
-    BufferFile.close();
-}
-
-
-// CAPTURE DATA ON TICK //
-void AnimationExporter::Tick()
-{
-    if(!bRecording && !bBufferIsActive)
-    {
-        return;
-    }
-
-    FrameInfo FrameData = CaptureFrameData();
-
-    if(bBufferIsActive)
-    {
-        BufferData.push_back(FrameData);
-    }
-
     if(bRecording && ActiveFile.is_open())
     {
         ActiveFile << FrameData.Print() << '\n';
     }
-}
-
-FrameInfo AnimationExporter::CaptureFrameData()
-{
-
 }

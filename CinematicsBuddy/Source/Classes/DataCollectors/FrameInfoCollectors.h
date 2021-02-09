@@ -13,7 +13,7 @@ struct TimeInfo
 	int ReplayFrame;
 
     static TimeInfo Get(ReplayServerWrapper Replay);
-    void AddToJSON(json::JSON& JSONState, const TimeInfo& FirstFrame);
+    void AddToJSON(json::JSON& JSONState, const TimeInfo& FirstFrame) const;
 };
 
 struct CameraInfo
@@ -24,7 +24,7 @@ struct CameraInfo
 	float FOV;
 
     static CameraInfo Get(CameraWrapper Camera);
-    void AddToJSON(json::JSON& JSONState);
+    void AddToJSON(json::JSON& JSONState) const;
 };
 
 struct BallInfo
@@ -34,7 +34,7 @@ struct BallInfo
 	Quat Rotation;
 
     static BallInfo Get(ServerWrapper Server);
-    void AddToJSON(json::JSON& JSONState);
+    void AddToJSON(json::JSON& JSONState) const;
 };
 
 struct WheelInfo
@@ -46,7 +46,7 @@ struct WheelInfo
 	//float Radius; //Stored in CarsSeen so it only needs to be written to file once
 
     static WheelInfo Get(WheelWrapper Wheel);
-    void AddToJSON(json::JSON& JSONState);
+    void AddToJSON(json::JSON& JSONState) const;
 };
 
 struct CarInfo
@@ -59,13 +59,12 @@ struct CarInfo
 	WheelInfo Wheels[4];
 
     static CarInfo Get(CarWrapper Car);
-    void AddToJSON(json::JSON& JSONState, const std::vector<struct CarSeen>& AllCarsSeen);
+    void AddToJSON(json::JSON& JSONState, const std::vector<struct CarSeen>& AllCarsSeen) const;
 };
 
 struct CarSeen
 {
     bool bIsNull;
-	std::chrono::steady_clock::time_point TimeSeen;
 	UniqueIDWrapper ID;
 	int Body;
 	float FrontWheelRadius;
@@ -73,3 +72,7 @@ struct CarSeen
 
     static CarSeen Get(CarWrapper Car);
 };
+inline bool operator==(const CarSeen c1, const CarSeen c2)
+{
+    return c1.ID.GetIdString() == c2.ID.GetIdString();
+}

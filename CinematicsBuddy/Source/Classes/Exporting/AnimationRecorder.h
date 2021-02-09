@@ -1,31 +1,19 @@
 #pragma once
-#include "SupportFiles/MacrosStructsEnums.h"
-#include <filesystem>
-#include <fstream>
-#include <vector>
+#include <memory>
 
-class AnimationExporter
+class AnimationBuffer;
+class AnimationExporter;
+
+class AnimationRecorder
 {
 public:
-    void StartRecording(const std::string& InPathName, const std::string& InFileName, const std::string& InCameraName);
-    void StopRecording();
+    AnimationRecorder(std::shared_ptr<AnimationExporter> InExporter, std::shared_ptr<AnimationBuffer> InBuffer);
 
-    void StartBuffer();
-    void PauseBuffer();
-    void StopBuffer();
-    void CaptureBuffer(const std::string& InPathName);
-    
-    void Tick();
+    void TickRecording();
 
 private:
-    bool bRecording;
-    bool bBufferIsActive;
+    AnimationRecorder() = delete;
 
-    std::ofstream ActiveFile;
-    std::string ActiveCameraName;
-
-    std::vector<FrameInfo> BufferData;
-
-    std::filesystem::path GetExportPathFromString(const std::string& InPathName);
-    FrameInfo CaptureFrameData();
+    std::shared_ptr<AnimationExporter> Exporter;
+    std::shared_ptr<AnimationBuffer> Buffer;
 };

@@ -141,8 +141,8 @@ void CinematicsBuddy::TestExportFormat()
 {
     //Gets the info of the current frame, and prints it in its final format to the console
     FrameInfo ThisFrame = FrameInfo::Get();
-    auto ThisFrameTime = ThisFrame.GetTimeInfoForTest();
-    auto CarsSeenThisFrame = ThisFrame.GetCarsSeenForTest();
+    const auto& ThisFrameTime = ThisFrame.GetTimeInfo();
+    const auto& CarsSeenThisFrame = ThisFrame.GetCarsSeen();
     GlobalCvarManager->log("\n" + ThisFrame.Print(ThisFrameTime, CarsSeenThisFrame));
 }
 

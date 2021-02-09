@@ -56,13 +56,7 @@
     <ClCompile Include="Source\Classes\Camera\CameraManager.cpp">
       <Filter>Source\Classes\Camera</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Classes\Exporting\AnimationBuffer.cpp">
-      <Filter>Source\Classes\Exporting</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Classes\Exporting\AnimationExporter.cpp">
-      <Filter>Source\Classes\Exporting</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Classes\Exporting\AnimationRecorder.cpp">
       <Filter>Source\Classes\Exporting</Filter>
     </ClCompile>
     <ClCompile Include="Source\Classes\Importing\AnimationImporter.cpp">
@@ -73,6 +67,12 @@
     </ClCompile>
     <ClCompile Include="Source\Classes\DataCollectors\FrameInfoCollectors.cpp">
       <Filter>Source\Classes\DataCollectors</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Classes\Exporting\AnimationBuffer.cpp">
+      <Filter>Source\Classes\Exporting</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Classes\Exporting\AnimationRecorder.cpp">
+      <Filter>Source\Classes\Exporting</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -88,13 +88,7 @@
     <ClInclude Include="Source\Classes\Camera\CameraManager.h">
       <Filter>Source\Classes\Camera</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Classes\Exporting\AnimationBuffer.h">
-      <Filter>Source\Classes\Exporting</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Classes\Exporting\AnimationExporter.h">
-      <Filter>Source\Classes\Exporting</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Classes\Exporting\AnimationRecorder.h">
       <Filter>Source\Classes\Exporting</Filter>
     </ClInclude>
     <ClInclude Include="Source\Classes\Importing\AnimationImporter.h">
@@ -108,6 +102,12 @@
     </ClInclude>
     <ClInclude Include="Vendor\SimpleJSON\json.hpp">
       <Filter>Vendor\SimpleJSON</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Classes\Exporting\AnimationBuffer.h">
+      <Filter>Source\Classes\Exporting</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Classes\Exporting\AnimationRecorder.h">
+      <Filter>Source\Classes\Exporting</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

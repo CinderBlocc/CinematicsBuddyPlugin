@@ -1,4 +1,5 @@
 #include "CBUtils.h"
+#include "MacrosStructsEnums.h"
 #include <sstream>
 #include <iomanip>
 
@@ -33,4 +34,29 @@ std::string CBUtils::GetCurrentTimeAsString()
 	strftime(buffer, 80, "%Y-%m-%d_%H-%M-%S", timestamp);
 
 	return std::string(buffer);
+}
+
+std::filesystem::path CBUtils::GetExportPathFromString(const std::string& InPathName)
+{
+    std::filesystem::path OutputFilePath;
+
+    if(InPathName.empty())
+    {
+        GlobalCvarManager->log("No special file path specified. Outputting to /bakkesmod/data/CinematicsBuddy/AnimationExports/");
+        OutputFilePath = GlobalGameWrapper->GetBakkesModPath() / "data" / "CinematicsBuddy" / "AnimationExports";
+    }
+    else
+    {
+        //Ensure file path ends with a slash
+        std::string FinalPathName = InPathName;
+        if(InPathName.back() != '/' && InPathName.back() != '\'')
+        {
+            FinalPathName.append(1, '/');
+        }
+
+        GlobalCvarManager->log("Special file path specified. Outputting to " + FinalPathName);
+        OutputFilePath = FinalPathName;
+    }
+
+    return OutputFilePath;
 }

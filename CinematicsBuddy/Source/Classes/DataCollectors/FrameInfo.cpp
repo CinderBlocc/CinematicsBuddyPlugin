@@ -53,5 +53,13 @@ std::string FrameInfo::Print(const TimeInfo& FirstFrame, const std::vector<CarSe
 
     json::JSON Output = json::Object();
 
-    return "";
+    TimeData.AddToJSON(Output, FirstFrame);
+	CameraData.AddToJSON(Output);
+	BallData.AddToJSON(Output);
+	for(auto& Car : CarData)
+    {
+        Car.AddToJSON(Output, AllCarsSeen);
+    }
+
+    return Output.dump(1, "\t");
 }
