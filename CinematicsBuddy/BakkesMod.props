@@ -12,7 +12,7 @@
       <AdditionalLibraryDirectories>$(BakkesModPath)bakkesmodsdk\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command> "$(BakkesModPath)bakkesmodsdk\bakkesmod-patch.exe" "$(TargetPath)"</Command>
+      <Command>"$(BakkesModPath)bakkesmodsdk\bakkesmod-patch.exe" "$(TargetPath)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup />

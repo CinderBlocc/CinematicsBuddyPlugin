@@ -15,6 +15,7 @@ private:
 	std::shared_ptr<float> CamRotationSpeed;
 	std::shared_ptr<bool> bShowVersionInfo;	
 	std::shared_ptr<bool> bUseCamVelocity;
+	std::shared_ptr<bool> bSetSpecialFilePath;
 
 	//Vectors
 	std::vector<std::string> WarningStrings;
@@ -29,8 +30,11 @@ private:
 public:
 	void onLoad() override;
 	void onUnload() override;
+
+    //Utility
     void GenerateSettingsFile();
     void TestExportFormat();
+    std::string GetSpecialFilePath();
 
 	//Recording
 	void RecordStart();
@@ -47,8 +51,5 @@ public:
 	void CamPathImport();
 	void CamPathApply();
 	void CamPathClear();
-
-	//Utility
-	void Render(CanvasWrapper canvas);
 };
 

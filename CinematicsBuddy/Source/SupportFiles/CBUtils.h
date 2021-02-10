@@ -3,9 +3,9 @@
 
 namespace CBUtils
 {
-    std::string PrintFloat(const float InFloat, const int InDecimals);
-    std::string PrintVector(const Vector& InVector, const int InDecimals);
-    std::string PrintQuat(const Quat& InQuat, const int InDecimals);
+    std::string PrintFloat(float InFloat, int InDecimals = 2);
+    std::string PrintVector(const Vector& InVector, int InDecimals = 2);
+    std::string PrintQuat(const Quat& InQuat, int InDecimals = 6);
 
     std::string GetCurrentTimeAsString();
     std::filesystem::path GetExportPathFromString(const std::string& InPathName);

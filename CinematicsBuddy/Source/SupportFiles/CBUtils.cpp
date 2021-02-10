@@ -3,21 +3,21 @@
 #include <sstream>
 #include <iomanip>
 
-std::string CBUtils::PrintFloat(const float InFloat, const int InDecimals)
+std::string CBUtils::PrintFloat(float InFloat, int InDecimals)
 {
     std::ostringstream Output;
 	Output << std::fixed << std::setprecision(InDecimals) << InFloat;
 	return Output.str();
 }
 
-std::string CBUtils::PrintVector(const Vector& InVector, const int InDecimals)
+std::string CBUtils::PrintVector(const Vector& InVector, int InDecimals)
 {
     std::ostringstream Output;
 	Output << std::fixed << std::setprecision(InDecimals) << InVector.X << ", " << InVector.Y << ", " << InVector.Z;
 	return Output.str();
 }
 
-std::string CBUtils::PrintQuat(const Quat& InQuat, const int InDecimals)
+std::string CBUtils::PrintQuat(const Quat& InQuat, int InDecimals)
 {
     std::ostringstream Output;
 	Output << std::fixed << std::setprecision(InDecimals) << InQuat.W << ", " << InQuat.X << ", " << InQuat.Y << ", " << InQuat.Z;

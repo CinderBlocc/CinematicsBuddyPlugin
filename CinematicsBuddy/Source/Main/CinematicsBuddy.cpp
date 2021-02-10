@@ -16,17 +16,7 @@ using namespace std::chrono;
 
     - If the file path is blank, use the default Import/Export folders
         - Grey out the text box and have a checkbox to enable it so they need to read instructions before applying an unnecessary path
-    - Change all cvar names (not notifiers) so that default values are guaranteed to apply on first download
-        - This is to reset the path cvar to default
     - Stop the recording on Soccar_TA destroyed to ensure only one replay gets recorded in a file
-
-    - Make AnimationExporter and AnimationBuffer subclasses of AnimationRecorder since they both do pretty much the same thing
-        - The similarities:
-            - Both need to hold information about the file they will write to when they finish recording
-            - Both need their own local storage containers
-        - The biggest differences are:
-            - Buffer pops front when it reaches time limit
-            - Exporter writes to a file as it goes along and stops completely when it reaches time limit
 
 */
 
@@ -104,31 +94,31 @@ void CinematicsBuddy::onLoad()
 	CamRotationSpeed      = std::make_shared<float>(0.f);
 	bShowVersionInfo      = std::make_shared<bool>(false);
 	bUseCamVelocity       = std::make_shared<bool>(false);
+	bSetSpecialFilePath   = std::make_shared<bool>(false);
 
-	cvarManager->registerCvar("cb_file_path", "", "Set the special output file path. Leave blank for default", true, false, 0, false, 0).bindTo(ExportSpecialFilePath);
-	cvarManager->registerCvar("cb_file_name", "", "Set the output file name", true, false, 0, false, 0).bindTo(ExportFileName);
-	cvarManager->registerCvar("cb_camera_name", "", "Set the camera name", true, false, 0, false, 0).bindTo(ExportCameraName);
-	cvarManager->registerCvar("cb_buffer_size", "160", "Number of seconds to buffer", true, true, 0, true, 6000).bindTo(BufferSize);
-	cvarManager->registerCvar("cb_import_file_name", "", "Set the output file name", true, false, 0, false, 0).bindTo(ImportFileName);
-	cvarManager->registerCvar("cb_cam_speed", "1", "Camera speed multiplier", true, true, 0, true, 1).bindTo(CamSpeed);
-	cvarManager->registerCvar("cb_cam_speed_rotation", "1", "Camera rotation speed multiplier", true, true, 0, true, 1).bindTo(CamRotationSpeed);
-	cvarManager->registerCvar("cb_show_version_info", "0", "Display version information on screen", true, false, 0, false, 0).bindTo(bShowVersionInfo);
-	cvarManager->registerCvar("cb_use_cam_velocity", "0", "Smooth camera movements", true, false, 0, false, 0).bindTo(bUseCamVelocity);
+	cvarManager->registerCvar(CVAR_SET_SPECIAL_PATH,   "0",   "Enable if you want to use a non-default path", true).bindTo(bSetSpecialFilePath);
+	cvarManager->registerCvar(CVAR_SPECIAL_PATH,       "",    "Set the special export file path. Leave blank for default", true).bindTo(ExportSpecialFilePath);
+	cvarManager->registerCvar(CVAR_FILE_NAME,          "",    "Set the export file name", true).bindTo(ExportFileName);
+	cvarManager->registerCvar(CVAR_CAMERA_NAME,        "",    "Set the camera name", true).bindTo(ExportCameraName);
+	cvarManager->registerCvar(CVAR_MAX_RECORD_LENGTH,  "300", "Number of seconds to record", true, true, 0, true, 1000).bindTo(BufferSize);
+	cvarManager->registerCvar(CVAR_MAX_BUFFER_LENGTH,  "30",  "Number of seconds to buffer", true, true, 0, true, 1000).bindTo(BufferSize);
+	cvarManager->registerCvar(CVAR_IMPORT_FILE_NAME,   "",    "Set the import file name", true).bindTo(ImportFileName);
+	cvarManager->registerCvar(CVAR_SMOOTH_CAM_INPUTS,  "0",   "Smooth camera movements", true).bindTo(bUseCamVelocity);
+	cvarManager->registerCvar(CVAR_CAM_MOVEMENT_SPEED, "1",   "Camera movement speed multiplier", true, true, 0, true, 3).bindTo(CamSpeed);
+	cvarManager->registerCvar(CVAR_CAM_ROTATION_SPEED, "1",   "Camera rotation speed multiplier", true, true, 0, true, 3).bindTo(CamRotationSpeed);
+	cvarManager->registerCvar(CVAR_SHOW_VERSION_INFO,  "0",   "Display version information on screen", true).bindTo(bShowVersionInfo);
 	
-	cvarManager->registerNotifier("cbRecordStart",     [this](std::vector<std::string> params){RecordStart();},   "Starts capturing animation data.", PERMISSION_ALL);
-	cvarManager->registerNotifier("cbRecordStop",      [this](std::vector<std::string> params){RecordStop();},    "Stops capturing animation data", PERMISSION_ALL);
-	cvarManager->registerNotifier("cbBufferStart",     [this](std::vector<std::string> params){BufferStart();},   "Starts the perpetual animation capture buffer", PERMISSION_ALL);
-	cvarManager->registerNotifier("cbBufferCapture",   [this](std::vector<std::string> params){BufferCapture();}, "Captures the data in the buffer", PERMISSION_ALL);
-	cvarManager->registerNotifier("cbBufferCancel",    [this](std::vector<std::string> params){BufferCancel();},  "Cancels the perpetual animation buffer", PERMISSION_ALL);
-	cvarManager->registerNotifier("cbAnimationImport", [this](std::vector<std::string> params){CamPathImport();}, "Imports a camera animation from a file", PERMISSION_ALL);
-	cvarManager->registerNotifier("cbAnimationClear",  [this](std::vector<std::string> params){CamPathClear();},  "Clears the imported camera animation", PERMISSION_ALL);
-
-	cvarManager->registerNotifier("cbTestExportFormat", [this](std::vector<std::string> params){TestExportFormat();},  "Prints data from current frame", PERMISSION_ALL);
+	cvarManager->registerNotifier(NOTIFIER_RECORD_START,   [this](std::vector<std::string> params){RecordStart();},      "Starts capturing animation data.",              PERMISSION_ALL);
+	cvarManager->registerNotifier(NOTIFIER_RECORD_STOP,    [this](std::vector<std::string> params){RecordStop();},       "Stops capturing animation data",                PERMISSION_ALL);
+	cvarManager->registerNotifier(NOTIFIER_BUFFER_START,   [this](std::vector<std::string> params){BufferStart();},      "Starts the perpetual animation capture buffer", PERMISSION_ALL);
+	cvarManager->registerNotifier(NOTIFIER_BUFFER_CAPTURE, [this](std::vector<std::string> params){BufferCapture();},    "Captures the data in the buffer",               PERMISSION_ALL);
+	cvarManager->registerNotifier(NOTIFIER_BUFFER_STOP,    [this](std::vector<std::string> params){BufferCancel();},     "Cancels the perpetual animation buffer",        PERMISSION_ALL);
+	cvarManager->registerNotifier(NOTIFIER_IMPORT_FILE,    [this](std::vector<std::string> params){CamPathImport();},    "Imports a camera animation from a file",        PERMISSION_ALL);
+	cvarManager->registerNotifier(NOTIFIER_IMPORT_CLEAR,   [this](std::vector<std::string> params){CamPathClear();},     "Clears the imported camera animation",          PERMISSION_ALL);
+	cvarManager->registerNotifier(NOTIFIER_TEST_EXPORT,    [this](std::vector<std::string> params){TestExportFormat();}, "Prints data from current frame",                PERMISSION_ALL);
 
 	gameWrapper->HookEvent("Function Engine.GameViewportClient.Tick", std::bind(&CinematicsBuddy::RecordingFunction, this));
 	gameWrapper->HookEvent("Function TAGame.PlayerInput_TA.PlayerInput", std::bind(&CinematicsBuddy::PlayerInputTick, this));
-
-	gameWrapper->RegisterDrawable(bind(&CinematicsBuddy::Render, this, std::placeholders::_1));
 
     GenerateSettingsFile();
 }
@@ -141,6 +131,11 @@ void CinematicsBuddy::TestExportFormat()
     const auto& ThisFrameTime = ThisFrame.GetTimeInfo();
     const auto& CarsSeenThisFrame = ThisFrame.GetCarsSeen();
     GlobalCvarManager->log("\n" + ThisFrame.Print(ThisFrameTime, CarsSeenThisFrame));
+}
+
+std::string CinematicsBuddy::GetSpecialFilePath()
+{
+    return (*bSetSpecialFilePath ? *ExportSpecialFilePath : "");
 }
 
 
@@ -164,7 +159,7 @@ void CinematicsBuddy::RecordingFunction()
 //NORMAL RECORDING
 void CinematicsBuddy::RecordStart()
 {
-    Exporter->StartRecording(*ExportSpecialFilePath, *ExportFileName, *ExportCameraName);
+    Exporter->StartRecording(GetSpecialFilePath(), *ExportFileName, *ExportCameraName);
 }
 void CinematicsBuddy::RecordStop()
 {
@@ -174,15 +169,15 @@ void CinematicsBuddy::RecordStop()
 //BUFFER RECORDING
 void CinematicsBuddy::BufferStart()
 {
-	Buffer->StartBuffer();
+    Buffer->StartRecording(GetSpecialFilePath(), *ExportFileName, *ExportCameraName);
 }
 void CinematicsBuddy::BufferCapture()
 {
-    Buffer->CaptureBuffer(*ExportSpecialFilePath, *ExportFileName, *ExportCameraName);
+    Buffer->CaptureBuffer(GetSpecialFilePath(), *ExportFileName, *ExportCameraName);
 }
 void CinematicsBuddy::BufferCancel()
 {
-	Buffer->StopBuffer();
+	Buffer->StopRecording();
 }
 
 

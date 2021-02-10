@@ -49,8 +49,7 @@
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>"$(BakkesModPath)bakkesmodsdk\bakkesmod-patch.exe" "$(TargetPath)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -67,7 +66,6 @@
     <ClCompile Include="Source\Classes\Importing\AnimationImporter.cpp" />
     <ClCompile Include="Source\Main\CinematicsBuddy.cpp" />
     <ClCompile Include="Source\SupportFiles\CBUtils.cpp" />
-    <ClCompile Include="Source\SupportFiles\Rendering.cpp" />
     <ClCompile Include="Source\SupportFiles\SettingsFileGenerator.cpp" />
   </ItemGroup>
   <ItemGroup>

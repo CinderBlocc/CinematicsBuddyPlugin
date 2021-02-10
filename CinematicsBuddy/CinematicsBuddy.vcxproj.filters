@@ -50,9 +50,6 @@
     <ClCompile Include="Source\SupportFiles\CBUtils.cpp">
       <Filter>Source\Support Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\SupportFiles\Rendering.cpp">
-      <Filter>Source\Support Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Classes\Camera\CameraManager.cpp">
       <Filter>Source\Classes\Camera</Filter>
     </ClCompile>

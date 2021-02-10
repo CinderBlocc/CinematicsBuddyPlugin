@@ -1,7 +1,15 @@
 #include "FrameInfoCollectors.h"
+#include "SupportFiles/CBUtils.h"
 #include "SimpleJSON/json.hpp"
 
 using namespace std::chrono;
+
+/*
+
+    @TODO
+    - Instead of passing in a JSON object, return JSON objects to store in other areas
+
+*/
 
 // TIME INFO //
 TimeInfo TimeInfo::Get(ReplayServerWrapper Replay)
@@ -21,10 +29,22 @@ TimeInfo TimeInfo::Get(ReplayServerWrapper Replay)
     return Output;
 }
 
-void TimeInfo::AddToJSON(json::JSON& JSONState, const TimeInfo& FirstFrame) const
+float TimeInfo::GetTimeDifference(const TimeInfo& FirstFrame) const
+{
+    return duration_cast<duration<float>>(TimeCaptured - FirstFrame.TimeCaptured).count();
+}
+
+json::JSON TimeInfo::ConvertToJSON(const TimeInfo& FirstFrame) const
 {
     //FirstFrameTime is so that the time can be trimmed to the start time
     //  get the difference between this frame's CaptureTime and FirstFrame's CaptureTime
+
+    json::JSON Output = json::Object();
+
+    Output["Time"] = GetTimeDifference(FirstFrame);
+    Output["ReplayFrame"] = ReplayFrame;
+
+    return Output;
 }
 
 
@@ -49,9 +69,15 @@ CameraInfo CameraInfo::Get(CameraWrapper Camera)
     return Output;
 }
 
-void CameraInfo::AddToJSON(json::JSON& JSONState) const
+json::JSON CameraInfo::ConvertToJSON() const
 {
+    json::JSON Output = json::Object();
 
+    Output["Location"] = CBUtils::PrintVector(Location);
+    Output["Rotation"] = CBUtils::PrintQuat(Rotation);
+    Output["FOV"] = CBUtils::PrintFloat(FOV);
+    
+    return Output;
 }
 
 
@@ -75,9 +101,14 @@ BallInfo BallInfo::Get(ServerWrapper Server)
     return Output;
 }
 
-void BallInfo::AddToJSON(json::JSON& JSONState) const
+json::JSON BallInfo::ConvertToJSON() const
 {
+    json::JSON Output = json::Object();
 
+    Output["Location"] = CBUtils::PrintVector(Location);
+    Output["Rotation"] = CBUtils::PrintQuat(Rotation);
+    
+    return Output;
 }
 
 
@@ -104,9 +135,15 @@ WheelInfo WheelInfo::Get(WheelWrapper Wheel)
     return Output;
 }
 
-void WheelInfo::AddToJSON(json::JSON& JSONState) const
+json::JSON WheelInfo::ConvertToJSON() const
 {
+    json::JSON Output = json::Object();
 
+    Output["SteerAmount"] = CBUtils::PrintFloat(SteerAmount);
+    Output["SuspensionDistance"] = CBUtils::PrintFloat(SuspensionDistance);
+    Output["SpinSpeed"] = CBUtils::PrintFloat(SpinSpeed);
+    
+    return Output;
 }
 
 
@@ -148,11 +185,42 @@ CarInfo CarInfo::Get(CarWrapper Car)
     return Output;
 }
 
-void CarInfo::AddToJSON(json::JSON& JSONState, const std::vector<struct CarSeen>& AllCarsSeen) const
+std::string CarInfo::GetCarSeenIndex(const std::vector<struct CarSeen>& AllCarsSeen) const
+{
+    if(!AllCarsSeen.empty())
+    {
+        int Index = 0;
+        for(const auto& ThisCarSeen : AllCarsSeen)
+        {
+            if(ID.GetIdString() == ThisCarSeen.ID.GetIdString())
+            {
+                return std::to_string(Index);
+            }
+
+            ++Index;
+        }
+    }
+
+    return ID.GetIdString();
+}
+
+json::JSON CarInfo::ConvertToJSON() const
 {
     //AllCarsSeen should be provided by the AnimationExporter when writing to file
     //  That way the header identifies each unique car and gives it a number by index in this vector
     //  so each frame can use that number instead of the full UniqueIDWrapper ID
+
+    json::JSON Output = json::Object();
+
+    Output["IsBoosting"] = bIsBoosting;
+    Output["Location"] = CBUtils::PrintVector(Location);
+    Output["Rotation"] = CBUtils::PrintQuat(Rotation);
+    for(int i = 0; i < 4; ++i)
+    {
+        Output["Wheels"][std::to_string(i)] = Wheels[i].ConvertToJSON();
+    }
+
+    return Output;
 }
 
 

@@ -1,5 +1,4 @@
 #include "AnimationRecorder.h"
-#include "DataCollectors/FileHeaderInfo.h"
 
 void AnimationRecorder::StartRecording(const std::string& InPathName, const std::string& InFileName, const std::string& InCameraName)
 {
@@ -19,7 +18,7 @@ void AnimationRecorder::AddData(const FrameInfo& FrameData)
     }
 }
 
-std::string AnimationRecorder::WriteHeader(std::ofstream& FileStream, const FileHeaderInfo& HeaderInfo)
+void AnimationRecorder::WriteHeader(std::ofstream& FileStream, const FileHeaderInfo& HeaderInfo)
 {
     if(FileStream.is_open())
     {

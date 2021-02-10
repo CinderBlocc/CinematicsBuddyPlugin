@@ -1,11 +1,10 @@
 #pragma once
 #include "DataCollectors/FrameInfo.h"
+#include "DataCollectors/FileHeaderInfo.h"
 #include <string>
 #include <deque>
 #include <vector>
 #include <fstream>
-
-class FileHeaderInfo;
 
 class AnimationRecorder
 {
@@ -15,7 +14,7 @@ public:
     
     virtual void AddData(const FrameInfo& FrameData);
 
-    std::string WriteHeader(std::ofstream& FileStream, const FileHeaderInfo& HeaderInfo);
+    void WriteHeader(std::ofstream& FileStream, const FileHeaderInfo& HeaderInfo);
 
     bool GetbIsRecording() { return bIsRecording; }
     void SetMaxRecordingTime(float NewTime) { MaxRecordingTime = NewTime; }

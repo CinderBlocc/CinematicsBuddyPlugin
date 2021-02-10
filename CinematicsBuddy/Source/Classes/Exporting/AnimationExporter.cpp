@@ -11,6 +11,8 @@
     @TODO:
 
         - Fix StartRecording so that it doesnt create the final file yet
+            - Create the path as a std::filesystem::path though so you can check if it exists
+                - Already done with OutputFilePath creation, just keep that
 
         - Validate if the intended file can be created in StartRecording
             - Don't actually create it in that function, just check if it *can* be created
@@ -20,6 +22,9 @@
         - Once recording is done, copy temp file into final file so that you now have a header you can write to
             - In order to do this, you need to keep track of data throughout the recording
                 - i.e. number of frames, name of replay (get in StartRecording), all the player cars seen during the recording, etc
+
+    NOTES:
+    - Don't end written file with "END". That will make JSON parsing harder to deal with
 
 */
 
@@ -111,7 +116,8 @@ void AnimationExporter::AddData(const FrameInfo& FrameData)
         //The temp file would be useful for debugging in those situations
         if(TempFile.is_open())
         {
-            TempFile << FrameData.Print() << '\n';
+            const FrameInfo& FirstFrame = RecordedData.empty() ? FrameData : RecordedData[0];
+            TempFile << FrameData.Print(FirstFrame.GetTimeInfo(), std::vector<CarSeen>()) << '\n';
         }
 
         float RecordingDuration = duration_cast<duration<float>>(steady_clock::now() - TimeStartedRecording).count();

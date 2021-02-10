@@ -1,6 +1,7 @@
 #include "AnimationBuffer.h"
 #include "SupportFiles/MacrosStructsEnums.h"
 #include "DataCollectors/FrameInfo.h"
+#include "DataCollectors/FileHeaderInfo.h"
 #include "SupportFiles/CBUtils.h"
 #include <fstream>
 #include <chrono>
@@ -9,6 +10,9 @@
 
     @TODO:
     - Write buffer header before saving to file
+
+    NOTES:
+    - Don't end written file with "END". That will make JSON parsing harder to deal with
 
 */
 
@@ -74,7 +78,6 @@ void AnimationBuffer::CaptureBuffer(const std::string& InPathName, const std::st
         {
             BufferFile << DataPoint.Print(FirstFrame.GetTimeInfo(), HeaderInfo.CarsSeenInRecording) << '\n';
         }
-        BufferFile << "END" << std::endl;
     }
 
     BufferFile.close();
