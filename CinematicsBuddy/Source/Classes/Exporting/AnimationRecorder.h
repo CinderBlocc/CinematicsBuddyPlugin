@@ -1,19 +1,29 @@
 #pragma once
-#include <memory>
+#include "DataCollectors/FrameInfo.h"
+#include <string>
+#include <deque>
+#include <vector>
+#include <fstream>
 
-class AnimationBuffer;
-class AnimationExporter;
+class FileHeaderInfo;
 
 class AnimationRecorder
 {
 public:
-    AnimationRecorder(std::shared_ptr<AnimationExporter> InExporter, std::shared_ptr<AnimationBuffer> InBuffer);
+    virtual void StartRecording(const std::string& InPathName, const std::string& InFileName, const std::string& InCameraName);
+    virtual void StopRecording();
+    
+    virtual void AddData(const FrameInfo& FrameData);
 
-    void TickRecording();
+    std::string WriteHeader(std::ofstream& FileStream, const FileHeaderInfo& HeaderInfo);
 
-private:
-    AnimationRecorder() = delete;
+    bool GetbIsRecording() { return bIsRecording; }
+    void SetMaxRecordingTime(float NewTime) { MaxRecordingTime = NewTime; }
 
-    std::shared_ptr<AnimationExporter> Exporter;
-    std::shared_ptr<AnimationBuffer> Buffer;
+protected:
+    bool bIsRecording;
+    float MaxRecordingTime;
+    std::deque<FrameInfo> RecordedData;
+
+    std::vector<CarSeen> GetCarsSeenInRecording();
 };

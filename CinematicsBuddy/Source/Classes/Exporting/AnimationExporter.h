@@ -1,20 +1,24 @@
 #pragma once
+#include "AnimationRecorder.h"
 #include <fstream>
+#include <chrono>
 
-class FrameInfo;
-
-class AnimationExporter
+class AnimationExporter : public AnimationRecorder
 {
 public:
-    void StartRecording(const std::string& InPathName, const std::string& InFileName, const std::string& InCameraName);
-    void StopRecording();
+    AnimationExporter();
+
+    void StartRecording(const std::string& InPathName, const std::string& InFileName, const std::string& InCameraName) override;
+    void StopRecording() override;
     
-    bool GetbIsRecording() { return bRecording; }
-    void AddData(const FrameInfo& FrameData);
+    void AddData(const FrameInfo& FrameData) override;
 
 private:
-    bool bRecording;
+    std::chrono::steady_clock::time_point TimeStartedRecording;
+    std::ofstream TempFile;
 
-    std::ofstream ActiveFile;
-    std::string ActiveCameraName;
+    //Store the values from StartRecording to use when creating the final file
+    std::string PendingPathName;
+    std::string PendingFileName;
+    std::string PendingCameraName;
 };

@@ -1,4 +1,5 @@
 #include "Main/CinematicsBuddy.h"
+#include "SupportFiles/MacrosStructsEnums.h"
 
 void CinematicsBuddy::Render(CanvasWrapper canvas)
 {
@@ -7,7 +8,7 @@ void CinematicsBuddy::Render(CanvasWrapper canvas)
 
 	std::vector<std::string> drawStrings;
 
-	if(*cvarShowVersionInfo)
+	if(*bShowVersionInfo)
 	{
 		drawStrings.push_back("CinematicsBuddy version: " + std::string(PLUGIN_VERSION));
 	}

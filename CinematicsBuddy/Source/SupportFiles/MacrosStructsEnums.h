@@ -1,6 +1,5 @@
 #pragma once
 #include "bakkesmod/plugin/bakkesmodplugin.h"
-#include <chrono>
 
 
 extern std::shared_ptr<CVarManagerWrapper> GlobalCvarManager;
@@ -13,13 +12,7 @@ extern std::shared_ptr<GameWrapper>        GlobalGameWrapper;
 
 
 // STRUCTS //
-struct FileHeaderInfo
-{
-    std::string Print() const
-    {
-        return "BEGIN ANIMATION";
-    }
-};
+
 
 
 // ENUMS //

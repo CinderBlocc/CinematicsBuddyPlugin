@@ -12,42 +12,52 @@
 
 */
 
-void AnimationBuffer::StartBuffer()
+AnimationBuffer::AnimationBuffer()
 {
-    if(bBufferIsActive)
+    bIsRecording = false;
+    MaxRecordingTime = 30.f;
+}
+
+void AnimationBuffer::StartRecording(const std::string& InPathName, const std::string& InFileName, const std::string& InCameraName)
+{
+    //Parameters aren't used (for now), but it's easier to have this in place in case they're needed later
+    AnimationRecorder::StartRecording(InPathName, InFileName, InCameraName);
+
+    if(bIsRecording)
     {
         return;
     }
 
-    BufferData.clear();
-    bBufferIsActive = true;
+    RecordedData.clear();
+    bIsRecording = true;
 }
 
-void AnimationBuffer::StopBuffer()
+void AnimationBuffer::StopRecording()
 {
-    bBufferIsActive = false;
-    BufferData.clear();
+    AnimationRecorder::StopRecording();
+
+    bIsRecording = false;
+    RecordedData.clear();
 }
 
-void AnimationBuffer::CaptureBuffer(const std::string& InPathName)
+void AnimationBuffer::CaptureBuffer(const std::string& InPathName, const std::string& InFileName, const std::string& InCameraName)
 {
-    if(BufferData.empty())
+    if(RecordedData.empty())
     {
         return;
     }
 
     //Open the file
     std::filesystem::path OutputFilePath = CBUtils::GetExportPathFromString(InPathName);
-    OutputFilePath += "Buffer_" + CBUtils::GetCurrentTimeAsString() + EXTENSION_NAME;
+    OutputFilePath += InFileName + "_Buffer_" + CBUtils::GetCurrentTimeAsString() + EXTENSION_NAME;
     std::ofstream BufferFile(OutputFilePath);
 
     //Write to the file
     if(BufferFile.is_open())
     {
         //Create file header
-        FileHeaderInfo FileHeader;
-
-        std::vector<CarSeen> CarsSeenInBuffer = GetCarsSeenInBuffer();
+        FileHeaderInfo HeaderInfo;
+        HeaderInfo.CarsSeenInRecording = GetCarsSeenInRecording();
 
         /*
         
@@ -55,13 +65,14 @@ void AnimationBuffer::CaptureBuffer(const std::string& InPathName)
         
         */
 
-        BufferFile << FileHeader.Print() << '\n';
+        //Write the header at the top of the file
+        WriteHeader(BufferFile, HeaderInfo);
 
         //Write the buffer data to the file
-        const FrameInfo& FirstFrame = BufferData[0];
-        for(const auto& DataPoint : BufferData)
+        const FrameInfo& FirstFrame = RecordedData[0];
+        for(const auto& DataPoint : RecordedData)
         {
-            BufferFile << DataPoint.Print(FirstFrame.GetTimeInfo(), CarsSeenInBuffer) << '\n';
+            BufferFile << DataPoint.Print(FirstFrame.GetTimeInfo(), HeaderInfo.CarsSeenInRecording) << '\n';
         }
         BufferFile << "END" << std::endl;
     }
@@ -71,18 +82,19 @@ void AnimationBuffer::CaptureBuffer(const std::string& InPathName)
 
 void AnimationBuffer::AddData(const FrameInfo& FrameData)
 {
-    if(bBufferIsActive)
+    AnimationRecorder::AddData(FrameData);
+
+    if(bIsRecording)
     {
-        BufferData.push_back(FrameData);
+        CleanOutdatedData();
     }
 }
 
 void AnimationBuffer::CleanOutdatedData()
 {
-    //Empty outdated data from the front of the buffer
     while(IsBufferFrontOutdated())
     {
-        BufferData.pop_front();
+        RecordedData.pop_front();
     }
 }
 
@@ -90,47 +102,14 @@ bool AnimationBuffer::IsBufferFrontOutdated()
 {
     using namespace std::chrono;
 
-    if(!BufferData.empty())
+    if(!RecordedData.empty())
     {
-        float FrontDuration = duration_cast<duration<float>>(steady_clock::now() - BufferData.front().GetTimeInfo().TimeCaptured).count();
-        if(FrontDuration >= MaxBufferLength)
+        float FrontDuration = duration_cast<duration<float>>(steady_clock::now() - RecordedData[0].GetTimeInfo().TimeCaptured).count();
+        if(FrontDuration >= MaxRecordingTime)
         {
             return true;
         }
     }
 
     return false;
-}
-
-std::vector<CarSeen> AnimationBuffer::GetCarsSeenInBuffer()
-{
-    std::vector<CarSeen> CarsSeenInBuffer;
-
-    //Loop through each frame in the buffer
-    for(const auto& DataPoint : BufferData)
-    {
-        //Loop through each of the cars this frame
-        auto CarsSeenThisFrame = DataPoint.GetCarsSeen();
-        for(const auto& CarSeenThisFrame : CarsSeenThisFrame)
-        {
-            //Compare this car to the cars in the buffer list
-            bool bHasSeenCar = false;
-            for(const auto& CarSeenInBuffer : CarsSeenInBuffer)
-            {
-                if(CarSeenThisFrame == CarSeenInBuffer)
-                {
-                    bHasSeenCar = true;
-                    break;
-                }
-            }
-
-            //If this car isn't in the list, add it
-            if(!bHasSeenCar)
-            {
-                CarsSeenInBuffer.push_back(CarSeenThisFrame);
-            }
-        }
-    }
-
-    return CarsSeenInBuffer;
 }

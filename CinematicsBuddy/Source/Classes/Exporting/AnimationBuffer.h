@@ -1,28 +1,18 @@
 #pragma once
-#include <string>
-#include <vector>
-#include <deque>
+#include "AnimationRecorder.h"
 
-class FrameInfo;
-
-class AnimationBuffer
+class AnimationBuffer : public AnimationRecorder
 {
 public:
-    void StartBuffer();
-    void StopBuffer();
-    void CaptureBuffer(const std::string& InPathName);
+    AnimationBuffer();
 
-    bool GetbIsRecording() { return bBufferIsActive; }
-    void SetMaxBufferLength(float NewLength) { MaxBufferLength = NewLength; }
+    void StartRecording(const std::string& InPathName, const std::string& InFileName, const std::string& InCameraName) override;
+    void StopRecording() override;
+    void CaptureBuffer(const std::string& InPathName, const std::string& InFileName, const std::string& InCameraName);
 
-    void AddData(const FrameInfo& FrameData);
-    void CleanOutdatedData();
+    void AddData(const FrameInfo& FrameData) override;
 
 private:
-    bool bBufferIsActive = false;
-    float MaxBufferLength = 30.f;
-    std::deque<class FrameInfo> BufferData;
-
+    void CleanOutdatedData();
     bool IsBufferFrontOutdated();
-    std::vector<class CarSeen> GetCarsSeenInBuffer();
 };

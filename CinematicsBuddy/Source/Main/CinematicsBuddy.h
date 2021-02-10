@@ -1,7 +1,6 @@
 #pragma once
 #pragma comment(lib, "PluginSDK.lib")
 #include "bakkesmod/plugin/bakkesmodplugin.h"
-#include "SupportFiles/MacrosStructsEnums.h"
 
 class CinematicsBuddy : public BakkesMod::Plugin::BakkesModPlugin
 {
@@ -18,12 +17,11 @@ private:
 	std::shared_ptr<bool> bUseCamVelocity;
 
 	//Vectors
-	std::vector<FrameInfo> recordingFrames;
-	std::vector<FrameInfo> bufferFrames;
 	std::vector<std::string> WarningStrings;
 
     std::shared_ptr<class AnimationImporter> Importer;
     std::shared_ptr<class AnimationExporter> Exporter;
+    std::shared_ptr<class AnimationBuffer>   Buffer;
 
     bool bRecording = false;
     bool bBufferIsActive = false;
@@ -33,10 +31,6 @@ public:
 	void onUnload() override;
     void GenerateSettingsFile();
     void TestExportFormat();
-	
-	//Input override
-	//void PlayerInputTick(ActorWrapper camInput, void * params, string funcName);
-	void PlayerInputTick();
 
 	//Recording
 	void RecordStart();
@@ -46,17 +40,15 @@ public:
 	void BufferCancel();
 	void RecordingFunction();
 
+    //Input override
+	void PlayerInputTick();
+
 	//Importing
 	void CamPathImport();
 	void CamPathApply();
 	void CamPathClear();
 
-	//File writing
-	std::string FormatFrameData(int index, FrameInfo firstFrame, FrameInfo currentFrame, std::vector<CarsSeen> carsList);
-	void WriteToFile(std::vector<FrameInfo> data, std::string filename);
-
 	//Utility
-	//Quat RotatorToQuat(Rotator convertToQuat);
 	void Render(CanvasWrapper canvas);
 };
 
