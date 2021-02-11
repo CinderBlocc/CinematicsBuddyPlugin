@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <cstdint>
@@ -11,6 +10,13 @@
 #include <initializer_list>
 #include <ostream>
 #include <iostream>
+
+/*
+
+    NOTE: This version of SimpleJSON has been edited specifically for exporting CinematicsBuddy files.
+    In order to keep file sizes small, much of the JSON formatting has been trimmed out.
+
+*/
 
 namespace json {
 
@@ -334,45 +340,66 @@ class JSON
             return JSONConstWrapper<deque<JSON>>( nullptr );
         }
 
-        string dump( int depth = 1, string tab = "  ") const {
-            string pad = "";
-            for( int i = 0; i < depth; ++i, pad += tab );
+        //Editing to make both output and code fit my personal style preferences
+        //And to reduce size of output (too many extra characters)
+        string dump(int depth = 1, string tab = "\t", bool bUseBraces = true) const
+        {
+            //Create the left padding
+            string pad;
+            for(int i = 0; i < depth; ++i)
+            {
+                pad += tab;
+            }
+            std::string OpenClosePad = pad;
+            OpenClosePad.pop_back();
 
-            switch( Type ) {
-                case Class::Null:
-                    return "null";
-                case Class::Object: {
-                    string s = "{\n";
-                    bool skip = true;
-                    for( auto &p : *Internal.Map ) {
-                        if( !skip ) s += ",\n";
-                        s += ( pad + "\"" + json_escape(p.first) + "\" : " + p.second.dump( depth + 1, tab ) );
-                        skip = false;
+            switch(Type)
+            {
+                case Class::Null: return "null";
+                case Class::Object:
+                {
+                    //Open the object
+                    string ObjectString;
+                    if(bUseBraces)
+                    {
+                        ObjectString += "{\n";
                     }
-                    s += ( "\n" + pad.erase( 0, 2 ) + "}" ) ;
-                    return s;
-                }
-                case Class::Array: {
-                    string s = "[";
-                    bool skip = true;
-                    for( auto &p : *Internal.List ) {
-                        if( !skip ) s += ", ";
-                        s += p.dump( depth + 1, tab );
-                        skip = false;
+
+                    //Recursively dump all objects, adding a new line between each
+                    for(const auto& SubObject : *Internal.Map)
+                    {
+                        ObjectString += pad + json_escape(SubObject.first) + ":" + SubObject.second.dump(depth + 1, tab);
+                        ObjectString += "\n";
                     }
-                    s += "]";
-                    return s;
+
+                    //Close and return the object
+                    if(bUseBraces)
+                    {
+                        ObjectString += OpenClosePad + "}";
+                    }
+                    return ObjectString;
                 }
-                case Class::String:
-                    return "\"" + json_escape( *Internal.String ) + "\"";
-                case Class::Floating:
-                    return std::to_string( Internal.Float );
-                case Class::Integral:
-                    return std::to_string( Internal.Int );
-                case Class::Boolean:
-                    return Internal.Bool ? "true" : "false";
-                default:
-                    return "";
+                case Class::Array:
+                {
+                    //Open the array
+                    string ArrayString = "[\n";
+
+                    //In CinematicsBuddy, only wheels are an array, and those are only one line
+                    //Extra formatting for arrays has been removed. Line breaks define array elements
+                    for(const auto& Element : *Internal.List)
+                    {
+                        ArrayString += Element.dump(depth, tab, false);
+                    }
+
+                    //Close array
+                    ArrayString += OpenClosePad + "]";
+                    return ArrayString;
+                }
+                case Class::String:   return json_escape(*Internal.String);
+                case Class::Floating: return std::to_string(Internal.Float);
+                case Class::Integral: return std::to_string(Internal.Int);
+                case Class::Boolean:  return Internal.Bool ? "t" : "f";
+                default: return "";
             }
             return "";
         }
@@ -438,123 +465,167 @@ inline std::ostream& operator<<( std::ostream &os, const JSON &json ) {
     return os;
 }
 
-namespace {
-    JSON parse_next( const string &, size_t & );
+/*
 
-    void consume_ws( const string &str, size_t &offset ) {
-        while( isspace( str[offset] ) ) ++offset;
+    NOTE: Changes were partially done below here to read the new output format,
+    but since the reader will be MaxScript and not the 3ds Max SDK,
+    there's no point in making this work since it won't be used.
+    If I decide to use the 3ds Max SDK to make a plugin, I'll revisit this.
+
+*/
+
+namespace
+{
+    //Forward declaration
+    JSON parse_next(const string &str, size_t &offset);
+
+    //Moves marker forward until it hits a non-whitespace character
+    void consume_ws(const string& str, size_t& offset)
+    {
+        while(isspace(str[offset])) { ++offset; }
     }
 
-    JSON parse_object( const string &str, size_t &offset ) {
+    JSON parse_object(const string& str, size_t& offset)
+    {
         JSON Object = JSON::Make( JSON::Class::Object );
 
         ++offset;
-        consume_ws( str, offset );
-        if( str[offset] == '}' ) {
-            ++offset; return std::move( Object );
+        consume_ws(str, offset);
+        if(str[offset] == '}')
+        {
+            ++offset;
+            return std::move( Object );
         }
 
-        while( true ) {
-            JSON Key = parse_next( str, offset );
-            consume_ws( str, offset );
-            if( str[offset] != ':' ) {
+        while(true)
+        {
+            JSON Key = parse_next(str, offset);
+            consume_ws(str, offset);
+            if(str[offset] != ':')
+            {
                 std::cerr << "Error: Object: Expected colon, found '" << str[offset] << "'\n";
                 break;
             }
-            consume_ws( str, ++offset );
-            JSON Value = parse_next( str, offset );
+            consume_ws(str, ++offset);
+            JSON Value = parse_next(str, offset);
             Object[Key.ToString()] = Value;
             
-            consume_ws( str, offset );
-            if( str[offset] == ',' ) {
-                ++offset; continue;
+            consume_ws(str, offset);
+            if(str[offset] == ',')
+            {
+                ++offset;
+                continue;
             }
-            else if( str[offset] == '}' ) {
-                ++offset; break;
-            }
-            else {
-                std::cerr << "ERROR: Object: Expected comma, found '" << str[offset] << "'\n";
+            
+            if(str[offset] == '}')
+            {
+                ++offset;
                 break;
             }
+
+            std::cerr << "ERROR: Object: Expected comma, found '" << str[offset] << "'\n";
+            break;
         }
 
         return std::move( Object );
     }
 
-    JSON parse_array( const string &str, size_t &offset ) {
+    JSON parse_array(const string& str, size_t& offset)
+    {
         JSON Array = JSON::Make( JSON::Class::Array );
         unsigned index = 0;
         
         ++offset;
-        consume_ws( str, offset );
-        if( str[offset] == ']' ) {
-            ++offset; return std::move( Array );
+        consume_ws(str, offset);
+        if(str[offset] == ']')
+        {
+            ++offset;
+            return std::move( Array );
         }
 
-        while( true ) {
-            Array[index++] = parse_next( str, offset );
-            consume_ws( str, offset );
+        while(true)
+        {
+            Array[index++] = parse_next(str, offset);
+            consume_ws(str, offset);
 
-            if( str[offset] == ',' ) {
-                ++offset; continue;
+            if(str[offset] == ',')
+            {
+                ++offset;
+                continue;
             }
-            else if( str[offset] == ']' ) {
-                ++offset; break;
+            
+            if( str[offset] == ']' )
+            {
+                ++offset;
+                break;
             }
-            else {
-                std::cerr << "ERROR: Array: Expected ',' or ']', found '" << str[offset] << "'\n";
-                return std::move( JSON::Make( JSON::Class::Array ) );
-            }
+            
+            std::cerr << "ERROR: Array: Expected ',' or ']', found '" << str[offset] << "'\n";
+            return std::move( JSON::Make( JSON::Class::Array ) );
         }
 
         return std::move( Array );
     }
 
-    JSON parse_string( const string &str, size_t &offset ) {
+    JSON parse_string(const string& str, size_t& offset)
+    {
         JSON String;
         string val;
-        for( char c = str[++offset]; c != '\"' ; c = str[++offset] ) {
-            if( c == '\\' ) {
-                switch( str[ ++offset ] ) {
-                case '\"': val += '\"'; break;
-                case '\\': val += '\\'; break;
-                case '/' : val += '/' ; break;
-                case 'b' : val += '\b'; break;
-                case 'f' : val += '\f'; break;
-                case 'n' : val += '\n'; break;
-                case 'r' : val += '\r'; break;
-                case 't' : val += '\t'; break;
-                case 'u' : {
-                    val += "\\u" ;
-                    for( unsigned i = 1; i <= 4; ++i ) {
-                        c = str[offset+i];
-                        if( (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') )
-                            val += c;
-                        else {
-                            std::cerr << "ERROR: String: Expected hex character in unicode escape, found '" << c << "'\n";
-                            return std::move( JSON::Make( JSON::Class::String ) );
+        for(char c = str[++offset]; c != '\"' ; c = str[++offset])
+        {
+            if(c == '\\')
+            {
+                switch(str[++offset])
+                {
+                    case '\"': val += '\"'; break;
+                    case '\\': val += '\\'; break;
+                    case '/' : val += '/' ; break;
+                    case 'b' : val += '\b'; break;
+                    case 'f' : val += '\f'; break;
+                    case 'n' : val += '\n'; break;
+                    case 'r' : val += '\r'; break;
+                    case 't' : val += '\t'; break;
+                    case 'u' :
+                    {
+                        val += "\\u";
+                        for(unsigned i = 1; i <= 4; ++i)
+                        {
+                            c = str[offset+i];
+                            if( (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') )
+                            {
+                                val += c;
+                            }
+                            else
+                            {
+                                std::cerr << "ERROR: String: Expected hex character in unicode escape, found '" << c << "'\n";
+                                return std::move( JSON::Make( JSON::Class::String ) );
+                            }
                         }
+                        offset += 4;
+                        break;
                     }
-                    offset += 4;
-                } break;
-                default  : val += '\\'; break;
+                    default  : val += '\\'; break;
                 }
             }
             else
+            {
                 val += c;
+            }
         }
         ++offset;
         String = val;
         return std::move( String );
     }
 
-    JSON parse_number( const string &str, size_t &offset ) {
+    JSON parse_number(const string& str, size_t& offset)
+    {
         JSON Number;
         string val, exp_str;
         char c;
         bool isDouble = false;
         long exp = 0;
-        while( true ) {
+        while(true)
+        {
             c = str[offset++];
             if( (c == '-') || (c >= '0' && c <= '9') )
                 val += c;
@@ -565,10 +636,17 @@ namespace {
             else
                 break;
         }
-        if( c == 'E' || c == 'e' ) {
-            c = str[ offset++ ];
-            if( c == '-' ){ ++offset; exp_str += '-';}
-            while( true ) {
+        if(c == 'E' || c == 'e')
+        {
+            c = str[offset++];
+            if(c == '-')
+            {
+                ++offset;
+                exp_str += '-';
+            }
+
+            while(true)
+            {
                 c = str[ offset++ ];
                 if( c >= '0' && c <= '9' )
                     exp_str += c;
@@ -581,52 +659,68 @@ namespace {
             }
             exp = std::stol( exp_str );
         }
-        else if( !isspace( c ) && c != ',' && c != ']' && c != '}' ) {
+        else if( !isspace( c ) && c != ',' && c != ']' && c != '}' )
+        {
             std::cerr << "ERROR: Number: unexpected character '" << c << "'\n";
             return std::move( JSON::Make( JSON::Class::Null ) );
         }
         --offset;
         
-        if( isDouble )
+        if(isDouble)
+        {
             Number = std::stod( val ) * std::pow( 10, exp );
-        else {
-            if( !exp_str.empty() )
-                Number = std::stol( val ) * std::pow( 10, exp );
-            else
-                Number = std::stol( val );
         }
-        return std::move( Number );
+        else
+        {
+            if(!exp_str.empty())
+                Number = std::stol(val) * std::pow(10, exp);
+            else
+                Number = std::stol(val);
+        }
+
+        return std::move(Number);
     }
 
-    JSON parse_bool( const string &str, size_t &offset ) {
+    JSON parse_bool(const string& str, size_t& offset)
+    {
         JSON Bool;
-        if( str.substr( offset, 4 ) == "true" )
+        if(str[offset] == 't')
+        {
             Bool = true;
-        else if( str.substr( offset, 5 ) == "false" )
+        }
+        else if(str[offset] == 'f')
+        {
             Bool = false;
-        else {
-            std::cerr << "ERROR: Bool: Expected 'true' or 'false', found '" << str.substr( offset, 5 ) << "'\n";
+        }
+        else
+        {
+            std::cerr << "ERROR: Bool: Expected 't' (true) or 'f' (false), found '" << str[offset] << "'\n";
             return std::move( JSON::Make( JSON::Class::Null ) );
         }
-        offset += (Bool.ToBool() ? 4 : 5);
+        ++offset;
         return std::move( Bool );
     }
 
-    JSON parse_null( const string &str, size_t &offset ) {
+    JSON parse_null(const string &str, size_t &offset)
+    {
         JSON Null;
-        if( str.substr( offset, 4 ) != "null" ) {
-            std::cerr << "ERROR: Null: Expected 'null', found '" << str.substr( offset, 4 ) << "'\n";
+        if(str.substr(offset, 4) != "null")
+        {
+            std::cerr << "ERROR: Null: Expected 'null', found '" << str.substr(offset, 4) << "'\n";
             return std::move( JSON::Make( JSON::Class::Null ) );
         }
         offset += 4;
         return std::move( Null );
     }
 
-    JSON parse_next( const string &str, size_t &offset ) {
+    //Determines the type of the next subobject and chooses the right parsing function
+    JSON parse_next(const string &str, size_t &offset)
+    {
         char value;
-        consume_ws( str, offset );
+        consume_ws(str, offset);
         value = str[offset];
-        switch( value ) {
+        switch(value)
+        {
             case '[' : return std::move( parse_array( str, offset ) );
             case '{' : return std::move( parse_object( str, offset ) );
             case '\"': return std::move( parse_string( str, offset ) );
@@ -641,9 +735,10 @@ namespace {
     }
 }
 
-inline JSON JSON::Load( const string &str ) {
+inline JSON JSON::Load( const string &str )
+{
     size_t offset = 0;
-    return std::move( parse_next( str, offset ) );
+    return std::move(parse_next(str, offset));
 }
 
 } // End Namespace json

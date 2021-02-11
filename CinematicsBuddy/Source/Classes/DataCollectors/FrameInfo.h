@@ -5,7 +5,7 @@ class FrameInfo
 {
 public:
     static FrameInfo Get();
-    std::string Print(const TimeInfo& FirstFrame, const std::vector<CarSeen>& AllCarsSeen) const;
+    std::string Print(const TimeInfo& FirstFrame, int FrameIndex, const std::vector<CarSeen>& AllCarsSeen) const;
 
     const TimeInfo& GetTimeInfo()             const { return TimeData; }
     const CameraInfo& GetCameraInfo()         const { return CameraData; }

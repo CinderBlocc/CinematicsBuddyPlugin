@@ -74,9 +74,11 @@ void AnimationBuffer::CaptureBuffer(const std::string& InPathName, const std::st
 
         //Write the buffer data to the file
         const FrameInfo& FirstFrame = RecordedData[0];
+        int FrameIndex = 0;
         for(const auto& DataPoint : RecordedData)
         {
-            BufferFile << DataPoint.Print(FirstFrame.GetTimeInfo(), HeaderInfo.CarsSeenInRecording) << '\n';
+            BufferFile << DataPoint.Print(FirstFrame.GetTimeInfo(), FrameIndex, HeaderInfo.CarsSeenInRecording) << '\n';
+            ++FrameIndex;
         }
     }
 

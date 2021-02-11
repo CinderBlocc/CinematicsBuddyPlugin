@@ -36,13 +36,12 @@ float TimeInfo::GetTimeDifference(const TimeInfo& FirstFrame) const
 
 json::JSON TimeInfo::ConvertToJSON(const TimeInfo& FirstFrame) const
 {
-    //FirstFrameTime is so that the time can be trimmed to the start time
-    //  get the difference between this frame's CaptureTime and FirstFrame's CaptureTime
-
     json::JSON Output = json::Object();
 
-    Output["Time"] = GetTimeDifference(FirstFrame);
-    Output["ReplayFrame"] = ReplayFrame;
+    //T: Time
+    //RF: ReplayFrame
+    Output["T"] = CBUtils::PrintFloat(GetTimeDifference(FirstFrame), 4);
+    Output["RF"] = ReplayFrame;
 
     return Output;
 }
@@ -73,9 +72,12 @@ json::JSON CameraInfo::ConvertToJSON() const
 {
     json::JSON Output = json::Object();
 
-    Output["Location"] = CBUtils::PrintVector(Location);
-    Output["Rotation"] = CBUtils::PrintQuat(Rotation);
-    Output["FOV"] = CBUtils::PrintFloat(FOV);
+    //L: Location
+    //R: Rotation
+    //F: FOV
+    Output["L"] = CBUtils::PrintVector(Location);
+    Output["R"] = CBUtils::PrintQuat(Rotation);
+    Output["F"] = CBUtils::PrintFloat(FOV);
     
     return Output;
 }
@@ -105,8 +107,10 @@ json::JSON BallInfo::ConvertToJSON() const
 {
     json::JSON Output = json::Object();
 
-    Output["Location"] = CBUtils::PrintVector(Location);
-    Output["Rotation"] = CBUtils::PrintQuat(Rotation);
+    //L: Location
+    //R: Rotation
+    Output["L"] = CBUtils::PrintVector(Location);
+    Output["R"] = CBUtils::PrintQuat(Rotation);
     
     return Output;
 }
@@ -135,13 +139,12 @@ WheelInfo WheelInfo::Get(WheelWrapper Wheel)
     return Output;
 }
 
-json::JSON WheelInfo::ConvertToJSON() const
+json::JSON WheelInfo::ConvertToJSON(int WheelIndex) const
 {
     json::JSON Output = json::Object();
 
-    Output["SteerAmount"] = CBUtils::PrintFloat(SteerAmount);
-    Output["SuspensionDistance"] = CBUtils::PrintFloat(SuspensionDistance);
-    Output["SpinSpeed"] = CBUtils::PrintFloat(SpinSpeed);
+    //WD: WheelData
+    Output[std::to_string(WheelIndex)] = CBUtils::PrintFloat(SteerAmount) + "," + CBUtils::PrintFloat(SuspensionDistance) + "," + CBUtils::PrintFloat(SpinSpeed);
     
     return Output;
 }
@@ -212,12 +215,16 @@ json::JSON CarInfo::ConvertToJSON() const
 
     json::JSON Output = json::Object();
 
-    Output["IsBoosting"] = bIsBoosting;
-    Output["Location"] = CBUtils::PrintVector(Location);
-    Output["Rotation"] = CBUtils::PrintQuat(Rotation);
+    //B: Boosting
+    //L: Location
+    //R: Rotation
+    //W: Wheels
+    Output["B"] = bIsBoosting;
+    Output["L"] = CBUtils::PrintVector(Location);
+    Output["R"] = CBUtils::PrintQuat(Rotation);
     for(int i = 0; i < 4; ++i)
     {
-        Output["Wheels"][std::to_string(i)] = Wheels[i].ConvertToJSON();
+        Output["W"][i] = Wheels[i].ConvertToJSON(i);
     }
 
     return Output;

@@ -47,7 +47,7 @@ struct WheelInfo
 	//float Radius; //Stored in CarsSeen so it only needs to be written to file once
 
     static WheelInfo Get(WheelWrapper Wheel);
-    json::JSON ConvertToJSON() const;
+    json::JSON ConvertToJSON(int WheelIndex) const;
 };
 
 struct CarInfo

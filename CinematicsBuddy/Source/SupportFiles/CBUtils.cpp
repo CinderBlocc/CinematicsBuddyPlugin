@@ -13,14 +13,14 @@ std::string CBUtils::PrintFloat(float InFloat, int InDecimals)
 std::string CBUtils::PrintVector(const Vector& InVector, int InDecimals)
 {
     std::ostringstream Output;
-	Output << std::fixed << std::setprecision(InDecimals) << InVector.X << ", " << InVector.Y << ", " << InVector.Z;
+	Output << std::fixed << std::setprecision(InDecimals) << InVector.X << "," << InVector.Y << "," << InVector.Z;
 	return Output.str();
 }
 
 std::string CBUtils::PrintQuat(const Quat& InQuat, int InDecimals)
 {
     std::ostringstream Output;
-	Output << std::fixed << std::setprecision(InDecimals) << InQuat.W << ", " << InQuat.X << ", " << InQuat.Y << ", " << InQuat.Z;
+	Output << std::fixed << std::setprecision(InDecimals) << InQuat.W << "," << InQuat.X << "," << InQuat.Y << "," << InQuat.Z;
 	return Output.str();
 }
 

@@ -75,7 +75,6 @@ void AnimationExporter::StartRecording(const std::string& InPathName, const std:
     if(bCanStartRecording)
     {
         bIsRecording = true;
-        TimeStartedRecording = steady_clock::now();
 
         PendingPathName   = InPathName;
         PendingFileName   = InFileName;
@@ -112,15 +111,16 @@ void AnimationExporter::AddData(const FrameInfo& FrameData)
 
     if(bIsRecording)
     {
+        const FrameInfo& FirstFrame = RecordedData.empty() ? FrameData : RecordedData[0];
+
         //Write to the temp file in case a crash happens midway through recording
         //The temp file would be useful for debugging in those situations
         if(TempFile.is_open())
         {
-            const FrameInfo& FirstFrame = RecordedData.empty() ? FrameData : RecordedData[0];
-            TempFile << FrameData.Print(FirstFrame.GetTimeInfo(), std::vector<CarSeen>()) << '\n';
+            TempFile << FrameData.Print(FirstFrame.GetTimeInfo(), -1, std::vector<CarSeen>()) << '\n';
         }
 
-        float RecordingDuration = duration_cast<duration<float>>(steady_clock::now() - TimeStartedRecording).count();
+        float RecordingDuration = duration_cast<duration<float>>(steady_clock::now() - FirstFrame.GetTimeInfo().TimeCaptured).count();
         if(RecordingDuration > MaxRecordingTime)
         {
             StopRecording();

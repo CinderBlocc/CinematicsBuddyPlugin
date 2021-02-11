@@ -42,7 +42,7 @@ FrameInfo FrameInfo::Get()
     return Output;
 }
 
-std::string FrameInfo::Print(const TimeInfo& FirstFrame, const std::vector<CarSeen>& AllCarsSeen) const
+std::string FrameInfo::Print(const TimeInfo& FirstFrame, int FrameIndex, const std::vector<CarSeen>& AllCarsSeen) const
 {
     //FirstFrame is so that the time can be trimmed to the start time
     //  get the difference between this frame's CaptureTime and FirstFrame's CaptureTime
@@ -53,13 +53,13 @@ std::string FrameInfo::Print(const TimeInfo& FirstFrame, const std::vector<CarSe
 
     json::JSON Output = json::Object();
 
-    Output["Time"] = TimeData.ConvertToJSON(FirstFrame);
-    Output["Camera"] = CameraData.ConvertToJSON();
-    Output["Ball"] = BallData.ConvertToJSON();
+    Output["T"] = TimeData.ConvertToJSON(FirstFrame);
+    Output["CM"] = CameraData.ConvertToJSON();
+    Output["B"] = BallData.ConvertToJSON();
     for(const auto& Car : CarData)
     {
-        Output["Cars"][Car.GetCarSeenIndex(AllCarsSeen)] = Car.ConvertToJSON();
+        Output["CR"][Car.GetCarSeenIndex(AllCarsSeen)] = Car.ConvertToJSON();
     }
 
-    return Output.dump(1, "\t");
+    return std::to_string(FrameIndex) + ":" + Output.dump(1, "\t");
 }

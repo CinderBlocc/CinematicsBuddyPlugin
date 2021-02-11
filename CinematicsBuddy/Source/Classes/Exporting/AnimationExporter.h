@@ -14,7 +14,6 @@ public:
     void AddData(const FrameInfo& FrameData) override;
 
 private:
-    std::chrono::steady_clock::time_point TimeStartedRecording;
     std::ofstream TempFile;
 
     //Store the values from StartRecording to use when creating the final file

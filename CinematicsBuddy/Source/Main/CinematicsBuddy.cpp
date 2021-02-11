@@ -130,7 +130,7 @@ void CinematicsBuddy::TestExportFormat()
     FrameInfo ThisFrame = FrameInfo::Get();
     const auto& ThisFrameTime = ThisFrame.GetTimeInfo();
     const auto& CarsSeenThisFrame = ThisFrame.GetCarsSeen();
-    GlobalCvarManager->log("\n" + ThisFrame.Print(ThisFrameTime, CarsSeenThisFrame));
+    GlobalCvarManager->log("\n" + ThisFrame.Print(ThisFrameTime, 0, CarsSeenThisFrame));
 }
 
 std::string CinematicsBuddy::GetSpecialFilePath()
