@@ -3,25 +3,63 @@
 #include <sstream>
 #include <iomanip>
 
-std::string CBUtils::PrintFloat(float InFloat, int InDecimals)
+std::string CBUtils::PrintFloat(float InFloat, int MaxDecimals)
 {
     std::ostringstream Output;
-	Output << std::fixed << std::setprecision(InDecimals) << InFloat;
+    float MinThreshold = powf(.1f, static_cast<float>(MaxDecimals));
+
+    if(MaxDecimals == 0 || (InFloat - static_cast<int>(InFloat)) < MinThreshold)
+    {
+        //All decimals were 0. Print as integer
+        Output << static_cast<int>(InFloat);
+    }
+    else
+    {
+        //This probably slows down printing, but it saves file space
+        //Start at 1 because 0 was already tested in the if statement above
+        int CalculatedDecimals = MaxDecimals;
+        for(int i = 1; i <= MaxDecimals; ++i)
+        {
+            //Shift all decimals up
+            float Shifted = InFloat * powf(10.f, static_cast<float>(i));
+
+            //Remove the integer component and see if any decimals remain
+            float Trimmed = Shifted - static_cast<int>(Shifted);
+            if(Trimmed < MinThreshold)
+            {
+                //No decimals remain after this point
+                CalculatedDecimals = i;
+                break;
+            }
+        }
+
+	    Output << std::fixed << std::setprecision(CalculatedDecimals) << InFloat;
+    }
+
 	return Output.str();
 }
 
-std::string CBUtils::PrintVector(const Vector& InVector, int InDecimals)
+std::string CBUtils::PrintVector(const Vector& InVector, int MaxDecimals)
 {
-    std::ostringstream Output;
-	Output << std::fixed << std::setprecision(InDecimals) << InVector.X << "," << InVector.Y << "," << InVector.Z;
-	return Output.str();
+    std::string Output;
+    
+    Output = PrintFloat(InVector.X, MaxDecimals) + ","
+           + PrintFloat(InVector.Y, MaxDecimals) + ","
+           + PrintFloat(InVector.Z, MaxDecimals);
+
+	return Output;
 }
 
-std::string CBUtils::PrintQuat(const Quat& InQuat, int InDecimals)
+std::string CBUtils::PrintQuat(const Quat& InQuat, int MaxDecimals)
 {
-    std::ostringstream Output;
-	Output << std::fixed << std::setprecision(InDecimals) << InQuat.W << "," << InQuat.X << "," << InQuat.Y << "," << InQuat.Z;
-	return Output.str();
+    std::string Output;
+    
+    Output = PrintFloat(InQuat.W, MaxDecimals) + ","
+           + PrintFloat(InQuat.X, MaxDecimals) + ","
+           + PrintFloat(InQuat.Y, MaxDecimals) + ","
+           + PrintFloat(InQuat.Z, MaxDecimals);
+
+	return Output;
 }
 
 std::string CBUtils::GetCurrentTimeAsString()

@@ -34,8 +34,11 @@ public:
     //Utility
     bool IsValidMode();
     void GenerateSettingsFile();
-    void TestExportFormat();
     std::string GetSpecialFilePath();
+    
+    // TESTING - REMOVE WHEN DONE //
+    void TestExportFormat();
+    void TestPrintFloat();
 
 	//Recording
 	void RecordStart();

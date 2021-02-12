@@ -2,9 +2,10 @@
 #include "SupportFiles/CBUtils.h"
 #include "SupportFiles/MacrosStructsEnums.h"
 #include "SimpleJSON/json.hpp"
+#include "Misc/CBTimer.h"
 #include <chrono>
 
-void AnimationRecorder::StartRecording(const std::string& InPathName, const std::string& InFileName, const std::string& InCameraName)
+void AnimationRecorder::StartRecording(StringParam InPathName, StringParam InFileName, StringParam InCameraName)
 {
     //Stub function
     if(bIsRecording)
@@ -30,8 +31,18 @@ void AnimationRecorder::AddData(const FrameInfo& FrameData)
     }
 }
 
-bool AnimationRecorder::WriteFile(const std::string& InPathName, const std::string& InFileName, const std::string& InCameraName)
+bool AnimationRecorder::WriteFile(StringParam InPathName, StringParam InFileName, StringParam InCameraName)
 {
+    // @TODO: Launch WriteFileThread in a new thread
+    // Mutex a bool bIsWritingFile or something
+
+    //Check if the recording has any data
+    if(RecordedData.empty())
+    {
+        GlobalCvarManager->log("ERROR: Cannot save file. No recorded data.");
+        return false;
+    }
+
     //Open the file
     std::filesystem::path OutputFilePath = CBUtils::GetExportPathFromString(InPathName, true);
     if(!std::filesystem::exists(OutputFilePath))
@@ -45,19 +56,11 @@ bool AnimationRecorder::WriteFile(const std::string& InPathName, const std::stri
     //Write to the file
     if(OutputFile.is_open())
     {
-        std::vector<CarSeen> CarsSeenInRecording = GetCarsSeenInRecording();
-        if(!WriteHeader(OutputFile, InCameraName, CarsSeenInRecording))
-        {
-            GlobalCvarManager->log("ERROR: File saving failed while writing header");
-            OutputFile.close();
-            return false;
-        }
-        if(!WriteRecordedDataToFile(OutputFile, CarsSeenInRecording))
-        {
-            GlobalCvarManager->log("ERROR: File saving failed while writing frame data");
-            OutputFile.close();
-            return false;
-        }
+        //Create a copy of the data to work from in the async task
+        std::deque<FrameInfo> RecordedDataCopy = RecordedData;
+
+        // @TODO: Launch this in a thread
+        WriteFileThread(OutputFile, InCameraName, RecordedDataCopy);
     }
     else
     {
@@ -66,35 +69,40 @@ bool AnimationRecorder::WriteFile(const std::string& InPathName, const std::stri
         return false;
     }
 
-    OutputFile.close();
+    // @TODO: Log this and return true after waiting for WriteFileThread to finish?
     GlobalCvarManager->log("Successfully wrote file " + OutputFilePath.string());
     return true;
 }
 
-bool AnimationRecorder::WriteHeader(std::ofstream& FileStream, const std::string& InCameraName, const std::vector<CarSeen>& CarsSeenInRecording)
+void AnimationRecorder::WriteFileThread(std::ofstream& FileStream, StringParam InCameraName, RecordingParam TheRecording)
+{
+    std::vector<CarSeen> CarsSeenInRecording = GetCarsSeenInRecording(TheRecording);
+    WriteHeader(FileStream, GetReplayMetadata(), InCameraName, TheRecording, CarsSeenInRecording);
+    WriteRecordedDataToFile(FileStream, TheRecording, CarsSeenInRecording);
+
+    FileStream.close();
+}
+
+void AnimationRecorder::WriteHeader(std::ofstream& FileStream, const ReplayMetadata& ReplayInfo, StringParam InCameraName, RecordingParam TheRecording, CarsSeenParam CarsSeenInRecording)
 {
     //Write recording metadata
     FileStream << "RECORDING METADATA" << '\n';
-    FileStream << "Version: " << PLUGIN_VERSION << '\n';
-    FileStream << "Camera: " << InCameraName << '\n';
-    FileStream << "Average FPS: " << CBUtils::PrintFloat(GetAverageFPS()) << '\n';
-    FileStream << "Frames: " << RecordedData.size() << '\n';
-    FileStream << "Duration: " << (RecordedData.size() > 1 ? RecordedData.back().GetTimeInfo().GetTimeDifference(RecordedData[0].GetTimeInfo()) : 0.f) << '\n';
+    FileStream << "Version: "     << PLUGIN_VERSION << '\n';
+    FileStream << "Camera: "      << InCameraName << '\n';
+    FileStream << "Average FPS: " << CBUtils::PrintFloat(GetAverageFPS(TheRecording)) << '\n';
+    FileStream << "Frames: "      << TheRecording.size() << '\n';
+    FileStream << "Duration: "    << CBUtils::PrintFloat(GetRecordingDuration(TheRecording)) << '\n';
     FileStream << std::endl;
 
     //Write replay metadata if it exists and if currently in replay
-    if(GetbWasWholeRecordingInSameReplay() &&
-       GlobalGameWrapper->IsInReplay() &&
-       !GlobalGameWrapper->GetGameEventAsReplay().IsNull() &&
-       GlobalGameWrapper->GetGameEventAsReplay().GetReplay().memory_address != NULL)
+    if(GetbWasWholeRecordingInSameReplay(TheRecording))
     {
-        ReplayWrapper Replay = GlobalGameWrapper->GetGameEventAsReplay().GetReplay();
         FileStream << "REPLAY METADATA" << '\n';
-        FileStream << "Name: "   << (Replay.GetReplayName().IsNull() ? "" : Replay.GetReplayName().ToString()) << '\n';
-        FileStream << "ID: "     << (Replay.GetId().IsNull()         ? "" : Replay.GetId().ToString()) << '\n';
-        FileStream << "Date: "   << (Replay.GetDate().IsNull()       ? "" : Replay.GetDate().ToString()) << '\n';
-        FileStream << "FPS: "    << CBUtils::PrintFloat(Replay.GetRecordFPS()) << '\n';
-        FileStream << "Frames: " << Replay.GetNumFrames() << '\n';
+        FileStream << "Name: "   << ReplayInfo.ReplayName   << '\n';
+        FileStream << "ID: "     << ReplayInfo.ReplayID     << '\n';
+        FileStream << "Date: "   << ReplayInfo.ReplayDate   << '\n';
+        FileStream << "FPS: "    << ReplayInfo.ReplayFPS    << '\n';
+        FileStream << "Frames: " << ReplayInfo.ReplayFrames << '\n';
         FileStream << std::endl;
     }
 
@@ -121,69 +129,73 @@ bool AnimationRecorder::WriteHeader(std::ofstream& FileStream, const std::string
 
     //Mark the header as complete so parsers know to start looping frames
     FileStream << "BEGIN ANIMATION" << std::endl;
-
-    return true;
 }
 
-bool AnimationRecorder::WriteRecordedDataToFile(std::ofstream& FileStream, const std::vector<CarSeen>& CarsSeenInRecording)
+void AnimationRecorder::WriteRecordedDataToFile(std::ofstream& FileStream, RecordingParam TheRecording, CarsSeenParam CarsSeenInRecording)
 {
-    if(RecordedData.empty())
-    {
-        GlobalCvarManager->log("ERROR: No recorded data.");
-        return false;
-    }
-
-    const FrameInfo& FirstFrame = RecordedData[0];
+    const FrameInfo& FirstFrame = TheRecording[0];
     int FrameIndex = 0;
-    for(const auto& DataPoint : RecordedData)
+    for(const auto& DataPoint : TheRecording)
     {
         FileStream << DataPoint.Print(FirstFrame.GetTimeInfo(), FrameIndex, CarsSeenInRecording) << '\n';
         ++FrameIndex;
     }
-
-    return true;
 }
 
-float AnimationRecorder::GetAverageFPS()
+float AnimationRecorder::GetRecordingDuration(RecordingParam TheRecording)
+{
+    //Need 2 data points to get a duration
+    if(TheRecording.size() < 2)
+    {
+        return 0.f;
+    }
+    
+    const TimeInfo& FirstFrame = TheRecording[0].GetTimeInfo();
+    const TimeInfo& LastFrame = TheRecording.back().GetTimeInfo();
+
+    return LastFrame.GetTimeDifference(FirstFrame);
+}
+
+float AnimationRecorder::GetAverageFPS(RecordingParam TheRecording)
 {
     using namespace std::chrono;
 
     //Need at least 2 data points to get a time difference
-    if(RecordedData.size() < 2)
+    if(TheRecording.size() < 2)
     {
         return 0.f;
     }
 
     //Add up all the time differences between each frame
     float TimeDifferencesTotal = 0.f;
-    for(size_t i = 1; i < RecordedData.size(); ++i)
+    for(size_t i = 1; i < TheRecording.size(); ++i)
     {
-        auto TimeDifference = RecordedData[i].GetTimeInfo().TimeCaptured - RecordedData[i-1].GetTimeInfo().TimeCaptured;
+        auto TimeDifference = TheRecording[i].GetTimeInfo().TimeCaptured - TheRecording[i-1].GetTimeInfo().TimeCaptured;
         TimeDifferencesTotal += duration_cast<duration<float>>(TimeDifference).count();
     }
 
     //Get the average
-    float AverageDifference = TimeDifferencesTotal / static_cast<float>(RecordedData.size());
+    float AverageDifference = TimeDifferencesTotal / static_cast<float>(TheRecording.size());
     return 1.f / AverageDifference;
 }
 
-bool AnimationRecorder::GetbWasWholeRecordingInSameReplay()
+bool AnimationRecorder::GetbWasWholeRecordingInSameReplay(RecordingParam TheRecording)
 {
     //No data. Definitely not in a replay
-    if(RecordedData.empty())
+    if(TheRecording.empty())
     {
         return false;
     }
 
     //Get the replay ID of the first frame. If it is empty, it was not in a replay
-    std::string ReplayID = RecordedData[0].GetReplayID();
+    std::string ReplayID = TheRecording[0].GetReplayID();
     if(ReplayID.empty())
     {
         return false;
     }
 
     //Check if every frame's ID matches the first frame
-    for(const auto& ThisFrame : RecordedData)
+    for(const auto& ThisFrame : TheRecording)
     {
         if(ThisFrame.GetReplayID() != ReplayID)
         {
@@ -194,12 +206,31 @@ bool AnimationRecorder::GetbWasWholeRecordingInSameReplay()
     return true;
 }
 
-std::vector<CarSeen> AnimationRecorder::GetCarsSeenInRecording()
+ReplayMetadata AnimationRecorder::GetReplayMetadata()
+{
+    ReplayMetadata Output;
+
+    if(!GlobalGameWrapper->IsInReplay()) { return Output; }
+    ReplayServerWrapper Server = GlobalGameWrapper->GetGameEventAsReplay();
+    if(Server.IsNull()) { return Output; }
+    ReplayWrapper Replay = Server.GetReplay();
+    if(Replay.memory_address == NULL) { return Output; }
+
+    Output.ReplayName   = Replay.GetReplayName().IsNull() ? "" : Replay.GetReplayName().ToString();
+    Output.ReplayID     = Replay.GetId().IsNull() ? "" : Replay.GetId().ToString();
+    Output.ReplayDate   = Replay.GetDate().IsNull() ? "" : Replay.GetDate().ToString();
+    Output.ReplayFPS    = CBUtils::PrintFloat(Replay.GetRecordFPS());
+    Output.ReplayFrames = std::to_string(Replay.GetNumFrames());
+
+    return Output;
+}
+
+std::vector<CarSeen> AnimationRecorder::GetCarsSeenInRecording(RecordingParam TheRecording)
 {
     std::vector<CarSeen> CarsSeenInRecording;
 
     //Loop through each frame in the recorded data
-    for(const auto& DataPoint : RecordedData)
+    for(const auto& DataPoint : TheRecording)
     {
         //Loop through each of the cars this frame
         auto CarsSeenThisFrame = DataPoint.GetCarsSeen();

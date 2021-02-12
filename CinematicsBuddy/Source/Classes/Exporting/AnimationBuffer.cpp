@@ -9,7 +9,7 @@ AnimationBuffer::AnimationBuffer()
     MaxRecordingTime = 30.f;
 }
 
-void AnimationBuffer::StartRecording(const std::string& InPathName, const std::string& InFileName, const std::string& InCameraName)
+void AnimationBuffer::StartRecording(StringParam InPathName, StringParam InFileName, StringParam InCameraName)
 {
     AnimationRecorder::StartRecording(InPathName, InFileName, InCameraName);
 
@@ -30,7 +30,7 @@ void AnimationBuffer::StopRecording()
     RecordedData.clear();
 }
 
-void AnimationBuffer::CaptureBuffer(const std::string& InPathName, const std::string& InFileName, const std::string& InCameraName)
+void AnimationBuffer::CaptureBuffer(StringParam InPathName, StringParam InFileName, StringParam InCameraName)
 {
     if(!bIsRecording)
     {

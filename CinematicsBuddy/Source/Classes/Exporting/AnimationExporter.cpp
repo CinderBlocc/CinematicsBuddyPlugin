@@ -11,7 +11,7 @@ AnimationExporter::AnimationExporter()
     FramesInTempFile = 0;
 }
 
-void AnimationExporter::StartRecording(const std::string& InPathName, const std::string& InFileName, const std::string& InCameraName)
+void AnimationExporter::StartRecording(StringParam InPathName, StringParam InFileName, StringParam InCameraName)
 {
     AnimationRecorder::StartRecording(InPathName, InFileName, InCameraName);
 
@@ -72,6 +72,7 @@ void AnimationExporter::StopRecording()
         return;
     }
 
+    bIsRecording = false;
     TempFile.close();
 
     if(WriteFile(PendingPathName, PendingFileName, PendingCameraName))
@@ -80,7 +81,6 @@ void AnimationExporter::StopRecording()
         std::filesystem::remove(GetTempExportFilePath());
     }
 
-    bIsRecording = false;
     GlobalCvarManager->getCvar(CVAR_IS_RECORDING_ACTIVE).setValue(false);
 }
 

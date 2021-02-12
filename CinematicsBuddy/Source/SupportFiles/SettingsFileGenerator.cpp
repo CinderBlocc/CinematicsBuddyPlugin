@@ -79,9 +79,11 @@ void CinematicsBuddy::GenerateSettingsFile()
     blank;
     
     nl("9|CAMERA OVERRIDES");
-    nl("1|Smooth Camera Inputs|" + cv(CVAR_SMOOTH_CAM_INPUTS));
-    nl("4|Camera Movement Speed|" + cv(CVAR_CAM_MOVEMENT_SPEED) + "|0|3");
-    nl("4|Camera Rotation Speed|" + cv(CVAR_CAM_ROTATION_SPEED) + "|0|3");
+    nl("1|Enable Overrides. NOTE: This may conflict with SpectatorControls. Recommend disabling those overrides while using these.|" + cv(CVAR_ENABLE_CAM_OVERRIDE));
+    nl("10|" + cv(CVAR_ENABLE_CAM_OVERRIDE));
+        nl("4|Camera Movement Speed|" + cv(CVAR_CAM_MOVEMENT_SPEED) + "|0|3");
+        nl("4|Camera Rotation Speed|" + cv(CVAR_CAM_ROTATION_SPEED) + "|0|3");
+    nl("11|");
     
 
     SettingsFile.close();

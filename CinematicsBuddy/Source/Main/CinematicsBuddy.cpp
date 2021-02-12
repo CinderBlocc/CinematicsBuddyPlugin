@@ -1,12 +1,12 @@
 #include "CinematicsBuddy.h"
 #include "bakkesmod/wrappers/includes.h"
-#include "Classes/Misc/CBTimer.h"
+#include "Misc/CBTimer.h"
 #include "SupportFiles/CBUtils.h"
 #include "SupportFiles/MacrosStructsEnums.h"
-#include "Classes/DataCollectors/FrameInfo.h"
-#include "Classes/Importing/AnimationImporter.h"
-#include "Classes/Exporting/AnimationExporter.h"
-#include "Classes/Exporting/AnimationBuffer.h"
+#include "DataCollectors/FrameInfo.h"
+#include "Importing/AnimationImporter.h"
+#include "Exporting/AnimationExporter.h"
+#include "Exporting/AnimationBuffer.h"
 #include <sstream>
 #include <fstream>
 
@@ -14,15 +14,17 @@
     @TODO
 
     - Change json output to unordered map? This alphabetizing is getting a little annoying because it's moving stuff in ways I didn't intend
-    - Write file asynchronously. Large files will hang up the game for a long time, and even small files cause a hitch
-        - Leave UI greyed out until file writing is completed
     - Stop the recording on Soccar_TA destroyed to ensure only one replay gets recorded in a file
+        - Implemented, but needs testing
     - Implement IsValidMode()
     - Change buffer to a checkbox with addOnValueChanged
         - It should auto-start capturing when user boots up game when using a checkbox (if user had it enabled)
     - Rename cvars
     - Automatic filename incrementing option
         - Could probably just check if file exists, then append _## and check if new exists. Keep iterating until successful
+    - Write file asynchronously. Large files will hang up the game for a long time, and even small files cause a hitch
+        - Leave UI greyed out until file writing is completed
+        - Launch from Exporter and Buffer, not in the WriteFile itself?
 */
 
 /*
@@ -103,7 +105,7 @@ void CinematicsBuddy::onLoad()
 	cvarManager->registerCvar(CVAR_MAX_RECORD_LENGTH,   "300", "Number of seconds to record", true, true, 0, true, 1000).bindTo(BufferSize);
 	cvarManager->registerCvar(CVAR_MAX_BUFFER_LENGTH,   "30",  "Number of seconds to buffer", true, true, 0, true, 1000).bindTo(BufferSize);
 	cvarManager->registerCvar(CVAR_IMPORT_FILE_NAME,    "",    "Set the import file name", true).bindTo(ImportFileName);
-	cvarManager->registerCvar(CVAR_SMOOTH_CAM_INPUTS,   "0",   "Smooth camera movements", true).bindTo(bUseCamOverrides);
+	cvarManager->registerCvar(CVAR_ENABLE_CAM_OVERRIDE, "0",   "Enables camera overriding features", true).bindTo(bUseCamOverrides);
 	cvarManager->registerCvar(CVAR_CAM_MOVEMENT_SPEED,  "1",   "Camera movement speed multiplier", true, true, 0, true, 3).bindTo(CamSpeed);
 	cvarManager->registerCvar(CVAR_CAM_ROTATION_SPEED,  "1",   "Camera rotation speed multiplier", true, true, 0, true, 3).bindTo(CamRotationSpeed);
 	cvarManager->registerCvar(CVAR_IS_RECORDING_ACTIVE, "0",   "Display version information on screen", false).bindTo(bIsRecordingActive);
@@ -115,7 +117,10 @@ void CinematicsBuddy::onLoad()
 	cvarManager->registerNotifier(NOTIFIER_BUFFER_STOP,    [this](std::vector<std::string> params){BufferCancel();},     "Cancels the perpetual animation buffer",        PERMISSION_ALL);
 	cvarManager->registerNotifier(NOTIFIER_IMPORT_FILE,    [this](std::vector<std::string> params){CamPathImport();},    "Imports a camera animation from a file",        PERMISSION_ALL);
 	cvarManager->registerNotifier(NOTIFIER_IMPORT_CLEAR,   [this](std::vector<std::string> params){CamPathClear();},     "Clears the imported camera animation",          PERMISSION_ALL);
-	cvarManager->registerNotifier(NOTIFIER_TEST_EXPORT,    [this](std::vector<std::string> params){TestExportFormat();}, "Prints data from current frame",                PERMISSION_ALL);
+	
+    // TESTS - REMOVE WHEN DONE //
+    cvarManager->registerNotifier("CBTestExportFormat", [this](std::vector<std::string> params){TestExportFormat();}, "Prints data from current frame", PERMISSION_ALL);
+    cvarManager->registerNotifier("CBTestPrintFloat", [this](std::vector<std::string> params){TestPrintFloat();}, "Tests the decimal saving PrintFloat function", PERMISSION_ALL);
 
 	gameWrapper->HookEvent("Function Engine.GameViewportClient.Tick", std::bind(&CinematicsBuddy::RecordingFunction, this));
 	gameWrapper->HookEvent("Function TAGame.PlayerInput_TA.PlayerInput", std::bind(&CinematicsBuddy::PlayerInputTick, this));
@@ -137,6 +142,19 @@ void CinematicsBuddy::TestExportFormat()
     Output += "\n\nTHIS FRAME\n" + ThisFrame.Print(ThisFrameTime, 0, CarsSeenThisFrame);
 
     GlobalCvarManager->log(Output);
+}
+
+void CinematicsBuddy::TestPrintFloat()
+{
+    GlobalCvarManager->log(CBUtils::PrintFloat(0.00000019f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(0.00000190f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(0.00001900f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(0.00019000f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(0.00190000f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(0.01900000f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(0.19000000f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(1.90000000f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(19.0000000f, 6));
 }
 
 std::string CinematicsBuddy::GetSpecialFilePath()

@@ -19,7 +19,7 @@ extern std::shared_ptr<GameWrapper>        GlobalGameWrapper;
 #define CVAR_MAX_RECORD_LENGTH   "CB_record_length"
 #define CVAR_MAX_BUFFER_LENGTH   "CB_buffer_length"
 #define CVAR_IMPORT_FILE_NAME    "CB_import_file_name"
-#define CVAR_SMOOTH_CAM_INPUTS   "CB_use_cam_velocity"
+#define CVAR_ENABLE_CAM_OVERRIDE "CB_use_cam_overrides"
 #define CVAR_CAM_MOVEMENT_SPEED  "CB_cam_speed"
 #define CVAR_CAM_ROTATION_SPEED  "CB_cam_speed_rotation"
 #define CVAR_IS_RECORDING_ACTIVE "CB_is_recording_active"
@@ -31,7 +31,6 @@ extern std::shared_ptr<GameWrapper>        GlobalGameWrapper;
 #define NOTIFIER_BUFFER_STOP    "CBBufferCancel"
 #define NOTIFIER_IMPORT_FILE    "CBAnimationImport"
 #define NOTIFIER_IMPORT_CLEAR   "CBAnimationClear"
-#define NOTIFIER_TEST_EXPORT    "CBTestExportFormat"
 
 
 // STRUCTS //
