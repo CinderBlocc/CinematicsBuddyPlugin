@@ -91,12 +91,17 @@ void AnimationExporter::StartRecording(const std::string& InPathName, const std:
 void AnimationExporter::StopRecording()
 {
     AnimationRecorder::StopRecording();
+    
+    if(!bIsRecording)
+    {
+        return;
+    }
 
     /*
     
         @TODO
         - Close temp file
-        - Get all the seen cars
+        - Write header
         - Write the entirety of RecordedData to the final file
             - If that write was successful, delete temp file
         

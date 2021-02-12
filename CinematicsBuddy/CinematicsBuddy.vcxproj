@@ -57,26 +57,26 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Classes\Camera\CameraManager.cpp" />
-    <ClCompile Include="Source\Classes\DataCollectors\FileHeaderInfo.cpp" />
     <ClCompile Include="Source\Classes\DataCollectors\FrameInfo.cpp" />
     <ClCompile Include="Source\Classes\DataCollectors\FrameInfoCollectors.cpp" />
     <ClCompile Include="Source\Classes\Exporting\AnimationBuffer.cpp" />
     <ClCompile Include="Source\Classes\Exporting\AnimationExporter.cpp" />
     <ClCompile Include="Source\Classes\Exporting\AnimationRecorder.cpp" />
     <ClCompile Include="Source\Classes\Importing\AnimationImporter.cpp" />
+    <ClCompile Include="Source\Classes\Misc\CBTimer.cpp" />
     <ClCompile Include="Source\Main\CinematicsBuddy.cpp" />
     <ClCompile Include="Source\SupportFiles\CBUtils.cpp" />
     <ClCompile Include="Source\SupportFiles\SettingsFileGenerator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Classes\Camera\CameraManager.h" />
-    <ClInclude Include="Source\Classes\DataCollectors\FileHeaderInfo.h" />
     <ClInclude Include="Source\Classes\DataCollectors\FrameInfo.h" />
     <ClInclude Include="Source\Classes\DataCollectors\FrameInfoCollectors.h" />
     <ClInclude Include="Source\Classes\Exporting\AnimationBuffer.h" />
     <ClInclude Include="Source\Classes\Exporting\AnimationExporter.h" />
     <ClInclude Include="Source\Classes\Exporting\AnimationRecorder.h" />
     <ClInclude Include="Source\Classes\Importing\AnimationImporter.h" />
+    <ClInclude Include="Source\Classes\Misc\CBTimer.h" />
     <ClInclude Include="Source\Main\CinematicsBuddy.h" />
     <ClInclude Include="Source\SupportFiles\CBUtils.h" />
     <ClInclude Include="Source\SupportFiles\MacrosStructsEnums.h" />

@@ -34,6 +34,9 @@
     <Filter Include="Vendor\SimpleJSON">
       <UniqueIdentifier>{f18b6365-18c7-4c6e-97c4-9f4f7a3f53e6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Classes\Misc">
+      <UniqueIdentifier>{5d3dd5f9-9728-4920-9cf9-e3f42b8be87f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\bakkesmod\plugins\settings\CinematicsBuddy.set">
@@ -71,8 +74,8 @@
     <ClCompile Include="Source\Classes\Exporting\AnimationRecorder.cpp">
       <Filter>Source\Classes\Exporting</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Classes\DataCollectors\FileHeaderInfo.cpp">
-      <Filter>Source\Classes\DataCollectors</Filter>
+    <ClCompile Include="Source\Classes\Misc\CBTimer.cpp">
+      <Filter>Source\Classes\Misc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -109,8 +112,8 @@
     <ClInclude Include="Source\Classes\Exporting\AnimationRecorder.h">
       <Filter>Source\Classes\Exporting</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Classes\DataCollectors\FileHeaderInfo.h">
-      <Filter>Source\Classes\DataCollectors</Filter>
+    <ClInclude Include="Source\Classes\Misc\CBTimer.h">
+      <Filter>Source\Classes\Misc</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

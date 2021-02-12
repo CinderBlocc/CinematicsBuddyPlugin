@@ -1,20 +1,9 @@
 #include "AnimationBuffer.h"
 #include "SupportFiles/MacrosStructsEnums.h"
 #include "DataCollectors/FrameInfo.h"
-#include "DataCollectors/FileHeaderInfo.h"
 #include "SupportFiles/CBUtils.h"
 #include <fstream>
 #include <chrono>
-
-/*
-
-    @TODO:
-    - Write buffer header before saving to file
-
-    NOTES:
-    - Don't end written file with "END". That will make JSON parsing harder to deal with
-
-*/
 
 AnimationBuffer::AnimationBuffer()
 {
@@ -40,6 +29,11 @@ void AnimationBuffer::StopRecording()
 {
     AnimationRecorder::StopRecording();
 
+    if(!bIsRecording)
+    {
+        return;
+    }
+
     bIsRecording = false;
     RecordedData.clear();
 }
@@ -59,25 +53,15 @@ void AnimationBuffer::CaptureBuffer(const std::string& InPathName, const std::st
     //Write to the file
     if(BufferFile.is_open())
     {
-        //Create file header
-        FileHeaderInfo HeaderInfo;
-        HeaderInfo.CarsSeenInRecording = GetCarsSeenInRecording();
-
-        /*
-        
-            FILL FILE HEADER INFO HERE
-        
-        */
-
         //Write the header at the top of the file
-        WriteHeader(BufferFile, HeaderInfo);
+        WriteHeader(BufferFile, InCameraName);
 
         //Write the buffer data to the file
         const FrameInfo& FirstFrame = RecordedData[0];
         int FrameIndex = 0;
         for(const auto& DataPoint : RecordedData)
         {
-            BufferFile << DataPoint.Print(FirstFrame.GetTimeInfo(), FrameIndex, HeaderInfo.CarsSeenInRecording) << '\n';
+            BufferFile << DataPoint.Print(FirstFrame.GetTimeInfo(), FrameIndex, CarsSeenInHeader) << '\n';
             ++FrameIndex;
         }
     }

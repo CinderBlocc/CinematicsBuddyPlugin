@@ -12,14 +12,17 @@ FrameInfo FrameInfo::Get()
     ServerWrapper ActualServer = GlobalGameWrapper->GetCurrentGameState();
     CameraWrapper Camera = GlobalGameWrapper->GetCamera();
     
-    Output.ReplayID = "NULL";
+    Output.ReplayID = "";
     if(GlobalGameWrapper->IsInReplay() && !ReplayServer.IsNull())
 	{
 		ReplayWrapper Replay = ReplayServer.GetReplay();
 		if(Replay.memory_address != NULL)
         {
             UnrealStringWrapper ReplayID = Replay.GetId();
-			Output.ReplayID = ReplayID.IsNull() ? "NULL" : ReplayID.ToString();
+            if(!ReplayID.IsNull())
+            {
+                Output.ReplayID = ReplayID.ToString();
+            }
         }
 	}
 
@@ -47,7 +50,7 @@ std::string FrameInfo::Print(const TimeInfo& FirstFrame, int FrameIndex, const s
     //FirstFrame is so that the time can be trimmed to the start time
     //  get the difference between this frame's CaptureTime and FirstFrame's CaptureTime
 
-    //AllCarsSeen should be provided by the AnimationExporter when writing to file
+    //AllCarsSeen should be provided by the AnimationRecorder object when writing to file
     //  That way the header identifies each unique car and gives it a number by index in this vector
     //  so each frame can use that number instead of the full UniqueIDWrapper ID
 
@@ -62,4 +65,16 @@ std::string FrameInfo::Print(const TimeInfo& FirstFrame, int FrameIndex, const s
     }
 
     return std::to_string(FrameIndex) + ":" + Output.dump(1, "\t");
+}
+
+std::string FrameInfo::PrintExampleFormat()
+{
+    json::JSON Output = json::Object();
+
+    Output["(T) Time"] = TimeInfo::CreateExampleJSON();
+    Output["(CM) Camera"] = CameraInfo::CreateExampleJSON();
+    Output["(B) Ball"] = BallInfo::CreateExampleJSON();
+    Output["(CR) Cars"]["(0-7, or player ID) CarsSeenIndex"] = CarInfo::CreateExampleJSON();
+
+    return "FrameNumber:" + Output.dump(1, "\t");
 }

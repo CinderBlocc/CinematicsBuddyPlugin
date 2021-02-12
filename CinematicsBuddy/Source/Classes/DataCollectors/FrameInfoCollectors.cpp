@@ -38,10 +38,18 @@ json::JSON TimeInfo::ConvertToJSON(const TimeInfo& FirstFrame) const
 {
     json::JSON Output = json::Object();
 
-    //T: Time
-    //RF: ReplayFrame
     Output["T"] = CBUtils::PrintFloat(GetTimeDifference(FirstFrame), 4);
     Output["RF"] = ReplayFrame;
+
+    return Output;
+}
+
+json::JSON TimeInfo::CreateExampleJSON()
+{
+    json::JSON Output = json::Object();
+
+    Output["(T) Time"] = "(float) Duration since first frame in seconds";
+    Output["(RF) Replay Frame"] = "(int) Replay timestamp";
 
     return Output;
 }
@@ -72,12 +80,20 @@ json::JSON CameraInfo::ConvertToJSON() const
 {
     json::JSON Output = json::Object();
 
-    //L: Location
-    //R: Rotation
-    //F: FOV
     Output["L"] = CBUtils::PrintVector(Location);
     Output["R"] = CBUtils::PrintQuat(Rotation);
     Output["F"] = CBUtils::PrintFloat(FOV);
+    
+    return Output;
+}
+
+json::JSON CameraInfo::CreateExampleJSON()
+{
+    json::JSON Output = json::Object();
+
+    Output["(L) Location"] = "(Vector) X, Y, Z";
+    Output["(R) Rotation"] = "(Quat) W, X, Y, Z";
+    Output["(F) FOV"] = "(float - degrees horizontal) Field of view";
     
     return Output;
 }
@@ -107,10 +123,18 @@ json::JSON BallInfo::ConvertToJSON() const
 {
     json::JSON Output = json::Object();
 
-    //L: Location
-    //R: Rotation
     Output["L"] = CBUtils::PrintVector(Location);
     Output["R"] = CBUtils::PrintQuat(Rotation);
+    
+    return Output;
+}
+
+json::JSON BallInfo::CreateExampleJSON()
+{
+    json::JSON Output = json::Object();
+
+    Output["(L) Location"] = "(Vector) X, Y, Z";
+    Output["(R) Rotation"] = "(Quat) W, X, Y, Z";
     
     return Output;
 }
@@ -143,8 +167,16 @@ json::JSON WheelInfo::ConvertToJSON(int WheelIndex) const
 {
     json::JSON Output = json::Object();
 
-    //WD: WheelData
     Output[std::to_string(WheelIndex)] = CBUtils::PrintFloat(SteerAmount) + "," + CBUtils::PrintFloat(SuspensionDistance) + "," + CBUtils::PrintFloat(SpinSpeed);
+    
+    return Output;
+}
+
+json::JSON WheelInfo::CreateExampleJSON()
+{
+    json::JSON Output = json::Object();
+
+    Output["(0-3) Wheel index"] = "(float - radians) SteerAmount, (float - degrees of axle rotation?) SuspensionDistance, (float - radians per second) SpinSpeed";
     
     return Output;
 }
@@ -209,16 +241,8 @@ std::string CarInfo::GetCarSeenIndex(const std::vector<struct CarSeen>& AllCarsS
 
 json::JSON CarInfo::ConvertToJSON() const
 {
-    //AllCarsSeen should be provided by the AnimationExporter when writing to file
-    //  That way the header identifies each unique car and gives it a number by index in this vector
-    //  so each frame can use that number instead of the full UniqueIDWrapper ID
-
     json::JSON Output = json::Object();
 
-    //B: Boosting
-    //L: Location
-    //R: Rotation
-    //W: Wheels
     Output["B"] = bIsBoosting;
     Output["L"] = CBUtils::PrintVector(Location);
     Output["R"] = CBUtils::PrintQuat(Rotation);
@@ -226,6 +250,18 @@ json::JSON CarInfo::ConvertToJSON() const
     {
         Output["W"][i] = Wheels[i].ConvertToJSON(i);
     }
+
+    return Output;
+}
+
+json::JSON CarInfo::CreateExampleJSON()
+{
+    json::JSON Output = json::Object();
+
+    Output["(B) IsBoosting"] = "(bool) If boost effects are playing";
+    Output["(L) Location"] = "(Vector) X, Y, Z";
+    Output["(R) Rotation"] = "(Quat) W, X, Y, Z";
+    Output["(W) Wheels Array"][0] = WheelInfo::CreateExampleJSON();
 
     return Output;
 }
@@ -261,6 +297,18 @@ CarSeen CarSeen::Get(CarWrapper Car)
             }
         }
     }
+
+    return Output;
+}
+
+json::JSON CarSeen::ConvertToJSON() const
+{
+    json::JSON Output = json::Object();
+
+    Output["ID"] = ID.GetIdString();
+    Output["Body"] = std::to_string(Body);
+    Output["Front Wheel Radius"] = CBUtils::PrintFloat(FrontWheelRadius);
+    Output["Back Wheel Radius"] = CBUtils::PrintFloat(BackWheelRadius);
 
     return Output;
 }

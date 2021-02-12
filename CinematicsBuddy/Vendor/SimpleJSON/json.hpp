@@ -398,7 +398,7 @@ class JSON
                 case Class::String:   return json_escape(*Internal.String);
                 case Class::Floating: return std::to_string(Internal.Float);
                 case Class::Integral: return std::to_string(Internal.Int);
-                case Class::Boolean:  return Internal.Bool ? "t" : "f";
+                case Class::Boolean:  return Internal.Bool ? "1" : "0";
                 default: return "";
             }
             return "";

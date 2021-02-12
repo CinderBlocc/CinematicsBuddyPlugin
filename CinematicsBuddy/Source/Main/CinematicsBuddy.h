@@ -32,6 +32,7 @@ public:
 	void onUnload() override;
 
     //Utility
+    bool IsValidMode();
     void GenerateSettingsFile();
     void TestExportFormat();
     std::string GetSpecialFilePath();
@@ -43,6 +44,7 @@ public:
 	void BufferCapture();
 	void BufferCancel();
 	void RecordingFunction();
+    void OnSoccarDestroyed();
 
     //Input override
 	void PlayerInputTick();

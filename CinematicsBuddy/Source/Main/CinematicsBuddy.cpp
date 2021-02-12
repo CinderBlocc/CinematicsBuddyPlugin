@@ -1,5 +1,6 @@
 #include "CinematicsBuddy.h"
 #include "bakkesmod/wrappers/includes.h"
+#include "Classes/Misc/CBTimer.h"
 #include "SupportFiles/CBUtils.h"
 #include "SupportFiles/MacrosStructsEnums.h"
 #include "Classes/DataCollectors/FrameInfo.h"
@@ -9,15 +10,15 @@
 #include <sstream>
 #include <fstream>
 
-using namespace std::chrono;
-
 /*
     NEW @TODO
 
     - If the file path is blank, use the default Import/Export folders
         - Grey out the text box and have a checkbox to enable it so they need to read instructions before applying an unnecessary path
     - Stop the recording on Soccar_TA destroyed to ensure only one replay gets recorded in a file
-
+    - Implement IsValidMode()
+    - Change buffer to a checkbox with addOnValueChanged
+        - It should auto-start capturing when user boots up game when using a checkbox (if user had it enabled)
 */
 
 
@@ -71,7 +72,7 @@ TO-DO:
 //		- REMOVE VERSION DEPENDENCIES IN 1.0.0!!! Completely lock in the formatting of the text file before version 1 so all future updates dont rely on a broken version
 //				- Still include version numbers in the file though in case those need to be referenced in troubleshooting
 
-BAKKESMOD_PLUGIN(CinematicsBuddy, "Cinematics Buddy Plugin", PLUGIN_VERSION, PLUGINTYPE_REPLAY)
+BAKKESMOD_PLUGIN(CinematicsBuddy, "Capture camera, ball, and car animation", PLUGIN_VERSION, PLUGINTYPE_REPLAY)
 
 std::shared_ptr<CVarManagerWrapper> GlobalCvarManager;
 std::shared_ptr<GameWrapper>        GlobalGameWrapper;
@@ -119,6 +120,7 @@ void CinematicsBuddy::onLoad()
 
 	gameWrapper->HookEvent("Function Engine.GameViewportClient.Tick", std::bind(&CinematicsBuddy::RecordingFunction, this));
 	gameWrapper->HookEvent("Function TAGame.PlayerInput_TA.PlayerInput", std::bind(&CinematicsBuddy::PlayerInputTick, this));
+	gameWrapper->HookEvent("Function TAGame.GameEvent_Soccar_TA.Destroyed", std::bind(&CinematicsBuddy::OnSoccarDestroyed, this));
 
     GenerateSettingsFile();
 }
@@ -130,7 +132,12 @@ void CinematicsBuddy::TestExportFormat()
     FrameInfo ThisFrame = FrameInfo::Get();
     const auto& ThisFrameTime = ThisFrame.GetTimeInfo();
     const auto& CarsSeenThisFrame = ThisFrame.GetCarsSeen();
-    GlobalCvarManager->log("\n" + ThisFrame.Print(ThisFrameTime, 0, CarsSeenThisFrame));
+    
+    std::string Output;
+    Output += "\n\nEXAMPLE FORMAT\n" + FrameInfo::PrintExampleFormat();
+    Output += "\n\nTHIS FRAME\n" + ThisFrame.Print(ThisFrameTime, 0, CarsSeenThisFrame);
+
+    GlobalCvarManager->log(Output);
 }
 
 std::string CinematicsBuddy::GetSpecialFilePath()
@@ -138,25 +145,43 @@ std::string CinematicsBuddy::GetSpecialFilePath()
     return (*bSetSpecialFilePath ? *ExportSpecialFilePath : "");
 }
 
+bool CinematicsBuddy::IsValidMode()
+{
+    /*
+    
+        Is every mode valid? Return false if server doesn't exist?
+        Don't allow during online play except in certain scenarios like spectating, unlimited, or LAN?
+    
+    */
+
+    return true;
+}
 
 
-//RECORDING FUNCTION
+
+// RECORDING FUNCTION //
 void CinematicsBuddy::RecordingFunction()
 {
-    const FrameInfo& ThisFrame = FrameInfo::Get();
-	
-    if(Exporter && Exporter->GetbIsRecording())
+    if(!IsValidMode())
     {
-        Exporter->AddData(ThisFrame);
+        return;
     }
 
-    if(Buffer && Buffer->GetbIsRecording())
+    //Only get the data for this frame if either Exporter or Buffer are recording
+    //Both Exporter and Buffer will only successfully add data if they are recording
+    if(Exporter->GetbIsRecording() || Buffer->GetbIsRecording())
     {
+        const FrameInfo& ThisFrame = FrameInfo::Get();
+        Exporter->AddData(ThisFrame);
         Buffer->AddData(ThisFrame);
     }
 }
+void CinematicsBuddy::OnSoccarDestroyed()
+{
+    Exporter->StopRecording();
+}
 
-//NORMAL RECORDING
+// NORMAL RECORDING //
 void CinematicsBuddy::RecordStart()
 {
     Exporter->StartRecording(GetSpecialFilePath(), *ExportFileName, *ExportCameraName);
@@ -166,7 +191,7 @@ void CinematicsBuddy::RecordStop()
     Exporter->StopRecording();
 }
 
-//BUFFER RECORDING
+// BUFFER RECORDING //
 void CinematicsBuddy::BufferStart()
 {
     Buffer->StartRecording(GetSpecialFilePath(), *ExportFileName, *ExportCameraName);

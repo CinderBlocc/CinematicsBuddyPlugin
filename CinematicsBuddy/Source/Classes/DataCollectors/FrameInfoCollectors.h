@@ -15,6 +15,7 @@ struct TimeInfo
     static TimeInfo Get(ReplayServerWrapper Replay);
     float GetTimeDifference(const TimeInfo& FirstFrame) const;
     json::JSON ConvertToJSON(const TimeInfo& FirstFrame) const;
+    static json::JSON CreateExampleJSON();
 };
 
 struct CameraInfo
@@ -26,6 +27,7 @@ struct CameraInfo
 
     static CameraInfo Get(CameraWrapper Camera);
     json::JSON ConvertToJSON() const;
+    static json::JSON CreateExampleJSON();
 };
 
 struct BallInfo
@@ -36,6 +38,7 @@ struct BallInfo
 
     static BallInfo Get(ServerWrapper Server);
     json::JSON ConvertToJSON() const;
+    static json::JSON CreateExampleJSON();
 };
 
 struct WheelInfo
@@ -44,10 +47,10 @@ struct WheelInfo
 	float SteerAmount;
 	float SuspensionDistance;
 	float SpinSpeed;
-	//float Radius; //Stored in CarsSeen so it only needs to be written to file once
 
     static WheelInfo Get(WheelWrapper Wheel);
     json::JSON ConvertToJSON(int WheelIndex) const;
+    static json::JSON CreateExampleJSON();
 };
 
 struct CarInfo
@@ -62,6 +65,7 @@ struct CarInfo
     static CarInfo Get(CarWrapper Car);
     std::string GetCarSeenIndex(const std::vector<struct CarSeen>& AllCarsSeen) const;
     json::JSON ConvertToJSON() const;
+    static json::JSON CreateExampleJSON();
 };
 
 struct CarSeen
@@ -73,6 +77,7 @@ struct CarSeen
 	float BackWheelRadius;
 
     static CarSeen Get(CarWrapper Car);
+    json::JSON ConvertToJSON() const;
 };
 inline bool operator==(const CarSeen c1, const CarSeen c2)
 {

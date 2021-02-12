@@ -1,6 +1,5 @@
 #pragma once
 #include "DataCollectors/FrameInfo.h"
-#include "DataCollectors/FileHeaderInfo.h"
 #include <string>
 #include <deque>
 #include <vector>
@@ -14,7 +13,9 @@ public:
     
     virtual void AddData(const FrameInfo& FrameData);
 
-    void WriteHeader(std::ofstream& FileStream, const FileHeaderInfo& HeaderInfo);
+    bool WriteHeader(std::ofstream& FileStream, const std::string& InCameraName);
+    float GetAverageFPS();
+    bool GetbWasWholeRecordingInSameReplay();
 
     bool GetbIsRecording() { return bIsRecording; }
     void SetMaxRecordingTime(float NewTime) { MaxRecordingTime = NewTime; }
@@ -24,5 +25,6 @@ protected:
     float MaxRecordingTime;
     std::deque<FrameInfo> RecordedData;
 
+    std::vector<CarSeen> CarsSeenInHeader;
     std::vector<CarSeen> GetCarsSeenInRecording();
 };
