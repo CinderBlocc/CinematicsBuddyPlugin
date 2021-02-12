@@ -1,5 +1,5 @@
 # SimpleJSON
-Simple C++ JSON library
+Simple C++ JSON library (heavily edited for writing as little data as possible in Cinematics Buddy export files)
 
 ## License
 Do what the fuck you want public license
