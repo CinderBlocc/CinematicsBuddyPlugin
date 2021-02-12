@@ -11,21 +11,22 @@
 #include <fstream>
 
 /*
-    NEW @TODO
+    @TODO
 
-    - If the file path is blank, use the default Import/Export folders
-        - Grey out the text box and have a checkbox to enable it so they need to read instructions before applying an unnecessary path
+    - Change json output to unordered map? This alphabetizing is getting a little annoying because it's moving stuff in ways I didn't intend
+    - Write file asynchronously. Large files will hang up the game for a long time, and even small files cause a hitch
+        - Leave UI greyed out until file writing is completed
     - Stop the recording on Soccar_TA destroyed to ensure only one replay gets recorded in a file
     - Implement IsValidMode()
     - Change buffer to a checkbox with addOnValueChanged
         - It should auto-start capturing when user boots up game when using a checkbox (if user had it enabled)
+    - Rename cvars
+    - Automatic filename incrementing option
+        - Could probably just check if file exists, then append _## and check if new exists. Keep iterating until successful
 */
 
-
 /*
-	PRIORITY
-
-	- File incrementation option
+    FINAL @TODO: Search the solution for "@TODO" and finish all the remaining @TODOs
 */
 
 /*
@@ -65,11 +66,9 @@ TO-DO:
 		- Do the same for the ball mesh since it doesn't seem to line up very well at times either
 */
 
-//0.9.7 - export rewrite
 //0.9.8 - input smoothing and camera speed control
 //0.9.9 - import rewrite
-//1.0.0 - car mesh export? Definitely wrap things up like error rendering before 1.0.0
-//		- REMOVE VERSION DEPENDENCIES IN 1.0.0!!! Completely lock in the formatting of the text file before version 1 so all future updates dont rely on a broken version
+//1.0.0 - REMOVE VERSION DEPENDENCIES!!! Completely lock in the formatting of the text in this version so all future updates don't rely on a broken version
 //				- Still include version numbers in the file though in case those need to be referenced in troubleshooting
 
 BAKKESMOD_PLUGIN(CinematicsBuddy, "Capture camera, ball, and car animation", PLUGIN_VERSION, PLUGINTYPE_REPLAY)
@@ -93,21 +92,21 @@ void CinematicsBuddy::onLoad()
 	BufferSize            = std::make_shared<float>(0.f);
 	CamSpeed              = std::make_shared<float>(0.f);
 	CamRotationSpeed      = std::make_shared<float>(0.f);
-	bShowVersionInfo      = std::make_shared<bool>(false);
-	bUseCamVelocity       = std::make_shared<bool>(false);
+	bUseCamOverrides      = std::make_shared<bool>(false);
 	bSetSpecialFilePath   = std::make_shared<bool>(false);
+	bIsRecordingActive    = std::make_shared<bool>(false);
 
-	cvarManager->registerCvar(CVAR_SET_SPECIAL_PATH,   "0",   "Enable if you want to use a non-default path", true).bindTo(bSetSpecialFilePath);
-	cvarManager->registerCvar(CVAR_SPECIAL_PATH,       "",    "Set the special export file path. Leave blank for default", true).bindTo(ExportSpecialFilePath);
-	cvarManager->registerCvar(CVAR_FILE_NAME,          "",    "Set the export file name", true).bindTo(ExportFileName);
-	cvarManager->registerCvar(CVAR_CAMERA_NAME,        "",    "Set the camera name", true).bindTo(ExportCameraName);
-	cvarManager->registerCvar(CVAR_MAX_RECORD_LENGTH,  "300", "Number of seconds to record", true, true, 0, true, 1000).bindTo(BufferSize);
-	cvarManager->registerCvar(CVAR_MAX_BUFFER_LENGTH,  "30",  "Number of seconds to buffer", true, true, 0, true, 1000).bindTo(BufferSize);
-	cvarManager->registerCvar(CVAR_IMPORT_FILE_NAME,   "",    "Set the import file name", true).bindTo(ImportFileName);
-	cvarManager->registerCvar(CVAR_SMOOTH_CAM_INPUTS,  "0",   "Smooth camera movements", true).bindTo(bUseCamVelocity);
-	cvarManager->registerCvar(CVAR_CAM_MOVEMENT_SPEED, "1",   "Camera movement speed multiplier", true, true, 0, true, 3).bindTo(CamSpeed);
-	cvarManager->registerCvar(CVAR_CAM_ROTATION_SPEED, "1",   "Camera rotation speed multiplier", true, true, 0, true, 3).bindTo(CamRotationSpeed);
-	cvarManager->registerCvar(CVAR_SHOW_VERSION_INFO,  "0",   "Display version information on screen", true).bindTo(bShowVersionInfo);
+	cvarManager->registerCvar(CVAR_SET_SPECIAL_PATH,    "0",   "Enable if you want to use a non-default path", true).bindTo(bSetSpecialFilePath);
+	cvarManager->registerCvar(CVAR_SPECIAL_PATH,        "",    "Set the special export file path. Leave blank for default", true).bindTo(ExportSpecialFilePath);
+	cvarManager->registerCvar(CVAR_FILE_NAME,           "",    "Set the export file name", true).bindTo(ExportFileName);
+	cvarManager->registerCvar(CVAR_CAMERA_NAME,         "",    "Set the camera name", true).bindTo(ExportCameraName);
+	cvarManager->registerCvar(CVAR_MAX_RECORD_LENGTH,   "300", "Number of seconds to record", true, true, 0, true, 1000).bindTo(BufferSize);
+	cvarManager->registerCvar(CVAR_MAX_BUFFER_LENGTH,   "30",  "Number of seconds to buffer", true, true, 0, true, 1000).bindTo(BufferSize);
+	cvarManager->registerCvar(CVAR_IMPORT_FILE_NAME,    "",    "Set the import file name", true).bindTo(ImportFileName);
+	cvarManager->registerCvar(CVAR_SMOOTH_CAM_INPUTS,   "0",   "Smooth camera movements", true).bindTo(bUseCamOverrides);
+	cvarManager->registerCvar(CVAR_CAM_MOVEMENT_SPEED,  "1",   "Camera movement speed multiplier", true, true, 0, true, 3).bindTo(CamSpeed);
+	cvarManager->registerCvar(CVAR_CAM_ROTATION_SPEED,  "1",   "Camera rotation speed multiplier", true, true, 0, true, 3).bindTo(CamRotationSpeed);
+	cvarManager->registerCvar(CVAR_IS_RECORDING_ACTIVE, "0",   "Display version information on screen", false).bindTo(bIsRecordingActive);
 	
 	cvarManager->registerNotifier(NOTIFIER_RECORD_START,   [this](std::vector<std::string> params){RecordStart();},      "Starts capturing animation data.",              PERMISSION_ALL);
 	cvarManager->registerNotifier(NOTIFIER_RECORD_STOP,    [this](std::vector<std::string> params){RecordStop();},       "Stops capturing animation data",                PERMISSION_ALL);
@@ -211,7 +210,7 @@ void CinematicsBuddy::PlayerInputTick()
 {
 	if(!gameWrapper->IsInReplay()) return;
 	
-	if(*bUseCamVelocity)
+	if(*bUseCamOverrides)
 	{
 		/*
 		struct CameraMovement

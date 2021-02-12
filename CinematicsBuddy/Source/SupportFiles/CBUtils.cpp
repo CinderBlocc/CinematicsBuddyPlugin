@@ -26,35 +26,42 @@ std::string CBUtils::PrintQuat(const Quat& InQuat, int InDecimals)
 
 std::string CBUtils::GetCurrentTimeAsString()
 {
-	time_t rawtime;
-	struct tm *timestamp;
-	char buffer [80];
-	time(&rawtime);
-	timestamp = localtime(&rawtime);
-	strftime(buffer, 80, "%Y-%m-%d_%H-%M-%S", timestamp);
+	time_t RawTime;
+	struct tm *Timestamp;
+	char StringBuffer[80];
+	time(&RawTime);
+	Timestamp = localtime(&RawTime);
+	strftime(StringBuffer, 80, "%Y-%m-%d_%H-%M-%S", Timestamp);
 
-	return std::string(buffer);
+	return std::string(StringBuffer);
 }
 
-std::filesystem::path CBUtils::GetExportPathFromString(const std::string& InPathName)
+std::filesystem::path CBUtils::GetExportPathFromString(const std::string& InPathName, bool bLogInfo)
 {
     std::filesystem::path OutputFilePath;
 
     if(InPathName.empty())
     {
-        GlobalCvarManager->log("No special file path specified. Outputting to /bakkesmod/data/CinematicsBuddy/AnimationExports/");
-        OutputFilePath = GlobalGameWrapper->GetBakkesModPath() / "data" / "CinematicsBuddy" / "AnimationExports";
+        if(bLogInfo)
+        {
+            GlobalCvarManager->log("No special file path specified. Outputting to default /bakkesmod/data/CinematicsBuddy/AnimationExports/");
+        }
+        OutputFilePath = GlobalGameWrapper->GetDataFolder() / "CinematicsBuddy" / "AnimationExports";
+        OutputFilePath += "/";
     }
     else
     {
         //Ensure file path ends with a slash
         std::string FinalPathName = InPathName;
-        if(InPathName.back() != '/' && InPathName.back() != '\'')
+        if(InPathName.back() != '/' && InPathName.back() != '\\')
         {
             FinalPathName.append(1, '/');
         }
 
-        GlobalCvarManager->log("Special file path specified. Outputting to " + FinalPathName);
+        if(bLogInfo)
+        {
+            GlobalCvarManager->log("Special file path specified. Outputting to " + FinalPathName);
+        }
         OutputFilePath = FinalPathName;
     }
 

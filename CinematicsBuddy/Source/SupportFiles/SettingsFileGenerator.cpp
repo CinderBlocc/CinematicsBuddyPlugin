@@ -8,7 +8,7 @@
 
 void CinematicsBuddy::GenerateSettingsFile()
 {
-    std::filesystem::path SettingsFilePath = gameWrapper->GetBakkesModPath() / "plugins" / "settings";
+    std::filesystem::path SettingsFilePath = GlobalGameWrapper->GetBakkesModPath() / "plugins" / "settings";
     if(!std::filesystem::exists(SettingsFilePath))
     {
         GlobalCvarManager->log("ERROR: Failed to write settings file. Path (" + SettingsFilePath.string() + ") does not exist");
@@ -30,20 +30,24 @@ void CinematicsBuddy::GenerateSettingsFile()
     nl("8|");
     blank;
     
-    nl("9|NORMAL RECORDING");
-    nl("12|File Name##Export|" + cv(CVAR_FILE_NAME));
-    nl("12|Camera Name|" + cv(CVAR_CAMERA_NAME));
-    nl("1|##UseSpecialPath|" + cv(CVAR_SET_SPECIAL_PATH));
-    nl("7|");
-    nl("10|" + cv(CVAR_SET_SPECIAL_PATH));
-        nl("9|Special Path");
+    nl("10|!" + cv(CVAR_IS_RECORDING_ACTIVE));
+        nl("9|NORMAL RECORDING");
+        nl("12|File Name##Export|" + cv(CVAR_FILE_NAME));
+        nl("12|Camera Name|" + cv(CVAR_CAMERA_NAME));
+        nl("1|##UseSpecialPath|" + cv(CVAR_SET_SPECIAL_PATH));
         nl("7|");
-        nl("12|##SpecialPath|" + cv(CVAR_SPECIAL_PATH));
-        nl("9|NOTE: Unchecking \"Special Path\", or leaving the path textbox blank will use the default /data/CinematicsBuddy/AnimationExports/ folder.");
+        nl("10|" + cv(CVAR_SET_SPECIAL_PATH));
+            nl("9|Special Path");
+            nl("7|");
+            nl("12|##SpecialPath|" + cv(CVAR_SPECIAL_PATH));
+            nl("9|NOTE: Unchecking \"Special Path\", or leaving the path textbox blank will use the default /data/CinematicsBuddy/AnimationExports/ folder.");
+        nl("11|");
+        nl("0|Start recording|" + cv(NOTIFIER_RECORD_START));
+        nl("7|");
     nl("11|");
-    nl("0|Start recording|" + cv(NOTIFIER_RECORD_START));
-    nl("7|");
-    nl("0|Stop recording|" + cv(NOTIFIER_RECORD_STOP));
+    nl("10|" + cv(CVAR_IS_RECORDING_ACTIVE));
+        nl("0|Stop recording|" + cv(NOTIFIER_RECORD_STOP));
+    nl("11|");
     nl("4|Max recording length (seconds)|" + cv(CVAR_MAX_RECORD_LENGTH) + "|0|600");
 
     blank;
@@ -79,14 +83,7 @@ void CinematicsBuddy::GenerateSettingsFile()
     nl("4|Camera Movement Speed|" + cv(CVAR_CAM_MOVEMENT_SPEED) + "|0|3");
     nl("4|Camera Rotation Speed|" + cv(CVAR_CAM_ROTATION_SPEED) + "|0|3");
     
-    blank;
-    nl("8|");
-    blank;
-
-    //Get rid of this? It only displays info in the Render function
-    nl("1|Show Version Information|" + cv(CVAR_SHOW_VERSION_INFO));
-    
 
     SettingsFile.close();
-    cvarManager->executeCommand("cl_settings_refreshplugins");
+    GlobalCvarManager->executeCommand("cl_settings_refreshplugins");
 }

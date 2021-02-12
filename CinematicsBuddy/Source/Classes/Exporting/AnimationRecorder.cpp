@@ -30,53 +30,83 @@ void AnimationRecorder::AddData(const FrameInfo& FrameData)
     }
 }
 
-bool AnimationRecorder::WriteHeader(std::ofstream& FileStream, const std::string& InCameraName)
+bool AnimationRecorder::WriteFile(const std::string& InPathName, const std::string& InFileName, const std::string& InCameraName)
 {
-    CarsSeenInHeader.clear();
-    if(!FileStream.is_open())
+    //Open the file
+    std::filesystem::path OutputFilePath = CBUtils::GetExportPathFromString(InPathName, true);
+    if(!std::filesystem::exists(OutputFilePath))
     {
+        GlobalCvarManager->log("ERROR: Cannot save file. File path (" + OutputFilePath.string() + ") is invalid.");
+        return false;
+    }
+    OutputFilePath += InFileName + EXTENSION_NAME;
+    std::ofstream OutputFile(OutputFilePath);
+
+    //Write to the file
+    if(OutputFile.is_open())
+    {
+        std::vector<CarSeen> CarsSeenInRecording = GetCarsSeenInRecording();
+        if(!WriteHeader(OutputFile, InCameraName, CarsSeenInRecording))
+        {
+            GlobalCvarManager->log("ERROR: File saving failed while writing header");
+            OutputFile.close();
+            return false;
+        }
+        if(!WriteRecordedDataToFile(OutputFile, CarsSeenInRecording))
+        {
+            GlobalCvarManager->log("ERROR: File saving failed while writing frame data");
+            OutputFile.close();
+            return false;
+        }
+    }
+    else
+    {
+        GlobalCvarManager->log("ERROR: Could not open output file");
+        OutputFile.close();
         return false;
     }
 
+    OutputFile.close();
+    GlobalCvarManager->log("Successfully wrote file " + OutputFilePath.string());
+    return true;
+}
+
+bool AnimationRecorder::WriteHeader(std::ofstream& FileStream, const std::string& InCameraName, const std::vector<CarSeen>& CarsSeenInRecording)
+{
     //Write recording metadata
     FileStream << "RECORDING METADATA" << '\n';
     FileStream << "Version: " << PLUGIN_VERSION << '\n';
     FileStream << "Camera: " << InCameraName << '\n';
     FileStream << "Average FPS: " << CBUtils::PrintFloat(GetAverageFPS()) << '\n';
     FileStream << "Frames: " << RecordedData.size() << '\n';
+    FileStream << "Duration: " << (RecordedData.size() > 1 ? RecordedData.back().GetTimeInfo().GetTimeDifference(RecordedData[0].GetTimeInfo()) : 0.f) << '\n';
     FileStream << std::endl;
 
-    //Write replay metadata if it exists
-    if(GetbWasWholeRecordingInSameReplay())
+    //Write replay metadata if it exists and if currently in replay
+    if(GetbWasWholeRecordingInSameReplay() &&
+       GlobalGameWrapper->IsInReplay() &&
+       !GlobalGameWrapper->GetGameEventAsReplay().IsNull() &&
+       GlobalGameWrapper->GetGameEventAsReplay().GetReplay().memory_address != NULL)
     {
+        ReplayWrapper Replay = GlobalGameWrapper->GetGameEventAsReplay().GetReplay();
         FileStream << "REPLAY METADATA" << '\n';
-
-        /*
-        
-            Should replay medatada be captured here? What if recording stops because the game mode is destroyed?
-            If you pre hook the game mode destroyed event, does the mode still exist for you to grab the info?
-
-            REPLAY METADATA HERE
-            Name
-            ID
-            Date
-            FPS
-            Frames
-
-        */
-
+        FileStream << "Name: "   << (Replay.GetReplayName().IsNull() ? "" : Replay.GetReplayName().ToString()) << '\n';
+        FileStream << "ID: "     << (Replay.GetId().IsNull()         ? "" : Replay.GetId().ToString()) << '\n';
+        FileStream << "Date: "   << (Replay.GetDate().IsNull()       ? "" : Replay.GetDate().ToString()) << '\n';
+        FileStream << "FPS: "    << CBUtils::PrintFloat(Replay.GetRecordFPS()) << '\n';
+        FileStream << "Frames: " << Replay.GetNumFrames() << '\n';
         FileStream << std::endl;
     }
 
     //Write cars seen
-    CarsSeenInHeader = GetCarsSeenInRecording();
-    if(!CarsSeenInHeader.empty())
+    if(!CarsSeenInRecording.empty())
     {
         int CarIndex = 0;
         json::JSON CarsSeenJSON = json::Object();
-        for(const auto& Car : CarsSeenInHeader)
+        for(const auto& Car : CarsSeenInRecording)
         {
-            CarsSeenJSON[CarIndex] = Car.ConvertToJSON();
+            CarsSeenJSON[std::to_string(CarIndex)] = Car.ConvertToJSON();
+            ++CarIndex;
         }
 
         FileStream << "CARS SEEN" << '\n';
@@ -91,6 +121,25 @@ bool AnimationRecorder::WriteHeader(std::ofstream& FileStream, const std::string
 
     //Mark the header as complete so parsers know to start looping frames
     FileStream << "BEGIN ANIMATION" << std::endl;
+
+    return true;
+}
+
+bool AnimationRecorder::WriteRecordedDataToFile(std::ofstream& FileStream, const std::vector<CarSeen>& CarsSeenInRecording)
+{
+    if(RecordedData.empty())
+    {
+        GlobalCvarManager->log("ERROR: No recorded data.");
+        return false;
+    }
+
+    const FrameInfo& FirstFrame = RecordedData[0];
+    int FrameIndex = 0;
+    for(const auto& DataPoint : RecordedData)
+    {
+        FileStream << DataPoint.Print(FirstFrame.GetTimeInfo(), FrameIndex, CarsSeenInRecording) << '\n';
+        ++FrameIndex;
+    }
 
     return true;
 }
@@ -115,7 +164,7 @@ float AnimationRecorder::GetAverageFPS()
 
     //Get the average
     float AverageDifference = TimeDifferencesTotal / static_cast<float>(RecordedData.size());
-    return 1 / AverageDifference;
+    return 1.f / AverageDifference;
 }
 
 bool AnimationRecorder::GetbWasWholeRecordingInSameReplay()

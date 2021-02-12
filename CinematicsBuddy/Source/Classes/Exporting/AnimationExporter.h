@@ -1,5 +1,6 @@
 #pragma once
 #include "AnimationRecorder.h"
+#include <filesystem>
 #include <fstream>
 #include <chrono>
 
@@ -14,9 +15,10 @@ public:
     void AddData(const FrameInfo& FrameData) override;
 
 private:
+    int FramesInTempFile;
     std::ofstream TempFile;
+    std::filesystem::path GetTempExportFilePath();
 
-    //Store the values from StartRecording to use when creating the final file
     std::string PendingPathName;
     std::string PendingFileName;
     std::string PendingCameraName;

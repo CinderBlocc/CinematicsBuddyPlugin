@@ -8,5 +8,5 @@ namespace CBUtils
     std::string PrintQuat(const Quat& InQuat, int InDecimals = 5);
 
     std::string GetCurrentTimeAsString();
-    std::filesystem::path GetExportPathFromString(const std::string& InPathName);
+    std::filesystem::path GetExportPathFromString(const std::string& InPathName, bool bLogInfo = false);
 }

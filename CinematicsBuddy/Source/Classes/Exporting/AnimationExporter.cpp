@@ -2,38 +2,13 @@
 #include "SupportFiles/CBUtils.h"
 #include "DataCollectors/FrameInfo.h"
 #include "SupportFiles/MacrosStructsEnums.h"
-#include <filesystem>
 #include <vector>
-
-
-/*
-
-    @TODO:
-
-        - Fix StartRecording so that it doesnt create the final file yet
-            - Create the path as a std::filesystem::path though so you can check if it exists
-                - Already done with OutputFilePath creation, just keep that
-
-        - Validate if the intended file can be created in StartRecording
-            - Don't actually create it in that function, just check if it *can* be created
-            - i.e. Check if the intended directory exists
-            - If valid, store the pathname, filename, and cameraname to be used in StopRecording
-        - Open and write to temp file while recording
-        - Once recording is done, copy temp file into final file so that you now have a header you can write to
-            - In order to do this, you need to keep track of data throughout the recording
-                - i.e. number of frames, name of replay (get in StartRecording), all the player cars seen during the recording, etc
-
-    NOTES:
-    - Don't end written file with "END". That will make JSON parsing harder to deal with
-
-*/
-
-using namespace std::chrono;
 
 AnimationExporter::AnimationExporter()
 {
     bIsRecording = false;
     MaxRecordingTime = 300.f;
+    FramesInTempFile = 0;
 }
 
 void AnimationExporter::StartRecording(const std::string& InPathName, const std::string& InFileName, const std::string& InCameraName)
@@ -50,18 +25,18 @@ void AnimationExporter::StartRecording(const std::string& InPathName, const std:
     bool bCanStartRecording = true;
 
     //Get the path
-    std::filesystem::path OutputFilePath = CBUtils::GetExportPathFromString(InPathName);
+    std::filesystem::path AnticipatedFinalPath = CBUtils::GetExportPathFromString(InPathName);
+    if(!std::filesystem::exists(AnticipatedFinalPath))
+    {
+        GlobalCvarManager->log("ERROR: Cannot start recording. File path (" + AnticipatedFinalPath.string() + ") is invalid");
+        bCanStartRecording = false;
+    }
 
     //Get the file name. Open the file if a name is provided
     if(InFileName.empty())
     {
         GlobalCvarManager->log("ERROR: Cannot start recording. Please specify a file name");
         bCanStartRecording = false;
-    }
-    else
-    {
-        OutputFilePath += InFileName + EXTENSION_NAME;
-        TempFile = std::ofstream(OutputFilePath);
     }
 
     //Get the camera name
@@ -74,17 +49,17 @@ void AnimationExporter::StartRecording(const std::string& InPathName, const std:
     //If valid, start recording
     if(bCanStartRecording)
     {
+        RecordedData.clear();
         bIsRecording = true;
 
         PendingPathName   = InPathName;
         PendingFileName   = InFileName;
         PendingCameraName = InCameraName;
 
-        /*
-        
-            @TODO: SET THE bRecording CVAR TO TRUE TO GREY OUT UI
-        
-        */
+        FramesInTempFile = 0;
+        TempFile = std::ofstream(GetTempExportFilePath());
+
+        GlobalCvarManager->getCvar(CVAR_IS_RECORDING_ACTIVE).setValue(true);
     }
 }
 
@@ -97,17 +72,16 @@ void AnimationExporter::StopRecording()
         return;
     }
 
-    /*
-    
-        @TODO
-        - Close temp file
-        - Write header
-        - Write the entirety of RecordedData to the final file
-            - If that write was successful, delete temp file
-        
-        Set the bRecording cvar to false to ungrey UI
+    TempFile.close();
 
-    */
+    if(WriteFile(PendingPathName, PendingFileName, PendingCameraName))
+    {
+        //Remove temp file upon successful write of final file
+        std::filesystem::remove(GetTempExportFilePath());
+    }
+
+    bIsRecording = false;
+    GlobalCvarManager->getCvar(CVAR_IS_RECORDING_ACTIVE).setValue(false);
 }
 
 void AnimationExporter::AddData(const FrameInfo& FrameData)
@@ -119,16 +93,26 @@ void AnimationExporter::AddData(const FrameInfo& FrameData)
         const FrameInfo& FirstFrame = RecordedData.empty() ? FrameData : RecordedData[0];
 
         //Write to the temp file in case a crash happens midway through recording
-        //The temp file would be useful for debugging in those situations
+        //The temp file will be useful for debugging in those situations
         if(TempFile.is_open())
         {
-            TempFile << FrameData.Print(FirstFrame.GetTimeInfo(), -1, std::vector<CarSeen>()) << '\n';
+            TempFile << FrameData.Print(FirstFrame.GetTimeInfo(), FramesInTempFile, std::vector<CarSeen>()) << '\n';
+            ++FramesInTempFile;
         }
 
+        using namespace std::chrono;
         float RecordingDuration = duration_cast<duration<float>>(steady_clock::now() - FirstFrame.GetTimeInfo().TimeCaptured).count();
         if(RecordingDuration > MaxRecordingTime)
         {
             StopRecording();
         }
     }
+}
+
+std::filesystem::path AnimationExporter::GetTempExportFilePath()
+{
+    std::filesystem::path TempFilePath = CBUtils::GetExportPathFromString("");
+    TempFilePath += "CBTempFile.tmp";
+
+    return TempFilePath;
 }

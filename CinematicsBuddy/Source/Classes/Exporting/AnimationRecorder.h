@@ -13,10 +13,6 @@ public:
     
     virtual void AddData(const FrameInfo& FrameData);
 
-    bool WriteHeader(std::ofstream& FileStream, const std::string& InCameraName);
-    float GetAverageFPS();
-    bool GetbWasWholeRecordingInSameReplay();
-
     bool GetbIsRecording() { return bIsRecording; }
     void SetMaxRecordingTime(float NewTime) { MaxRecordingTime = NewTime; }
 
@@ -25,6 +21,10 @@ protected:
     float MaxRecordingTime;
     std::deque<FrameInfo> RecordedData;
 
-    std::vector<CarSeen> CarsSeenInHeader;
+    bool WriteFile(const std::string& InPathName, const std::string& InFileName, const std::string& InCameraName);
+    bool WriteHeader(std::ofstream& FileStream, const std::string& InCameraName, const std::vector<CarSeen>& CarsSeenInRecording);
+    bool WriteRecordedDataToFile(std::ofstream& FileStream, const std::vector<CarSeen>& CarsSeenInRecording);
     std::vector<CarSeen> GetCarsSeenInRecording();
+    float GetAverageFPS();
+    bool GetbWasWholeRecordingInSameReplay();
 };

@@ -13,9 +13,9 @@ private:
 	std::shared_ptr<float> BufferSize;
 	std::shared_ptr<float> CamSpeed;
 	std::shared_ptr<float> CamRotationSpeed;
-	std::shared_ptr<bool> bShowVersionInfo;	
-	std::shared_ptr<bool> bUseCamVelocity;
 	std::shared_ptr<bool> bSetSpecialFilePath;
+	std::shared_ptr<bool> bUseCamOverrides;
+	std::shared_ptr<bool> bIsRecordingActive;
 
 	//Vectors
 	std::vector<std::string> WarningStrings;
