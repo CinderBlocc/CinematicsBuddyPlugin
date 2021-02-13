@@ -14,8 +14,10 @@ private:
 	std::shared_ptr<float> CamSpeed;
 	std::shared_ptr<float> CamRotationSpeed;
 	std::shared_ptr<bool> bSetSpecialFilePath;
+	std::shared_ptr<bool> bIncrementFileNames;
 	std::shared_ptr<bool> bUseCamOverrides;
 	std::shared_ptr<bool> bIsRecordingActive;
+	std::shared_ptr<bool> bIsBufferActive;
 
 	//Vectors
 	std::vector<std::string> WarningStrings;
@@ -43,11 +45,11 @@ public:
 	//Recording
 	void RecordStart();
 	void RecordStop();
-	void BufferStart();
 	void BufferCapture();
-	void BufferCancel();
 	void RecordingFunction();
-    void OnSoccarDestroyed();
+    void OnBufferEnabledChanged();
+    void OnIncrementChanged();
+    void OnNewMapLoading();
 
     //Input override
 	void PlayerInputTick();

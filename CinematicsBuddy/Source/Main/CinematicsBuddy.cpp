@@ -13,18 +13,16 @@
 /*
     @TODO
 
-    - Change json output to unordered map? This alphabetizing is getting a little annoying because it's moving stuff in ways I didn't intend
-    - Stop the recording on Soccar_TA destroyed to ensure only one replay gets recorded in a file
-        - Implemented, but needs testing
-    - Implement IsValidMode()
-    - Change buffer to a checkbox with addOnValueChanged
-        - It should auto-start capturing when user boots up game when using a checkbox (if user had it enabled)
-    - Rename cvars
     - Automatic filename incrementing option
         - Could probably just check if file exists, then append _## and check if new exists. Keep iterating until successful
-    - Write file asynchronously. Large files will hang up the game for a long time, and even small files cause a hitch
+    - Camera overrides
+        - Methods that will need to have custom delta functions made:
+            - Local camera movement and rotation
+            - Speed control for movement and rotation
+        - Input averaging for smoothness
+            - Timed buffer using chrono, similar to the deque of RecordedData in AnimationBuffer
+    - Write export file asynchronously. Large files will hang up the game for a long time, and even small files cause a hitch
         - Leave UI greyed out until file writing is completed
-        - Launch from Exporter and Buffer, not in the WriteFile itself?
 */
 
 /*
@@ -33,11 +31,6 @@
 
 /*
 TO-DO:
-	- LOCAL CAMERA MOVEMENT: As soon as the camera has rolled in flycam, it's gg trying to control it anymore
-		- Add an option to override movement so that inputs will be relative to camera's rotation
-		- i.e. holding trigger will move camera along local up axis instead of world up axis
-		- i.e. pitch and yaw will be local instead of global after camera has rolled
-
 	- Camera animation importing
 		- IMPORT INTERPOLATION
 			- https://discordapp.com/channels/@me/602523400518369280/676118235631845398
@@ -48,24 +41,6 @@ TO-DO:
 			- This would just be an output of a list of frames not tied to any particular replay timestamp
 				- Maybe it should have an output of the timestamp it was saved at so it can go to that exact replay frame
 			- Still use the chrono delta for these frames
-
-	- Camera smoothing (use bakkes' CameraInputModifier for reference _Youtube/4_extraassets/bakkesmod_extra/CameraInputModifier)
-		- Look through previous CB versions. How did you edit player input without having the input constantly multiply over itself?
-		- Try to find the speed limiter in the full SDK and uncap the max speed for the camera movement
-		- BETTER OPTION
-			- Fill buffer with inputs. Delete inputs if their capture time is outside the smoothing time
-				struct InputVal
-				{
-					chrono::clock timeOfCapture
-					CameraInput capturedInputs;
-				}
-				while((chrono::now() - inputVals[0].timeOfCapture) > smoothingTime) inputVals.erase(inputVals.begin());
-			- Get average of all inputs. Use that average as the assigned input.
-		- Easing: https://forum.unity.com/threads/joystick-easing-script.11535/   //   https://answers.unrealengine.com/questions/726110/how-to-ease-the-player-controller-rotation-speed.html
-
-	- Export car mesh animation instead of car rigid body animation?
-		- This will make the car align better in external software
-		- Do the same for the ball mesh since it doesn't seem to line up very well at times either
 */
 
 //0.9.8 - input smoothing and camera speed control
@@ -94,37 +69,43 @@ void CinematicsBuddy::onLoad()
 	BufferSize            = std::make_shared<float>(0.f);
 	CamSpeed              = std::make_shared<float>(0.f);
 	CamRotationSpeed      = std::make_shared<float>(0.f);
-	bUseCamOverrides      = std::make_shared<bool>(false);
 	bSetSpecialFilePath   = std::make_shared<bool>(false);
+	bIncrementFileNames   = std::make_shared<bool>(false);
+	bUseCamOverrides      = std::make_shared<bool>(false);
 	bIsRecordingActive    = std::make_shared<bool>(false);
+    bIsBufferActive       = std::make_shared<bool>(false);
 
-	cvarManager->registerCvar(CVAR_SET_SPECIAL_PATH,    "0",   "Enable if you want to use a non-default path", true).bindTo(bSetSpecialFilePath);
-	cvarManager->registerCvar(CVAR_SPECIAL_PATH,        "",    "Set the special export file path. Leave blank for default", true).bindTo(ExportSpecialFilePath);
-	cvarManager->registerCvar(CVAR_FILE_NAME,           "",    "Set the export file name", true).bindTo(ExportFileName);
-	cvarManager->registerCvar(CVAR_CAMERA_NAME,         "",    "Set the camera name", true).bindTo(ExportCameraName);
-	cvarManager->registerCvar(CVAR_MAX_RECORD_LENGTH,   "300", "Number of seconds to record", true, true, 0, true, 1000).bindTo(BufferSize);
-	cvarManager->registerCvar(CVAR_MAX_BUFFER_LENGTH,   "30",  "Number of seconds to buffer", true, true, 0, true, 1000).bindTo(BufferSize);
-	cvarManager->registerCvar(CVAR_IMPORT_FILE_NAME,    "",    "Set the import file name", true).bindTo(ImportFileName);
-	cvarManager->registerCvar(CVAR_ENABLE_CAM_OVERRIDE, "0",   "Enables camera overriding features", true).bindTo(bUseCamOverrides);
-	cvarManager->registerCvar(CVAR_CAM_MOVEMENT_SPEED,  "1",   "Camera movement speed multiplier", true, true, 0, true, 3).bindTo(CamSpeed);
-	cvarManager->registerCvar(CVAR_CAM_ROTATION_SPEED,  "1",   "Camera rotation speed multiplier", true, true, 0, true, 3).bindTo(CamRotationSpeed);
-	cvarManager->registerCvar(CVAR_IS_RECORDING_ACTIVE, "0",   "Display version information on screen", false).bindTo(bIsRecordingActive);
+	GlobalCvarManager->registerCvar(CVAR_SET_SPECIAL_PATH,    "0",   "Enable if you want to use a non-default path", true).bindTo(bSetSpecialFilePath);
+	GlobalCvarManager->registerCvar(CVAR_SPECIAL_PATH,        "",    "Set the special export file path. Leave blank for default", true).bindTo(ExportSpecialFilePath);
+	GlobalCvarManager->registerCvar(CVAR_INCREMENT_FILES,     "1",   "Automatically append a unique number to file names", true).bindTo(bIncrementFileNames);
+	GlobalCvarManager->registerCvar(CVAR_FILE_NAME,           "",    "Set the export file name", true).bindTo(ExportFileName);
+	GlobalCvarManager->registerCvar(CVAR_CAMERA_NAME,         "",    "Set the camera name", true).bindTo(ExportCameraName);
+	GlobalCvarManager->registerCvar(CVAR_MAX_RECORD_LENGTH,   "300", "Number of seconds to record", true, true, 0, true, 1000).bindTo(BufferSize);
+	GlobalCvarManager->registerCvar(CVAR_MAX_BUFFER_LENGTH,   "30",  "Number of seconds to buffer", true, true, 0, true, 1000).bindTo(BufferSize);
+	GlobalCvarManager->registerCvar(CVAR_BUFFER_ENABLED,      "0",   "Enable constant recording buffer", false).bindTo(bIsBufferActive);
+	GlobalCvarManager->registerCvar(CVAR_IMPORT_FILE_NAME,    "",    "Set the import file name", true).bindTo(ImportFileName);
+	GlobalCvarManager->registerCvar(CVAR_ENABLE_CAM_OVERRIDE, "0",   "Enables camera overriding features", true).bindTo(bUseCamOverrides);
+	GlobalCvarManager->registerCvar(CVAR_CAM_MOVEMENT_SPEED,  "1",   "Camera movement speed multiplier", true, true, 0, true, 3).bindTo(CamSpeed);
+	GlobalCvarManager->registerCvar(CVAR_CAM_ROTATION_SPEED,  "1",   "Camera rotation speed multiplier", true, true, 0, true, 3).bindTo(CamRotationSpeed);
+	GlobalCvarManager->registerCvar(CVAR_IS_RECORDING_ACTIVE, "0",   "Display version information on screen", false).bindTo(bIsRecordingActive);
+	GlobalCvarManager->registerCvar(CVAR_IS_FILE_WRITING    , "0",   "Handle UI state if file is writing", false, false, 0, false, 0, false);
+
+    GlobalCvarManager->getCvar(CVAR_BUFFER_ENABLED).addOnValueChanged(std::bind(&CinematicsBuddy::OnBufferEnabledChanged, this));
+    GlobalCvarManager->getCvar(CVAR_INCREMENT_FILES).addOnValueChanged(std::bind(&CinematicsBuddy::OnIncrementChanged, this));
 	
-	cvarManager->registerNotifier(NOTIFIER_RECORD_START,   [this](std::vector<std::string> params){RecordStart();},      "Starts capturing animation data.",              PERMISSION_ALL);
-	cvarManager->registerNotifier(NOTIFIER_RECORD_STOP,    [this](std::vector<std::string> params){RecordStop();},       "Stops capturing animation data",                PERMISSION_ALL);
-	cvarManager->registerNotifier(NOTIFIER_BUFFER_START,   [this](std::vector<std::string> params){BufferStart();},      "Starts the perpetual animation capture buffer", PERMISSION_ALL);
-	cvarManager->registerNotifier(NOTIFIER_BUFFER_CAPTURE, [this](std::vector<std::string> params){BufferCapture();},    "Captures the data in the buffer",               PERMISSION_ALL);
-	cvarManager->registerNotifier(NOTIFIER_BUFFER_STOP,    [this](std::vector<std::string> params){BufferCancel();},     "Cancels the perpetual animation buffer",        PERMISSION_ALL);
-	cvarManager->registerNotifier(NOTIFIER_IMPORT_FILE,    [this](std::vector<std::string> params){CamPathImport();},    "Imports a camera animation from a file",        PERMISSION_ALL);
-	cvarManager->registerNotifier(NOTIFIER_IMPORT_CLEAR,   [this](std::vector<std::string> params){CamPathClear();},     "Clears the imported camera animation",          PERMISSION_ALL);
+	GlobalCvarManager->registerNotifier(NOTIFIER_RECORD_START,   [this](std::vector<std::string> params){RecordStart();},      "Starts capturing animation data.",              PERMISSION_ALL);
+	GlobalCvarManager->registerNotifier(NOTIFIER_RECORD_STOP,    [this](std::vector<std::string> params){RecordStop();},       "Stops capturing animation data",                PERMISSION_ALL);
+	GlobalCvarManager->registerNotifier(NOTIFIER_BUFFER_CAPTURE, [this](std::vector<std::string> params){BufferCapture();},    "Captures the data in the buffer",               PERMISSION_ALL);
+	GlobalCvarManager->registerNotifier(NOTIFIER_IMPORT_FILE,    [this](std::vector<std::string> params){CamPathImport();},    "Imports a camera animation from a file",        PERMISSION_ALL);
+	GlobalCvarManager->registerNotifier(NOTIFIER_IMPORT_CLEAR,   [this](std::vector<std::string> params){CamPathClear();},     "Clears the imported camera animation",          PERMISSION_ALL);
 	
     // TESTS - REMOVE WHEN DONE //
-    cvarManager->registerNotifier("CBTestExportFormat", [this](std::vector<std::string> params){TestExportFormat();}, "Prints data from current frame", PERMISSION_ALL);
-    cvarManager->registerNotifier("CBTestPrintFloat", [this](std::vector<std::string> params){TestPrintFloat();}, "Tests the decimal saving PrintFloat function", PERMISSION_ALL);
+    GlobalCvarManager->registerNotifier("CBTestExportFormat", [this](std::vector<std::string> params){TestExportFormat();}, "Prints data from current frame", PERMISSION_ALL);
+    GlobalCvarManager->registerNotifier("CBTestPrintFloat", [this](std::vector<std::string> params){TestPrintFloat();}, "Tests the decimal saving PrintFloat function", PERMISSION_ALL);
 
-	gameWrapper->HookEvent("Function Engine.GameViewportClient.Tick", std::bind(&CinematicsBuddy::RecordingFunction, this));
-	gameWrapper->HookEvent("Function TAGame.PlayerInput_TA.PlayerInput", std::bind(&CinematicsBuddy::PlayerInputTick, this));
-	gameWrapper->HookEvent("Function TAGame.GameEvent_Soccar_TA.Destroyed", std::bind(&CinematicsBuddy::OnSoccarDestroyed, this));
+	GlobalGameWrapper->HookEvent("Function Engine.GameViewportClient.Tick", std::bind(&CinematicsBuddy::RecordingFunction, this));
+	GlobalGameWrapper->HookEvent("Function TAGame.PlayerInput_TA.PlayerInput", std::bind(&CinematicsBuddy::PlayerInputTick, this));
+	GlobalGameWrapper->HookEvent("Function ProjectX.EngineShare_X.EventPreLoadMap", std::bind(&CinematicsBuddy::OnNewMapLoading, this));
 
     GenerateSettingsFile();
 }
@@ -164,14 +145,7 @@ std::string CinematicsBuddy::GetSpecialFilePath()
 
 bool CinematicsBuddy::IsValidMode()
 {
-    /*
-    
-        Is every mode valid? Return false if server doesn't exist?
-        Don't allow during online play except in certain scenarios like spectating, unlimited, or LAN?
-    
-    */
-
-    return true;
+    return !GlobalGameWrapper->GetCurrentGameState().IsNull();
 }
 
 
@@ -193,9 +167,16 @@ void CinematicsBuddy::RecordingFunction()
         Buffer->AddData(ThisFrame);
     }
 }
-void CinematicsBuddy::OnSoccarDestroyed()
+void CinematicsBuddy::OnNewMapLoading()
 {
+    //Game is about to switch to a new map and kill the current map
+    //In order to get replay metadata, the recording needs to stop here
     Exporter->StopRecording();
+}
+void CinematicsBuddy::OnIncrementChanged()
+{
+    Exporter->SetbIncrementFiles(*bIncrementFileNames);
+    Buffer->SetbIncrementFiles(*bIncrementFileNames);
 }
 
 // NORMAL RECORDING //
@@ -209,17 +190,20 @@ void CinematicsBuddy::RecordStop()
 }
 
 // BUFFER RECORDING //
-void CinematicsBuddy::BufferStart()
-{
-    Buffer->StartRecording(GetSpecialFilePath(), *ExportFileName, *ExportCameraName);
-}
 void CinematicsBuddy::BufferCapture()
 {
     Buffer->CaptureBuffer(GetSpecialFilePath(), *ExportFileName, *ExportCameraName);
 }
-void CinematicsBuddy::BufferCancel()
+void CinematicsBuddy::OnBufferEnabledChanged()
 {
-	Buffer->StopRecording();
+    if(*bIsBufferActive)
+    {
+        Buffer->StartRecording();
+    }
+    else
+    {
+        Buffer->StopRecording();
+    }
 }
 
 

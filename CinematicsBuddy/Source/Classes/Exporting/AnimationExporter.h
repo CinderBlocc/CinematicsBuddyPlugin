@@ -9,7 +9,7 @@ class AnimationExporter : public AnimationRecorder
 public:
     AnimationExporter();
 
-    void StartRecording(StringParam InPathName, StringParam InFileName, StringParam InCameraName) override;
+    void StartRecording(StringParam InPathName = "", StringParam InFileName = "", StringParam InCameraName = "") override;
     void StopRecording() override;
     
     void AddData(const FrameInfo& FrameData) override;

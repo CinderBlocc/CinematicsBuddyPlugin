@@ -31,6 +31,21 @@ void AnimationRecorder::AddData(const FrameInfo& FrameData)
     }
 }
 
+std::filesystem::path AnimationRecorder::GetFinalFileName(std::filesystem::path IntendedPath, StringParam InFileName)
+{
+    std::filesystem::path Output = IntendedPath;
+
+    // @TODO: Do something recursive in here or some loopy magic to iterate attempts
+    // Recursive might be easiest if you pass in `int NumAttempts`
+    // First check should be seeing if this needs to increment in the first place (check if bIncrementFileNames is true)
+    // Append _## to the filename. Only up to _99. From there just overwrite _99 each time
+    //     NOTE: 1-9 should be _01, _02, etc so sorting doesn't freak out and put _1 next to _10
+
+    Output += InFileName + EXTENSION_NAME;
+
+    return Output;
+}
+
 bool AnimationRecorder::WriteFile(StringParam InPathName, StringParam InFileName, StringParam InCameraName)
 {
     // @TODO: Launch WriteFileThread in a new thread
@@ -50,7 +65,7 @@ bool AnimationRecorder::WriteFile(StringParam InPathName, StringParam InFileName
         GlobalCvarManager->log("ERROR: Cannot save file. File path (" + OutputFilePath.string() + ") is invalid.");
         return false;
     }
-    OutputFilePath += InFileName + EXTENSION_NAME;
+    OutputFilePath = GetFinalFileName(OutputFilePath, InFileName);
     std::ofstream OutputFile(OutputFilePath);
 
     //Write to the file
@@ -60,7 +75,9 @@ bool AnimationRecorder::WriteFile(StringParam InPathName, StringParam InFileName
         std::deque<FrameInfo> RecordedDataCopy = RecordedData;
 
         // @TODO: Launch this in a thread
+        GlobalCvarManager->getCvar(CVAR_IS_FILE_WRITING).setValue(true);
         WriteFileThread(OutputFile, InCameraName, RecordedDataCopy);
+        GlobalCvarManager->getCvar(CVAR_IS_FILE_WRITING).setValue(false);
     }
     else
     {

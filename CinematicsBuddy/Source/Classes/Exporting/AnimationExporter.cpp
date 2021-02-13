@@ -6,6 +6,7 @@
 
 AnimationExporter::AnimationExporter()
 {
+    bIncrementFileNames = true;
     bIsRecording = false;
     MaxRecordingTime = 300.f;
     FramesInTempFile = 0;

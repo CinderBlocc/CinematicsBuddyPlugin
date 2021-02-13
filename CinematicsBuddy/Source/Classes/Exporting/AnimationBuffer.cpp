@@ -5,6 +5,7 @@
 
 AnimationBuffer::AnimationBuffer()
 {
+    bIncrementFileNames = true;
     bIsRecording = false;
     MaxRecordingTime = 30.f;
 }

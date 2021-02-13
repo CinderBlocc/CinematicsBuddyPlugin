@@ -12,23 +12,28 @@ extern std::shared_ptr<GameWrapper>        GlobalGameWrapper;
 #define PLUGIN_VERSION "0.9.8"
 #define EXTENSION_NAME ".txt"
 
-#define CVAR_SET_SPECIAL_PATH    "CB_b_set_file_path"
-#define CVAR_SPECIAL_PATH        "CB_file_path"
-#define CVAR_FILE_NAME           "CB_file_name"
-#define CVAR_CAMERA_NAME         "CB_camera_name"
-#define CVAR_MAX_RECORD_LENGTH   "CB_record_length"
-#define CVAR_MAX_BUFFER_LENGTH   "CB_buffer_length"
-#define CVAR_IMPORT_FILE_NAME    "CB_import_file_name"
-#define CVAR_ENABLE_CAM_OVERRIDE "CB_use_cam_overrides"
-#define CVAR_CAM_MOVEMENT_SPEED  "CB_cam_speed"
-#define CVAR_CAM_ROTATION_SPEED  "CB_cam_speed_rotation"
-#define CVAR_IS_RECORDING_ACTIVE "CB_is_recording_active"
-	
+//Cvars the user can set
+#define CVAR_SET_SPECIAL_PATH    "CB_bSetFilePath"
+#define CVAR_SPECIAL_PATH        "CB_FilePath"
+#define CVAR_INCREMENT_FILES     "CB_bIncrementFileNames"
+#define CVAR_FILE_NAME           "CB_FileName"
+#define CVAR_CAMERA_NAME         "CB_CameraName"
+#define CVAR_MAX_RECORD_LENGTH   "CB_MaxRecordingLength"
+#define CVAR_MAX_BUFFER_LENGTH   "CB_MaxBufferLength"
+#define CVAR_BUFFER_ENABLED      "CB_bBufferEnabled"
+#define CVAR_IMPORT_FILE_NAME    "CB_ImportFileName"
+#define CVAR_ENABLE_CAM_OVERRIDE "CB_bUseCamOverrides"
+#define CVAR_CAM_MOVEMENT_SPEED  "CB_CamMovementSpeed"
+#define CVAR_CAM_ROTATION_SPEED  "CB_CamRotationSpeed"
+
+//Cvars only the plugin should set internally
+#define CVAR_IS_RECORDING_ACTIVE "CB_bIsRecordingActive"
+#define CVAR_IS_FILE_WRITING     "CB_bIsFileWriting"
+
+//Notifiers
 #define NOTIFIER_RECORD_START   "CBRecordStart"
 #define NOTIFIER_RECORD_STOP    "CBRecordStop"
-#define NOTIFIER_BUFFER_START   "CBBufferStart"
 #define NOTIFIER_BUFFER_CAPTURE "CBBufferCapture"
-#define NOTIFIER_BUFFER_STOP    "CBBufferCancel"
 #define NOTIFIER_IMPORT_FILE    "CBAnimationImport"
 #define NOTIFIER_IMPORT_CLEAR   "CBAnimationClear"
 
