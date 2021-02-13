@@ -11,10 +11,8 @@
 #include <fstream>
 
 /*
-    @TODO
+    #TODO
 
-    - Automatic filename incrementing option
-        - Could probably just check if file exists, then append _## and check if new exists. Keep iterating until successful
     - Camera overrides
         - Methods that will need to have custom delta functions made:
             - Local camera movement and rotation
@@ -26,7 +24,7 @@
 */
 
 /*
-    FINAL @TODO: Search the solution for "@TODO" and finish all the remaining @TODOs
+    FINAL #TODO: Look for all TODO tags in VA Hashtags and finish them
 */
 
 /*
@@ -66,6 +64,7 @@ void CinematicsBuddy::onLoad()
 	ExportFileName        = std::make_shared<std::string>("");
 	ExportCameraName      = std::make_shared<std::string>("");
 	ImportFileName        = std::make_shared<std::string>("");
+	RecordSize            = std::make_shared<float>(0.f);
 	BufferSize            = std::make_shared<float>(0.f);
 	CamSpeed              = std::make_shared<float>(0.f);
 	CamRotationSpeed      = std::make_shared<float>(0.f);
@@ -80,7 +79,7 @@ void CinematicsBuddy::onLoad()
 	GlobalCvarManager->registerCvar(CVAR_INCREMENT_FILES,     "1",   "Automatically append a unique number to file names", true).bindTo(bIncrementFileNames);
 	GlobalCvarManager->registerCvar(CVAR_FILE_NAME,           "",    "Set the export file name", true).bindTo(ExportFileName);
 	GlobalCvarManager->registerCvar(CVAR_CAMERA_NAME,         "",    "Set the camera name", true).bindTo(ExportCameraName);
-	GlobalCvarManager->registerCvar(CVAR_MAX_RECORD_LENGTH,   "300", "Number of seconds to record", true, true, 0, true, 1000).bindTo(BufferSize);
+	GlobalCvarManager->registerCvar(CVAR_MAX_RECORD_LENGTH,   "300", "Number of seconds to record", true, true, 0, true, 1000).bindTo(RecordSize);
 	GlobalCvarManager->registerCvar(CVAR_MAX_BUFFER_LENGTH,   "30",  "Number of seconds to buffer", true, true, 0, true, 1000).bindTo(BufferSize);
 	GlobalCvarManager->registerCvar(CVAR_BUFFER_ENABLED,      "0",   "Enable constant recording buffer", false).bindTo(bIsBufferActive);
 	GlobalCvarManager->registerCvar(CVAR_IMPORT_FILE_NAME,    "",    "Set the import file name", true).bindTo(ImportFileName);
@@ -92,10 +91,13 @@ void CinematicsBuddy::onLoad()
 
     GlobalCvarManager->getCvar(CVAR_BUFFER_ENABLED).addOnValueChanged(std::bind(&CinematicsBuddy::OnBufferEnabledChanged, this));
     GlobalCvarManager->getCvar(CVAR_INCREMENT_FILES).addOnValueChanged(std::bind(&CinematicsBuddy::OnIncrementChanged, this));
+    GlobalCvarManager->getCvar(CVAR_MAX_RECORD_LENGTH).addOnValueChanged(std::bind(&CinematicsBuddy::OnMaxRecordingLengthChanged, this));
+    GlobalCvarManager->getCvar(CVAR_MAX_BUFFER_LENGTH).addOnValueChanged(std::bind(&CinematicsBuddy::OnMaxBufferLengthChanged, this));
 	
 	GlobalCvarManager->registerNotifier(NOTIFIER_RECORD_START,   [this](std::vector<std::string> params){RecordStart();},      "Starts capturing animation data.",              PERMISSION_ALL);
 	GlobalCvarManager->registerNotifier(NOTIFIER_RECORD_STOP,    [this](std::vector<std::string> params){RecordStop();},       "Stops capturing animation data",                PERMISSION_ALL);
 	GlobalCvarManager->registerNotifier(NOTIFIER_BUFFER_CAPTURE, [this](std::vector<std::string> params){BufferCapture();},    "Captures the data in the buffer",               PERMISSION_ALL);
+	GlobalCvarManager->registerNotifier(NOTIFIER_BUFFER_CLEAR,   [this](std::vector<std::string> params){BufferClear();},      "Cleares the data from the buffer",              PERMISSION_ALL);
 	GlobalCvarManager->registerNotifier(NOTIFIER_IMPORT_FILE,    [this](std::vector<std::string> params){CamPathImport();},    "Imports a camera animation from a file",        PERMISSION_ALL);
 	GlobalCvarManager->registerNotifier(NOTIFIER_IMPORT_CLEAR,   [this](std::vector<std::string> params){CamPathClear();},     "Clears the imported camera animation",          PERMISSION_ALL);
 	
@@ -111,6 +113,7 @@ void CinematicsBuddy::onLoad()
 }
 void CinematicsBuddy::onUnload(){}
 
+// TESTS - REMOVE WHEN DONE //
 void CinematicsBuddy::TestExportFormat()
 {
     //Gets the info of the current frame, and prints it in its final format to the console
@@ -124,7 +127,6 @@ void CinematicsBuddy::TestExportFormat()
 
     GlobalCvarManager->log(Output);
 }
-
 void CinematicsBuddy::TestPrintFloat()
 {
     GlobalCvarManager->log(CBUtils::PrintFloat(0.00000019f, 6));
@@ -138,16 +140,48 @@ void CinematicsBuddy::TestPrintFloat()
     GlobalCvarManager->log(CBUtils::PrintFloat(19.0000000f, 6));
 }
 
+// UTILITY //
 std::string CinematicsBuddy::GetSpecialFilePath()
 {
     return (*bSetSpecialFilePath ? *ExportSpecialFilePath : "");
 }
-
 bool CinematicsBuddy::IsValidMode()
 {
     return !GlobalGameWrapper->GetCurrentGameState().IsNull();
 }
+void CinematicsBuddy::OnNewMapLoading()
+{
+    //Game is about to switch to a new map and kill the current map
+    //In order to get replay metadata, the recording needs to stop here
+    Exporter->StopRecording();
+}
 
+
+// CVAR CHANGES //
+void CinematicsBuddy::OnIncrementChanged()
+{
+    Exporter->SetbIncrementFiles(*bIncrementFileNames);
+    Buffer->SetbIncrementFiles(*bIncrementFileNames);
+}
+void CinematicsBuddy::OnBufferEnabledChanged()
+{
+    if(*bIsBufferActive)
+    {
+        Buffer->StartRecording();
+    }
+    else
+    {
+        Buffer->StopRecording();
+    }
+}
+void CinematicsBuddy::OnMaxRecordingLengthChanged()
+{
+    Exporter->SetMaxRecordingTime(*RecordSize);
+}
+void CinematicsBuddy::OnMaxBufferLengthChanged()
+{
+    Buffer->SetMaxRecordingTime(*BufferSize);
+}
 
 
 // RECORDING FUNCTION //
@@ -167,17 +201,6 @@ void CinematicsBuddy::RecordingFunction()
         Buffer->AddData(ThisFrame);
     }
 }
-void CinematicsBuddy::OnNewMapLoading()
-{
-    //Game is about to switch to a new map and kill the current map
-    //In order to get replay metadata, the recording needs to stop here
-    Exporter->StopRecording();
-}
-void CinematicsBuddy::OnIncrementChanged()
-{
-    Exporter->SetbIncrementFiles(*bIncrementFileNames);
-    Buffer->SetbIncrementFiles(*bIncrementFileNames);
-}
 
 // NORMAL RECORDING //
 void CinematicsBuddy::RecordStart()
@@ -194,16 +217,9 @@ void CinematicsBuddy::BufferCapture()
 {
     Buffer->CaptureBuffer(GetSpecialFilePath(), *ExportFileName, *ExportCameraName);
 }
-void CinematicsBuddy::OnBufferEnabledChanged()
+void CinematicsBuddy::BufferClear()
 {
-    if(*bIsBufferActive)
-    {
-        Buffer->StartRecording();
-    }
-    else
-    {
-        Buffer->StopRecording();
-    }
+    Buffer->ClearBuffer();
 }
 
 

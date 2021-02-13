@@ -62,6 +62,20 @@ std::string CBUtils::PrintQuat(const Quat& InQuat, int MaxDecimals)
 	return Output;
 }
 
+std::string CBUtils::PrintDoubleDigit(int InValue)
+{
+    //Clamp to double digits
+    InValue = min(InValue, 99);
+
+    //Already double digits
+    if(InValue >= 10)
+    {
+        return std::to_string(InValue);
+    }
+
+    return "0" + std::to_string(InValue);
+}
+
 std::string CBUtils::GetCurrentTimeAsString()
 {
 	time_t RawTime;
@@ -104,4 +118,37 @@ std::filesystem::path CBUtils::GetExportPathFromString(const std::string& InPath
     }
 
     return OutputFilePath;
+}
+
+std::filesystem::path CBUtils::GetFinalFileName(std::filesystem::path IntendedPath, const std::string& InFileName, int IncrementLevel)
+{
+    std::filesystem::path Output = IntendedPath;
+
+    //No auto-increment, just write the file with the direct name
+    if(IncrementLevel < 0)
+    {
+        Output += InFileName + EXTENSION_NAME;
+        return Output;
+    }
+
+    std::filesystem::path CheckIfExists = Output;
+    if(IncrementLevel == 0)
+    {
+        //If _00 just print the normal name
+        CheckIfExists += InFileName;
+    }
+    else
+    {
+        //Append _01 - _99. If increment is more than 99 somehow, it'll just overwrite 99
+        CheckIfExists += InFileName + "_" + PrintDoubleDigit(IncrementLevel);
+    }
+
+    CheckIfExists += EXTENSION_NAME;
+    if(std::filesystem::exists(CheckIfExists))
+    {
+        return GetFinalFileName(IntendedPath, InFileName, ++IncrementLevel);
+    }
+    
+    Output = CheckIfExists;
+    return Output;
 }

@@ -10,6 +10,7 @@ private:
 	std::shared_ptr<std::string> ExportFileName;
 	std::shared_ptr<std::string> ExportCameraName;
 	std::shared_ptr<std::string> ImportFileName;
+	std::shared_ptr<float> RecordSize;
 	std::shared_ptr<float> BufferSize;
 	std::shared_ptr<float> CamSpeed;
 	std::shared_ptr<float> CamRotationSpeed;
@@ -37,19 +38,24 @@ public:
     bool IsValidMode();
     void GenerateSettingsFile();
     std::string GetSpecialFilePath();
+    void OnNewMapLoading();
     
     // TESTING - REMOVE WHEN DONE //
     void TestExportFormat();
     void TestPrintFloat();
 
 	//Recording
+	void RecordingFunction();
 	void RecordStart();
 	void RecordStop();
 	void BufferCapture();
-	void RecordingFunction();
-    void OnBufferEnabledChanged();
+    void BufferClear();
+
+    //Cvar changes
     void OnIncrementChanged();
-    void OnNewMapLoading();
+    void OnBufferEnabledChanged();
+    void OnMaxBufferLengthChanged();
+    void OnMaxRecordingLengthChanged();
 
     //Input override
 	void PlayerInputTick();

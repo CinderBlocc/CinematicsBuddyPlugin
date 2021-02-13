@@ -31,26 +31,8 @@ void AnimationRecorder::AddData(const FrameInfo& FrameData)
     }
 }
 
-std::filesystem::path AnimationRecorder::GetFinalFileName(std::filesystem::path IntendedPath, StringParam InFileName)
-{
-    std::filesystem::path Output = IntendedPath;
-
-    // @TODO: Do something recursive in here or some loopy magic to iterate attempts
-    // Recursive might be easiest if you pass in `int NumAttempts`
-    // First check should be seeing if this needs to increment in the first place (check if bIncrementFileNames is true)
-    // Append _## to the filename. Only up to _99. From there just overwrite _99 each time
-    //     NOTE: 1-9 should be _01, _02, etc so sorting doesn't freak out and put _1 next to _10
-
-    Output += InFileName + EXTENSION_NAME;
-
-    return Output;
-}
-
 bool AnimationRecorder::WriteFile(StringParam InPathName, StringParam InFileName, StringParam InCameraName)
 {
-    // @TODO: Launch WriteFileThread in a new thread
-    // Mutex a bool bIsWritingFile or something
-
     //Check if the recording has any data
     if(RecordedData.empty())
     {
@@ -65,7 +47,7 @@ bool AnimationRecorder::WriteFile(StringParam InPathName, StringParam InFileName
         GlobalCvarManager->log("ERROR: Cannot save file. File path (" + OutputFilePath.string() + ") is invalid.");
         return false;
     }
-    OutputFilePath = GetFinalFileName(OutputFilePath, InFileName);
+    OutputFilePath = CBUtils::GetFinalFileName(OutputFilePath, InFileName, (bIncrementFileNames ? 0 : -1));
     std::ofstream OutputFile(OutputFilePath);
 
     //Write to the file
@@ -74,7 +56,8 @@ bool AnimationRecorder::WriteFile(StringParam InPathName, StringParam InFileName
         //Create a copy of the data to work from in the async task
         std::deque<FrameInfo> RecordedDataCopy = RecordedData;
 
-        // @TODO: Launch this in a thread
+        // #TODO: Launch this in a thread.
+        // #TODO: Maybe run the cvar setting commands as `executeCommand(sleep 1; thecvar 0/1)` to avoid thread issues and put the command into the queue?
         GlobalCvarManager->getCvar(CVAR_IS_FILE_WRITING).setValue(true);
         WriteFileThread(OutputFile, InCameraName, RecordedDataCopy);
         GlobalCvarManager->getCvar(CVAR_IS_FILE_WRITING).setValue(false);
@@ -86,7 +69,7 @@ bool AnimationRecorder::WriteFile(StringParam InPathName, StringParam InFileName
         return false;
     }
 
-    // @TODO: Log this and return true after waiting for WriteFileThread to finish?
+    // #TODO: Log this and return true after waiting for WriteFileThread to finish?
     GlobalCvarManager->log("Successfully wrote file " + OutputFilePath.string());
     return true;
 }

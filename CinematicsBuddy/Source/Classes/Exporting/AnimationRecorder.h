@@ -37,7 +37,6 @@ protected:
     bool bIncrementFileNames;
     RecordingType RecordedData;
 
-    std::filesystem::path GetFinalFileName(std::filesystem::path IntendedPath, StringParam InFileName);
     bool WriteFile(StringParam InPathName, StringParam InFileName, StringParam InCameraName);
     void WriteFileThread(std::ofstream& FileStream, StringParam InCameraName, RecordingParam TheRecording);
     void WriteHeader(std::ofstream& FileStream, const ReplayMetadata& ReplayInfo, StringParam InCameraName, RecordingParam TheRecording, CarsSeenParam CarsSeenInRecording);

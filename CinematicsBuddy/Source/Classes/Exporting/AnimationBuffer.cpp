@@ -42,6 +42,11 @@ void AnimationBuffer::CaptureBuffer(StringParam InPathName, StringParam InFileNa
     WriteFile(InPathName, BufferFileName, InCameraName);
 }
 
+void AnimationBuffer::ClearBuffer()
+{
+    RecordedData.clear();
+}
+
 void AnimationBuffer::AddData(const FrameInfo& FrameData)
 {
     AnimationRecorder::AddData(FrameData);

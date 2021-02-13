@@ -34,6 +34,7 @@ extern std::shared_ptr<GameWrapper>        GlobalGameWrapper;
 #define NOTIFIER_RECORD_START   "CBRecordStart"
 #define NOTIFIER_RECORD_STOP    "CBRecordStop"
 #define NOTIFIER_BUFFER_CAPTURE "CBBufferCapture"
+#define NOTIFIER_BUFFER_CLEAR   "CBBufferClear"
 #define NOTIFIER_IMPORT_FILE    "CBAnimationImport"
 #define NOTIFIER_IMPORT_CLEAR   "CBAnimationClear"
 

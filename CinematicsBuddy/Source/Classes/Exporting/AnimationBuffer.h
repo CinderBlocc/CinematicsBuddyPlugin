@@ -9,6 +9,7 @@ public:
     void StartRecording(StringParam InPathName = "", StringParam InFileName = "", StringParam InCameraName = "") override;
     void StopRecording() override;
     void CaptureBuffer(StringParam InPathName, StringParam InFileName, StringParam InCameraName);
+    void ClearBuffer();
 
     void AddData(const FrameInfo& FrameData) override;
 

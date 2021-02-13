@@ -75,6 +75,8 @@ void CinematicsBuddy::GenerateSettingsFile()
         nl("1|Enable Buffer|" + cv(CVAR_BUFFER_ENABLED));
         nl("7|");
         nl("0|Capture Buffer|" + cv(NOTIFIER_BUFFER_CAPTURE));
+        nl("7|");
+        nl("0|Clear Buffer|" + cv(NOTIFIER_BUFFER_CLEAR));
         nl("4|Max buffer length (seconds)|" + cv(CVAR_MAX_BUFFER_LENGTH) + "|0|600");
         nl("9|NOTE: File is saved to location specified by \"Special Path\" in the NORMAL RECORDING section. Read the note there for instructions.");
     
