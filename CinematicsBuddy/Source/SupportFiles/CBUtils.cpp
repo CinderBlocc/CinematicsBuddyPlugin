@@ -5,10 +5,12 @@
 
 std::string CBUtils::PrintFloat(float InFloat, int MaxDecimals)
 {
+    //#TODO: Check to make sure abs() fixed the printing issue for negative numbers
+
     std::ostringstream Output;
     float MinThreshold = powf(.1f, static_cast<float>(MaxDecimals));
 
-    if(MaxDecimals == 0 || (InFloat - static_cast<int>(InFloat)) < MinThreshold)
+    if(MaxDecimals == 0 || abs(InFloat - static_cast<int>(InFloat)) < MinThreshold)
     {
         //All decimals were 0. Print as integer
         Output << static_cast<int>(InFloat);
@@ -25,7 +27,7 @@ std::string CBUtils::PrintFloat(float InFloat, int MaxDecimals)
 
             //Remove the integer component and see if any decimals remain
             float Trimmed = Shifted - static_cast<int>(Shifted);
-            if(Trimmed < MinThreshold)
+            if(abs(Trimmed) < MinThreshold)
             {
                 //No decimals remain after this point
                 CalculatedDecimals = i;

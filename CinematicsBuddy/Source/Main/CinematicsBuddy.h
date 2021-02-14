@@ -26,6 +26,7 @@ private:
     std::shared_ptr<class AnimationImporter> Importer;
     std::shared_ptr<class AnimationExporter> Exporter;
     std::shared_ptr<class AnimationBuffer>   Buffer;
+    std::shared_ptr<class CameraManager>     Camera;
 
     bool bRecording = false;
     bool bBufferIsActive = false;
@@ -35,7 +36,8 @@ public:
 	void onUnload() override;
 
     //Utility
-    bool IsValidMode();
+    bool IsValidRecordingMode();
+    bool IsValidCamOverrideMode();
     void GenerateSettingsFile();
     std::string GetSpecialFilePath();
     void OnNewMapLoading();
@@ -43,6 +45,7 @@ public:
     // TESTING - REMOVE WHEN DONE //
     void TestExportFormat();
     void TestPrintFloat();
+    void DebugRender(CanvasWrapper Canvas);
 
 	//Recording
 	void RecordingFunction();
@@ -56,6 +59,7 @@ public:
     void OnBufferEnabledChanged();
     void OnMaxBufferLengthChanged();
     void OnMaxRecordingLengthChanged();
+    void OnCamOverridesChanged();
 
     //Input override
 	void PlayerInputTick();

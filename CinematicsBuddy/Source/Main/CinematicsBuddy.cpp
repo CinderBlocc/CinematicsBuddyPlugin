@@ -7,12 +7,14 @@
 #include "Importing/AnimationImporter.h"
 #include "Exporting/AnimationExporter.h"
 #include "Exporting/AnimationBuffer.h"
+#include "Camera/CameraManager.h"
 #include <sstream>
 #include <fstream>
 
 /*
     #TODO
 
+    - Have cvar change functions group into less functions, and pass in the type that was changed as an enum so the function can choose what value to apply
     - Camera overrides
         - Methods that will need to have custom delta functions made:
             - Local camera movement and rotation
@@ -25,6 +27,7 @@
 
 /*
     FINAL #TODO: Look for all TODO tags in VA Hashtags and finish them
+                 Also look for all "TESTS" and remove them
 */
 
 /*
@@ -59,6 +62,7 @@ void CinematicsBuddy::onLoad()
     Importer = std::make_shared<AnimationImporter>();
     Exporter = std::make_shared<AnimationExporter>();
     Buffer   = std::make_shared<AnimationBuffer>();
+    Camera   = std::make_shared<CameraManager>();
 
     ExportSpecialFilePath = std::make_shared<std::string>("");
 	ExportFileName        = std::make_shared<std::string>("");
@@ -104,6 +108,7 @@ void CinematicsBuddy::onLoad()
     // TESTS - REMOVE WHEN DONE //
     GlobalCvarManager->registerNotifier("CBTestExportFormat", [this](std::vector<std::string> params){TestExportFormat();}, "Prints data from current frame", PERMISSION_ALL);
     GlobalCvarManager->registerNotifier("CBTestPrintFloat", [this](std::vector<std::string> params){TestPrintFloat();}, "Tests the decimal saving PrintFloat function", PERMISSION_ALL);
+    GlobalGameWrapper->RegisterDrawable(std::bind(&CinematicsBuddy::DebugRender, this, std::placeholders::_1));
 
 	GlobalGameWrapper->HookEvent("Function Engine.GameViewportClient.Tick", std::bind(&CinematicsBuddy::RecordingFunction, this));
 	GlobalGameWrapper->HookEvent("Function TAGame.PlayerInput_TA.PlayerInput", std::bind(&CinematicsBuddy::PlayerInputTick, this));
@@ -112,6 +117,7 @@ void CinematicsBuddy::onLoad()
     GenerateSettingsFile();
 }
 void CinematicsBuddy::onUnload(){}
+
 
 // TESTS - REMOVE WHEN DONE //
 void CinematicsBuddy::TestExportFormat()
@@ -139,15 +145,26 @@ void CinematicsBuddy::TestPrintFloat()
     GlobalCvarManager->log(CBUtils::PrintFloat(1.90000000f, 6));
     GlobalCvarManager->log(CBUtils::PrintFloat(19.0000000f, 6));
 }
+void CinematicsBuddy::DebugRender(CanvasWrapper Canvas)
+{
+    Camera->DebugRender(Canvas);
+}
+
 
 // UTILITY //
 std::string CinematicsBuddy::GetSpecialFilePath()
 {
     return (*bSetSpecialFilePath ? *ExportSpecialFilePath : "");
 }
-bool CinematicsBuddy::IsValidMode()
+bool CinematicsBuddy::IsValidRecordingMode()
 {
     return !GlobalGameWrapper->GetCurrentGameState().IsNull();
+}
+bool CinematicsBuddy::IsValidCamOverrideMode()
+{
+    //#TODO: Check if camera is spectator or something? Check only if they're in replay?
+
+    return true;
 }
 void CinematicsBuddy::OnNewMapLoading()
 {
@@ -182,12 +199,25 @@ void CinematicsBuddy::OnMaxBufferLengthChanged()
 {
     Buffer->SetMaxRecordingTime(*BufferSize);
 }
+void CinematicsBuddy::OnCamOverridesChanged()
+{
+    Camera->SetbUseOverrides(*bUseCamOverrides);
+
+    if(*bUseCamOverrides)
+    {
+        //#TODO: Call OnSpeedChanged (and other cam cvar functions) to apply chosen values
+    }
+    else
+    {
+        Camera->ResetValues();
+    }
+}
 
 
 // RECORDING FUNCTION //
 void CinematicsBuddy::RecordingFunction()
 {
-    if(!IsValidMode())
+    if(!IsValidRecordingMode())
     {
         return;
     }
@@ -226,70 +256,18 @@ void CinematicsBuddy::BufferClear()
 /* INPUT OVERRIDE */
 void CinematicsBuddy::PlayerInputTick()
 {
-	if(!gameWrapper->IsInReplay()) return;
-	
-	if(*bUseCamOverrides)
-	{
-		/*
-		struct CameraMovement
-		{
-			unsigned char padding[0x160];//352
-			float forward;
-			float turn;
-			float strafe;
-			float up;
-			float lookup;
-		};
+    using namespace std::chrono;
 
-		CameraMovement* cm = (CameraMovement*)camInput.memory_address;
+    //Get delta for this tick. PreviousTime is "static" so it is only created and initialized to now() once
+    static steady_clock::time_point PreviousTime = steady_clock::now();
+    steady_clock::time_point CurrentTime = steady_clock::now();
+    float InputDelta = duration_cast<duration<float>>(CurrentTime - PreviousTime).count();
+    PreviousTime = CurrentTime;
 
-		//ControllerInput controls = something.GetInput();
-		//Get average of controller inputs
-		//assign average to cm->values
-
-		//LOOK AT UPlayerInput_TA which may give better results than this
-
-		cm->forward *= *cvarCamSpeed;
-		cm->strafe *= *cvarCamSpeed;
-		cm->up *= *cvarCamSpeed;
-
-		cm->turn *= *cvarCamRotationSpeed;
-		cm->lookup *= *cvarCamRotationSpeed;
-		*/
-
-		PlayerControllerWrapper controller = gameWrapper->GetPlayerController();
-		if(controller.IsNull()) return;
-		controller.SetSpectatorCameraAccel(4000);//4000 default. Higher = speedier acceleration
-		controller.SetSpectatorCameraSpeed(2000);//2000 default.
-
-		/*
-		//ALL OF THESE ARE IN PLAYERCONTROLLERWRAPPER
-			//Get inputs from this?
-			float GetLastInputPitchUp();
-			float GetLastInputPitchDown();
-			float GetLastInputYawLeft();
-			float GetLastInputYawRight();
-			float GetLastInputPitch();
-			float GetLastInputYaw();
-
-			//Set inputs with this
-			void SetAForward(float aForward);
-			void SetATurn(float aTurn);
-			void SetAStrafe(float aStrafe);
-			void SetAUp(float aUp);
-			void SetALookUp(float aLookUp);
-
-			//MAYBE try getting inputs from GetAForward() etc, but that likely won't work
-		*/
-	}
-	else
-	{
-		//Reset values to default and leave player controller alone
-		PlayerControllerWrapper controller = gameWrapper->GetPlayerController();
-		if(controller.IsNull()) return;
-		controller.SetSpectatorCameraAccel(4000);
-		controller.SetSpectatorCameraSpeed(2000);
-	}
+	if(*bUseCamOverrides && IsValidCamOverrideMode())
+    {
+	    Camera->PlayerInputTick(InputDelta);
+    }
 }
 
 

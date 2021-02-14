@@ -57,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Classes\Camera\CameraManager.cpp" />
+    <ClCompile Include="Source\Classes\Camera\InputsManager.cpp" />
     <ClCompile Include="Source\Classes\DataCollectors\FrameInfo.cpp" />
     <ClCompile Include="Source\Classes\DataCollectors\FrameInfoCollectors.cpp" />
     <ClCompile Include="Source\Classes\Exporting\AnimationBuffer.cpp" />
@@ -70,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Classes\Camera\CameraManager.h" />
+    <ClInclude Include="Source\Classes\Camera\InputsManager.h" />
     <ClInclude Include="Source\Classes\DataCollectors\FrameInfo.h" />
     <ClInclude Include="Source\Classes\DataCollectors\FrameInfoCollectors.h" />
     <ClInclude Include="Source\Classes\Exporting\AnimationBuffer.h" />
