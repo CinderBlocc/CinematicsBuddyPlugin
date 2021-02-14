@@ -4,10 +4,17 @@
 /*
 
     Instead of averaging forward/back inputs, use those inputs to generate an acceleration/brake along forward vector up to a certain velocity?
-        - Take delta into account. Add more velocity
+        - Take delta into account. Add/subtract velocity based on input strength multiplied by delta
         - Velocity would be entirely local. If player is looking up and down while decelerating with no inputs, they'll move in a rollercoaster
-        - Reduce the strength of the input the closer the velocity is to max to ease into final speed?
+        - Reduce the strength of the input (or lack of input) the closer the velocity is to max to ease into final speed?
         - Acceleration should be a matter of duration (i.e. 1 second to max speed), so force applied should be tied to max speed
+        - Take FOV into account for pitch and yaw rotation speed. Maybe even roll as well, but that's less likely to be an issue
+        - Make roll button more responsive? It seems to take about a second before it toggles bRoll
+            - Maybe just make that a binding in a dropdown in the settings file and check each tick if the chosen (cached) FNameByString button is pressed
+                - Only necessary for controllers because keyboard users get instant input. Could nicely trim down the size of the list
+                    - Name the buttons independently of XBox. i.e. "Xbox A - PS4 X@XboxTypeS_A"
+                    - Generate a static vector<pair<DisplayName, RealName>> to be filled by settings file generator once, but used multiple times
+                        - static bool bHasBeenGenerated = false; // Do thing // bHasBeenGenerated = true;
 
 */
 
