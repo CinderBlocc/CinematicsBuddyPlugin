@@ -14,6 +14,7 @@ public:
     
     //Set state values
     void SetbUseOverrides(bool bNewValue)      { bUseOverrides      = bNewValue; }
+    void SetbUseLocalMatrix(bool bNewValue)    { bUseLocalMatrix    = bNewValue; }
     void SetMovementSpeed(float NewValue)      { MovementSpeed      = NewValue;  }
     void SetMovementAccel(float NewValue)      { MovementAccel      = NewValue;  }
     void SetRotationAccel(float NewValue)      { RotationAccel      = NewValue;  }
@@ -29,6 +30,7 @@ private:
 
     //State variables set by plugin
     bool bUseOverrides;
+    bool bUseLocalMatrix;
     bool bRoll;
     float MovementSpeed;
     float MovementAccel;
@@ -36,6 +38,10 @@ private:
     float MouseSensitivity;
     float GamepadSensitivity;
     float FOVRotationScale;
+
+    //Internal state variables
+    float BaseSpeed;
+    float MaxSpeed;
     
     //Speed of movement and rotation
     Vector Velocity;
@@ -53,4 +59,12 @@ private:
     void UpdateAngularVelocity(float Delta);
     void UpdatePosition(float Delta, CameraWrapper TheCamera);
     void UpdateRotation(float Delta, CameraWrapper TheCamera);
+
+    //Utility
+    float GetSpeedComponent(Vector Direction);
+    float GetInvertedPerc(float InPerc);
+    float GetWeightedPerc(float InPerc);
+    float GetReducedPerc(float InputPerc, float SpeedPerc);
+    float GetBrakeForce(float InputPerc, float SpeedPerc);
+    float RemapPercentage(float CurrentPerc, float CurrentMin, float CurrentMax, float NewMin, float NewMax);
 };

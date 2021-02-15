@@ -23,6 +23,7 @@ private:
 
     //Camera override cvars
     std::shared_ptr<bool>  bUseCamOverrides;
+    std::shared_ptr<bool>  bUseLocalMatrix;
     std::shared_ptr<float> CamMovementSpeed;
     std::shared_ptr<float> CamMovementAccel;
     std::shared_ptr<float> CamRotationAccel;

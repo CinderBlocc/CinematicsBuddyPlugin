@@ -98,6 +98,7 @@ void CinematicsBuddy::onLoad()
     
     //Camera override cvars
     bUseCamOverrides      = std::make_shared<bool>(false);
+    bUseLocalMatrix       = std::make_shared<bool>(false);
     CamMovementSpeed      = std::make_shared<float>(0.f);
     CamMovementAccel      = std::make_shared<float>(0.f);
     CamRotationAccel      = std::make_shared<float>(0.f);
@@ -106,6 +107,7 @@ void CinematicsBuddy::onLoad()
     CamFOVRotationScale   = std::make_shared<float>(0.f);
     CamRollBinding        = std::make_shared<std::string>("");
     GlobalCvarManager->registerCvar(CVAR_ENABLE_CAM_OVERRIDE, "0",   "Enables camera overriding features", true).bindTo(bUseCamOverrides);
+    GlobalCvarManager->registerCvar(CVAR_CAM_LOCAL_MATRIX,    "1",   "Uses the local orientation of the camera", true).bindTo(bUseLocalMatrix);
 	GlobalCvarManager->registerCvar(CVAR_CAM_MOVEMENT_SPEED,  "1",   "Camera movement speed multiplier", true, true, 0, true, 3).bindTo(CamMovementSpeed);
     GlobalCvarManager->registerCvar(CVAR_CAM_MOVEMENT_ACCEL,  "1",   "Camera movement acceleration speed", true, true, 0, true, 5).bindTo(CamMovementAccel);
     GlobalCvarManager->registerCvar(CVAR_CAM_ROTATION_ACCEL,  "1",   "Camera rotation acceleration speed", true, true, 0, true, 5).bindTo(CamRotationAccel);
@@ -114,6 +116,7 @@ void CinematicsBuddy::onLoad()
     GlobalCvarManager->registerCvar(CVAR_FOV_ROTATION_SCALE,  "0.9", "Multiplier for slowing camera rotation when zoomed in", true, true, 0, true, 2).bindTo(CamFOVRotationScale);
     GlobalCvarManager->registerCvar(CVAR_ROLL_BINDING, "XboxTypeS_RightShoulder", "Button bound to bRoll modifier to change camera yaw input to roll", true).bindTo(CamRollBinding);
     GlobalCvarManager->getCvar(CVAR_ENABLE_CAM_OVERRIDE).addOnValueChanged( std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_bUseOverrides));
+    GlobalCvarManager->getCvar(CVAR_CAM_LOCAL_MATRIX).addOnValueChanged(    std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_bUseLocalMatrix));
     GlobalCvarManager->getCvar(CVAR_CAM_MOVEMENT_SPEED).addOnValueChanged(  std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_MovementSpeed));
     GlobalCvarManager->getCvar(CVAR_CAM_MOVEMENT_ACCEL).addOnValueChanged(  std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_MovementAccel));
     GlobalCvarManager->getCvar(CVAR_CAM_ROTATION_ACCEL).addOnValueChanged(  std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_RotationAccel));
@@ -193,6 +196,7 @@ void CinematicsBuddy::OnCamOverridesChanged(ECamOverrideChanged ChangedValue)
     switch(ChangedValue)
     {
         case ECamOverrideChanged::C_bUseOverrides:      return Camera->SetbUseOverrides(*bUseCamOverrides);
+        case ECamOverrideChanged::C_bUseLocalMatrix:    return Camera->SetbUseLocalMatrix(*bUseLocalMatrix);
         case ECamOverrideChanged::C_MovementSpeed:      return Camera->SetMovementSpeed(*CamMovementSpeed);
         case ECamOverrideChanged::C_MovementAccel:      return Camera->SetMovementAccel(*CamMovementAccel);
         case ECamOverrideChanged::C_RotationAccel:      return Camera->SetRotationAccel(*CamRotationAccel);

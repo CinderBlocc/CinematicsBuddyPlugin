@@ -25,6 +25,7 @@ extern std::shared_ptr<GameWrapper>        GlobalGameWrapper;
 
 //Camera override cvars
 #define CVAR_ENABLE_CAM_OVERRIDE "CB_bUseCamOverrides"
+#define CVAR_CAM_LOCAL_MATRIX    "CB_bUseLocalMatrix"
 #define CVAR_CAM_MOVEMENT_SPEED  "CB_CamMovementSpeed"
 #define CVAR_CAM_MOVEMENT_ACCEL  "CB_CamMovementAccel"
 #define CVAR_CAM_ROTATION_ACCEL  "CB_CamRotationAccel"
@@ -61,6 +62,7 @@ enum class ERecordingSettingChanged
 enum class ECamOverrideChanged
 {
     C_bUseOverrides = 0,
+    C_bUseLocalMatrix,
     C_MovementSpeed,
     C_MovementAccel,
     C_RotationAccel,
