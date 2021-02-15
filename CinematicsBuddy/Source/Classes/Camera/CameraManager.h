@@ -37,18 +37,20 @@ private:
     float GamepadSensitivity;
     float FOVRotationScale;
     
-    void UpdateCameraMatrix(CameraWrapper TheCamera);
-    void UpdateVelocity(float Delta);
-    void UpdateAngularVelocity(float Delta);
-    void UpdatePosition(float Delta, CameraWrapper TheCamera);
-    void UpdateRotation(float Delta, CameraWrapper TheCamera);
-
     //Speed of movement and rotation
-    Vector Velocity; // cm / s
-    Vector AngularVelocity; // cm / s
+    Vector Velocity;
+    Vector AngularVelocity;
 
     //Camera matrix
     Vector Forward;
     Vector Right;
     Vector Up;
+
+    //Functions to update camera transformation
+    void UpdateCameraTransformation(float Delta);
+    void UpdateCameraMatrix(CameraWrapper TheCamera);
+    void UpdateVelocity(float Delta);
+    void UpdateAngularVelocity(float Delta);
+    void UpdatePosition(float Delta, CameraWrapper TheCamera);
+    void UpdateRotation(float Delta, CameraWrapper TheCamera);
 };

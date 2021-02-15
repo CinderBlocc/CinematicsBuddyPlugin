@@ -22,9 +22,16 @@ void CameraManager::PlayerInputTick(float Delta, bool InbRoll)
         return;
     }
 
+    //Get the inputs and then nullify them before they reach the game
     bRoll = InbRoll;
 	Inputs->PlayerInputTick(Delta, bRoll);
 
+    //Apply inputs to camera
+    UpdateCameraTransformation(Delta);
+}
+
+void CameraManager::UpdateCameraTransformation(float Delta)
+{
     CameraWrapper TheCamera = GlobalGameWrapper->GetCamera();
     if(!TheCamera.IsNull())
     {
@@ -46,31 +53,36 @@ void CameraManager::UpdateCameraMatrix(CameraWrapper TheCamera)
 
 void CameraManager::UpdateVelocity(float Delta)
 {
+    //Calculate the max speed
+    constexpr float BaseSpeed = 2000.f;
+    float MaxSpeed = BaseSpeed * MovementSpeed;
+
+    //Get useful percentages
+    float SpeedPerc   = Velocity.magnitude() / MaxSpeed;
+    float ForwardPerc = Inputs->GetForward();
+    float RightPerc   = Inputs->GetRight();
+    float UpPerc      = Inputs->GetUp();
+
     //#TODO: Braking force should be applied per vector component, and should be the inverse of that component's input amount
     //i.e. If forward input is 0.25, forward braking should be 0.75
 
     //#TODO: Calculate an impulse amount based on delta?
     //As Velocity approaches MaxVelocity, reduce impulse strength to ease into max speed?
-    float SpeedPerc = Velocity.magnitude() / MovementSpeed;
-    float BrakeAmount = min(Delta * 10.f, 1.f);
-    float AccelImpulse = MovementSpeed * Delta * (1 - SpeedPerc) * MovementAccel;
     //float BrakeImpulse = MaxSpeed * Delta * (1 - SpeedPerc) * Acceleration;
 
     //Get relative input velocity direction. NOTE: Won't be normalized
     //#TODO: Normalize this? Might be problematic in slowing down forward momentum while holding right, etc
-    float ForwardPerc   = Inputs->GetForward();
-    float RightPerc     = Inputs->GetRight();
-    float UpPerc        = Inputs->GetUp();
     Vector AccelForward = Forward * ForwardPerc;
     Vector AccelRight   = Right   * RightPerc;
     Vector AccelUp      = Up      * UpPerc;
+    Vector AccelVelocity = AccelForward + AccelRight + AccelUp;
     //Vector BrakeForward = Forward * (1 - ForwardPerc) * -1.f;
     //Vector BrakeRight   = Right   * (1 - RightPerc)   * -1.f;
     //Vector BrakeUp      = Up      * (1 - UpPerc)      * -1.f;
-    Vector AccelVelocity = AccelForward + AccelRight + AccelUp;
     //Vector BrakeVelocity = BrakeForward + BrakeRight + BrakeUp;
 
     //Apply impulse strength to directional vector
+    float AccelImpulse = MaxSpeed * Delta * (1 - SpeedPerc) * MovementAccel;
     AccelVelocity *= AccelImpulse;
     //BrakeVelocity *= BrakeImpulse;
 
@@ -78,6 +90,7 @@ void CameraManager::UpdateVelocity(float Delta)
     Velocity += AccelVelocity;
 
     //Apply brake
+    float BrakeAmount = min(Delta * 10.f, 1.f);
     if(abs(AccelVelocity.magnitude()) < 0.001f)
     {
         Velocity -= Velocity * BrakeAmount;
@@ -92,12 +105,11 @@ void CameraManager::UpdateVelocity(float Delta)
 
 void CameraManager::UpdateAngularVelocity(float Delta)
 {
-    
+    //#TODO: Take FOVRotationScale into account here, along with camera FOV
 }
 
 void CameraManager::UpdatePosition(float Delta, CameraWrapper TheCamera)
 {
-    //#TODO: Make sure this is right
     Vector NewLocation = TheCamera.GetLocation() + Velocity * Delta;
     TheCamera.SetLocation(NewLocation);
 }
