@@ -1,42 +1,36 @@
 #pragma once
-#include "bakkesmod/wrappers/wrapperstructs.h"
+#include "bakkesmod/plugin/bakkesmodplugin.h"
 
 class InputsManager
 {
 public:
     InputsManager();
 
-    void PlayerInputTick(float Delta);
-    void ResetValues();
+    void PlayerInputTick(float Delta, bool bRoll);
 
-    void DebugRender(class CanvasWrapper Canvas);
+    // TESTS - REMOVE WHEN DONE //
+    void DebugRender(class CanvasWrapper Canvas, std::vector<std::string>& RenderStrings);
 
-    bool bUsingGamepad;
-    bool bRoll;
-    float MouseSensitivity;
-    float Acceleration;
-    float Speed;
-    float Forward;
-    float Strafe;
-    float Up;
-    float Pitch;//LookUp
-    float Yaw;//Turn
-    float Roll;//Keyboard: LookRoll | Gamepad: bRoll + Turn (Yaw)
-    float LookRightScale;
-    float LookUpScale;
-    float GamepadLookScale;
+    //Get input values
+    float GetForward() { return Forward; }
+    float GetRight()   { return Right;   }
+    float GetUp()      { return Up;      }
+    float GetPitch()   { return Pitch;   }
+    float GetYaw()     { return Yaw;     }
+    float GetRoll()    { return Roll;    }
 
 private:
-    bool bDirty;
-    void GetInputs(PlayerControllerWrapper Controller);
+    void GetInputs(PlayerControllerWrapper Controller, bool bRoll);
     void NullifyInputs(PlayerControllerWrapper Controller);
-    void UpdateVelocity(float Delta);
-    void UpdateAngularVelocity(float Delta);
 
-    Vector Velocity;
-    Vector AngularVelocity;
-    Vector CurrentLocation;
-    Vector CurrentRotation;
-    Vector PreviousLocation;
-    Vector PreviousRotation;
+    //Inputs read from game (and modified)
+    float Forward; // Default range: Gamepad(-1 to 1), Keyboard(-1 to 1)
+    float Right;   // Default range: Gamepad(-1 to 1), Keyboard(-1 to 1)
+    float Up;      // Default range: Gamepad(-1 to 1), Keyboard(-1 to 1)
+    float Pitch;   // Default range: Gamepad(-1 to 1), Keyboard(-??? to ??? -- Depends on range of mouse movement)
+    float Yaw;     // Default range: Gamepad(-1 to 1), Keyboard(-??? to ??? -- Depends on range of mouse movement)
+    float Roll;    // Default range: Gamepad(-1 to 1), Keyboard(-??? to ??? -- Depends on range of mouse movement)
+
+    //State variables read from game
+    bool bUsingGamepad;
 };

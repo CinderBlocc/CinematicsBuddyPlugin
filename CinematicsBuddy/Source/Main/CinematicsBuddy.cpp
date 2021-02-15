@@ -56,28 +56,27 @@ std::shared_ptr<GameWrapper>        GlobalGameWrapper;
 
 void CinematicsBuddy::onLoad()
 {
+    //Assign these so any file that includes MacrosStructsEnums can use them
     GlobalCvarManager = cvarManager;
     GlobalGameWrapper = gameWrapper;
 
+    //Class pointers
     Importer = std::make_shared<AnimationImporter>();
     Exporter = std::make_shared<AnimationExporter>();
     Buffer   = std::make_shared<AnimationBuffer>();
     Camera   = std::make_shared<CameraManager>();
 
+    //Recording cvars
     ExportSpecialFilePath = std::make_shared<std::string>("");
 	ExportFileName        = std::make_shared<std::string>("");
 	ExportCameraName      = std::make_shared<std::string>("");
-	ImportFileName        = std::make_shared<std::string>("");
 	RecordSize            = std::make_shared<float>(0.f);
 	BufferSize            = std::make_shared<float>(0.f);
-	CamSpeed              = std::make_shared<float>(0.f);
-	CamRotationSpeed      = std::make_shared<float>(0.f);
 	bSetSpecialFilePath   = std::make_shared<bool>(false);
 	bIncrementFileNames   = std::make_shared<bool>(false);
-	bUseCamOverrides      = std::make_shared<bool>(false);
 	bIsRecordingActive    = std::make_shared<bool>(false);
     bIsBufferActive       = std::make_shared<bool>(false);
-
+	bIsFileWriting        = std::make_shared<bool>(false);
 	GlobalCvarManager->registerCvar(CVAR_SET_SPECIAL_PATH,    "0",   "Enable if you want to use a non-default path", true).bindTo(bSetSpecialFilePath);
 	GlobalCvarManager->registerCvar(CVAR_SPECIAL_PATH,        "",    "Set the special export file path. Leave blank for default", true).bindTo(ExportSpecialFilePath);
 	GlobalCvarManager->registerCvar(CVAR_INCREMENT_FILES,     "1",   "Automatically append a unique number to file names", true).bindTo(bIncrementFileNames);
@@ -86,18 +85,44 @@ void CinematicsBuddy::onLoad()
 	GlobalCvarManager->registerCvar(CVAR_MAX_RECORD_LENGTH,   "300", "Number of seconds to record", true, true, 0, true, 1000).bindTo(RecordSize);
 	GlobalCvarManager->registerCvar(CVAR_MAX_BUFFER_LENGTH,   "30",  "Number of seconds to buffer", true, true, 0, true, 1000).bindTo(BufferSize);
 	GlobalCvarManager->registerCvar(CVAR_BUFFER_ENABLED,      "0",   "Enable constant recording buffer", false).bindTo(bIsBufferActive);
-	GlobalCvarManager->registerCvar(CVAR_IMPORT_FILE_NAME,    "",    "Set the import file name", true).bindTo(ImportFileName);
-	GlobalCvarManager->registerCvar(CVAR_ENABLE_CAM_OVERRIDE, "0",   "Enables camera overriding features", true).bindTo(bUseCamOverrides);
-	GlobalCvarManager->registerCvar(CVAR_CAM_MOVEMENT_SPEED,  "1",   "Camera movement speed multiplier", true, true, 0, true, 3).bindTo(CamSpeed);
-	GlobalCvarManager->registerCvar(CVAR_CAM_ROTATION_SPEED,  "1",   "Camera rotation speed multiplier", true, true, 0, true, 3).bindTo(CamRotationSpeed);
-	GlobalCvarManager->registerCvar(CVAR_IS_RECORDING_ACTIVE, "0",   "Display version information on screen", false).bindTo(bIsRecordingActive);
-	GlobalCvarManager->registerCvar(CVAR_IS_FILE_WRITING    , "0",   "Handle UI state if file is writing", false, false, 0, false, 0, false);
+	GlobalCvarManager->registerCvar(CVAR_IS_RECORDING_ACTIVE, "0",   "Internal info about the state of the recording", false, false, 0, false, 0, false).bindTo(bIsRecordingActive);
+	GlobalCvarManager->registerCvar(CVAR_IS_FILE_WRITING    , "0",   "Handle UI state if file is writing", false, false, 0, false, 0, false).bindTo(bIsFileWriting);
+    GlobalCvarManager->getCvar(CVAR_INCREMENT_FILES).addOnValueChanged(   std::bind(&CinematicsBuddy::OnRecordingSettingChanged, this, ERecordingSettingChanged::R_bIncrement));
+    GlobalCvarManager->getCvar(CVAR_MAX_RECORD_LENGTH).addOnValueChanged( std::bind(&CinematicsBuddy::OnRecordingSettingChanged, this, ERecordingSettingChanged::R_MaxRecordingLength));
+    GlobalCvarManager->getCvar(CVAR_MAX_BUFFER_LENGTH).addOnValueChanged( std::bind(&CinematicsBuddy::OnRecordingSettingChanged, this, ERecordingSettingChanged::R_MaxBufferLength));
+    GlobalCvarManager->getCvar(CVAR_BUFFER_ENABLED).addOnValueChanged(    std::bind(&CinematicsBuddy::OnRecordingSettingChanged, this, ERecordingSettingChanged::R_bBufferEnabled));
 
-    GlobalCvarManager->getCvar(CVAR_BUFFER_ENABLED).addOnValueChanged(std::bind(&CinematicsBuddy::OnBufferEnabledChanged, this));
-    GlobalCvarManager->getCvar(CVAR_INCREMENT_FILES).addOnValueChanged(std::bind(&CinematicsBuddy::OnIncrementChanged, this));
-    GlobalCvarManager->getCvar(CVAR_MAX_RECORD_LENGTH).addOnValueChanged(std::bind(&CinematicsBuddy::OnMaxRecordingLengthChanged, this));
-    GlobalCvarManager->getCvar(CVAR_MAX_BUFFER_LENGTH).addOnValueChanged(std::bind(&CinematicsBuddy::OnMaxBufferLengthChanged, this));
+    //Import cvars
+    ImportFileName = std::make_shared<std::string>("");
+    GlobalCvarManager->registerCvar(CVAR_IMPORT_FILE_NAME, "", "Set the import file name", true).bindTo(ImportFileName);
+    
+    //Camera override cvars
+    bUseCamOverrides      = std::make_shared<bool>(false);
+    CamMovementSpeed      = std::make_shared<float>(0.f);
+    CamMovementAccel      = std::make_shared<float>(0.f);
+    CamRotationAccel      = std::make_shared<float>(0.f);
+    CamMouseSensitivity   = std::make_shared<float>(0.f);
+    CamGamepadSensitivity = std::make_shared<float>(0.f);
+    CamFOVRotationScale   = std::make_shared<float>(0.f);
+    CamRollBinding        = std::make_shared<std::string>("");
+    GlobalCvarManager->registerCvar(CVAR_ENABLE_CAM_OVERRIDE, "0",   "Enables camera overriding features", true).bindTo(bUseCamOverrides);
+	GlobalCvarManager->registerCvar(CVAR_CAM_MOVEMENT_SPEED,  "1",   "Camera movement speed multiplier", true, true, 0, true, 3).bindTo(CamMovementSpeed);
+    GlobalCvarManager->registerCvar(CVAR_CAM_MOVEMENT_ACCEL,  "1",   "Camera movement acceleration speed", true, true, 0, true, 5).bindTo(CamMovementAccel);
+    GlobalCvarManager->registerCvar(CVAR_CAM_ROTATION_ACCEL,  "1",   "Camera rotation acceleration speed", true, true, 0, true, 5).bindTo(CamRotationAccel);
+    GlobalCvarManager->registerCvar(CVAR_MOUSE_SENSITIVITY,   "10",  "Camera rotation speed when using mouse", true, true, 0, true, 25).bindTo(CamMouseSensitivity);
+    GlobalCvarManager->registerCvar(CVAR_GAMEPAD_SENSITIVITY, "20",  "Camera rotation speed when using gamepad", true, true, 0, true, 50).bindTo(CamGamepadSensitivity);
+    GlobalCvarManager->registerCvar(CVAR_FOV_ROTATION_SCALE,  "0.9", "Multiplier for slowing camera rotation when zoomed in", true, true, 0, true, 2).bindTo(CamFOVRotationScale);
+    GlobalCvarManager->registerCvar(CVAR_ROLL_BINDING, "XboxTypeS_RightShoulder", "Button bound to bRoll modifier to change camera yaw input to roll", true).bindTo(CamRollBinding);
+    GlobalCvarManager->getCvar(CVAR_ENABLE_CAM_OVERRIDE).addOnValueChanged( std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_bUseOverrides));
+    GlobalCvarManager->getCvar(CVAR_CAM_MOVEMENT_SPEED).addOnValueChanged(  std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_MovementSpeed));
+    GlobalCvarManager->getCvar(CVAR_CAM_MOVEMENT_ACCEL).addOnValueChanged(  std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_MovementAccel));
+    GlobalCvarManager->getCvar(CVAR_CAM_ROTATION_ACCEL).addOnValueChanged(  std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_RotationAccel));
+    GlobalCvarManager->getCvar(CVAR_MOUSE_SENSITIVITY).addOnValueChanged(   std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_MouseSensitivity));
+    GlobalCvarManager->getCvar(CVAR_GAMEPAD_SENSITIVITY).addOnValueChanged( std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_GamepadSensitivity));
+    GlobalCvarManager->getCvar(CVAR_FOV_ROTATION_SCALE).addOnValueChanged(  std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_FOVRotationScale));
+    GlobalCvarManager->getCvar(CVAR_ROLL_BINDING).addOnValueChanged(        std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_RollBinding));
 	
+    //Notifiers
 	GlobalCvarManager->registerNotifier(NOTIFIER_RECORD_START,   [this](std::vector<std::string> params){RecordStart();},      "Starts capturing animation data.",              PERMISSION_ALL);
 	GlobalCvarManager->registerNotifier(NOTIFIER_RECORD_STOP,    [this](std::vector<std::string> params){RecordStop();},       "Stops capturing animation data",                PERMISSION_ALL);
 	GlobalCvarManager->registerNotifier(NOTIFIER_BUFFER_CAPTURE, [this](std::vector<std::string> params){BufferCapture();},    "Captures the data in the buffer",               PERMISSION_ALL);
@@ -105,66 +130,25 @@ void CinematicsBuddy::onLoad()
 	GlobalCvarManager->registerNotifier(NOTIFIER_IMPORT_FILE,    [this](std::vector<std::string> params){CamPathImport();},    "Imports a camera animation from a file",        PERMISSION_ALL);
 	GlobalCvarManager->registerNotifier(NOTIFIER_IMPORT_CLEAR,   [this](std::vector<std::string> params){CamPathClear();},     "Clears the imported camera animation",          PERMISSION_ALL);
 	
+    //Hooks
+    GlobalGameWrapper->HookEvent("Function Engine.GameViewportClient.Tick", std::bind(&CinematicsBuddy::RecordingFunction, this));
+	GlobalGameWrapper->HookEvent("Function TAGame.PlayerInput_TA.PlayerInput", std::bind(&CinematicsBuddy::PlayerInputTick, this));
+	GlobalGameWrapper->HookEvent("Function ProjectX.EngineShare_X.EventPreLoadMap", std::bind(&CinematicsBuddy::OnNewMapLoading, this));
+
     // TESTS - REMOVE WHEN DONE //
     GlobalCvarManager->registerNotifier("CBTestExportFormat", [this](std::vector<std::string> params){TestExportFormat();}, "Prints data from current frame", PERMISSION_ALL);
     GlobalCvarManager->registerNotifier("CBTestPrintFloat", [this](std::vector<std::string> params){TestPrintFloat();}, "Tests the decimal saving PrintFloat function", PERMISSION_ALL);
     GlobalGameWrapper->RegisterDrawable(std::bind(&CinematicsBuddy::DebugRender, this, std::placeholders::_1));
-
-	GlobalGameWrapper->HookEvent("Function Engine.GameViewportClient.Tick", std::bind(&CinematicsBuddy::RecordingFunction, this));
-	GlobalGameWrapper->HookEvent("Function TAGame.PlayerInput_TA.PlayerInput", std::bind(&CinematicsBuddy::PlayerInputTick, this));
-	GlobalGameWrapper->HookEvent("Function ProjectX.EngineShare_X.EventPreLoadMap", std::bind(&CinematicsBuddy::OnNewMapLoading, this));
 
     GenerateSettingsFile();
 }
 void CinematicsBuddy::onUnload(){}
 
 
-// TESTS - REMOVE WHEN DONE //
-void CinematicsBuddy::TestExportFormat()
-{
-    //Gets the info of the current frame, and prints it in its final format to the console
-    FrameInfo ThisFrame = FrameInfo::Get();
-    const auto& ThisFrameTime = ThisFrame.GetTimeInfo();
-    const auto& CarsSeenThisFrame = ThisFrame.GetCarsSeen();
-    
-    std::string Output;
-    Output += "\n\nEXAMPLE FORMAT\n" + FrameInfo::PrintExampleFormat();
-    Output += "\n\nTHIS FRAME\n" + ThisFrame.Print(ThisFrameTime, 0, CarsSeenThisFrame);
-
-    GlobalCvarManager->log(Output);
-}
-void CinematicsBuddy::TestPrintFloat()
-{
-    GlobalCvarManager->log(CBUtils::PrintFloat(0.00000019f, 6));
-    GlobalCvarManager->log(CBUtils::PrintFloat(0.00000190f, 6));
-    GlobalCvarManager->log(CBUtils::PrintFloat(0.00001900f, 6));
-    GlobalCvarManager->log(CBUtils::PrintFloat(0.00019000f, 6));
-    GlobalCvarManager->log(CBUtils::PrintFloat(0.00190000f, 6));
-    GlobalCvarManager->log(CBUtils::PrintFloat(0.01900000f, 6));
-    GlobalCvarManager->log(CBUtils::PrintFloat(0.19000000f, 6));
-    GlobalCvarManager->log(CBUtils::PrintFloat(1.90000000f, 6));
-    GlobalCvarManager->log(CBUtils::PrintFloat(19.0000000f, 6));
-}
-void CinematicsBuddy::DebugRender(CanvasWrapper Canvas)
-{
-    Camera->DebugRender(Canvas);
-}
-
-
 // UTILITY //
 std::string CinematicsBuddy::GetSpecialFilePath()
 {
     return (*bSetSpecialFilePath ? *ExportSpecialFilePath : "");
-}
-bool CinematicsBuddy::IsValidRecordingMode()
-{
-    return !GlobalGameWrapper->GetCurrentGameState().IsNull();
-}
-bool CinematicsBuddy::IsValidCamOverrideMode()
-{
-    //#TODO: Check if camera is spectator or something? Check only if they're in replay?
-
-    return true;
 }
 void CinematicsBuddy::OnNewMapLoading()
 {
@@ -175,46 +159,61 @@ void CinematicsBuddy::OnNewMapLoading()
 
 
 // CVAR CHANGES //
-void CinematicsBuddy::OnIncrementChanged()
+void CinematicsBuddy::OnRecordingSettingChanged(ERecordingSettingChanged ChangedValue)
 {
-    Exporter->SetbIncrementFiles(*bIncrementFileNames);
-    Buffer->SetbIncrementFiles(*bIncrementFileNames);
-}
-void CinematicsBuddy::OnBufferEnabledChanged()
-{
-    if(*bIsBufferActive)
+    switch(ChangedValue)
     {
-        Buffer->StartRecording();
+        case ERecordingSettingChanged::R_bIncrement:
+        {
+            Exporter->SetbIncrementFiles(*bIncrementFileNames);
+            Buffer->SetbIncrementFiles(*bIncrementFileNames);
+            return;
+        }
+        case ERecordingSettingChanged::R_bBufferEnabled:
+        {
+            if(*bIsBufferActive) { Buffer->StartRecording(); }
+            else                 { Buffer->StopRecording();  }
+            return;
+        }
+        case ERecordingSettingChanged::R_MaxBufferLength:
+        {
+            Exporter->SetMaxRecordingTime(*RecordSize);
+            return;
+        }
+        case ERecordingSettingChanged::R_MaxRecordingLength:
+        {
+            Buffer->SetMaxRecordingTime(*BufferSize);
+            return;
+        }
+        default: return;
     }
-    else
-    {
-        Buffer->StopRecording();
-    }
 }
-void CinematicsBuddy::OnMaxRecordingLengthChanged()
+void CinematicsBuddy::OnCamOverridesChanged(ECamOverrideChanged ChangedValue)
 {
-    Exporter->SetMaxRecordingTime(*RecordSize);
-}
-void CinematicsBuddy::OnMaxBufferLengthChanged()
-{
-    Buffer->SetMaxRecordingTime(*BufferSize);
-}
-void CinematicsBuddy::OnCamOverridesChanged()
-{
-    Camera->SetbUseOverrides(*bUseCamOverrides);
-
-    if(*bUseCamOverrides)
+    switch(ChangedValue)
     {
-        //#TODO: Call OnSpeedChanged (and other cam cvar functions) to apply chosen values
-    }
-    else
-    {
-        Camera->ResetValues();
+        case ECamOverrideChanged::C_bUseOverrides:      return Camera->SetbUseOverrides(*bUseCamOverrides);
+        case ECamOverrideChanged::C_MovementSpeed:      return Camera->SetMovementSpeed(*CamMovementSpeed);
+        case ECamOverrideChanged::C_MovementAccel:      return Camera->SetMovementAccel(*CamMovementAccel);
+        case ECamOverrideChanged::C_RotationAccel:      return Camera->SetRotationAccel(*CamRotationAccel);
+        case ECamOverrideChanged::C_MouseSensitivity:   return Camera->SetMouseSensitivity(*CamMouseSensitivity);
+        case ECamOverrideChanged::C_GamepadSensitivity: return Camera->SetGamepadSensitivity(*CamGamepadSensitivity);
+        case ECamOverrideChanged::C_FOVRotationScale:   return Camera->SetFOVRotationScale(*CamFOVRotationScale);
+        case ECamOverrideChanged::C_RollBinding:
+        {
+            CamRollBindingIndex = GlobalGameWrapper->GetFNameIndexByString(*CamRollBinding);
+            return;
+        }
+        default: return;
     }
 }
 
 
 // RECORDING FUNCTION //
+bool CinematicsBuddy::IsValidRecordingMode()
+{
+    return !GlobalGameWrapper->GetCurrentGameState().IsNull();
+}
 void CinematicsBuddy::RecordingFunction()
 {
     if(!IsValidRecordingMode())
@@ -254,6 +253,12 @@ void CinematicsBuddy::BufferClear()
 
 
 /* INPUT OVERRIDE */
+bool CinematicsBuddy::IsValidCamOverrideMode()
+{
+    //#TODO: Check if camera is spectator or something? Check only if they're in replay?
+
+    return GlobalGameWrapper->IsInReplay();
+}
 void CinematicsBuddy::PlayerInputTick()
 {
     using namespace std::chrono;
@@ -266,7 +271,7 @@ void CinematicsBuddy::PlayerInputTick()
 
 	if(*bUseCamOverrides && IsValidCamOverrideMode())
     {
-	    Camera->PlayerInputTick(InputDelta);
+	    Camera->PlayerInputTick(InputDelta, GlobalGameWrapper->IsKeyPressed(CamRollBindingIndex));
     }
 }
 
@@ -371,4 +376,51 @@ void CinematicsBuddy::CamPathClear()
 	stopApplyingAnimation = true;
 	importDataVector.clear();
     */
+}
+
+
+// TESTS - REMOVE WHEN DONE //
+void CinematicsBuddy::TestExportFormat()
+{
+    //Gets the info of the current frame, and prints it in its final format to the console
+    FrameInfo ThisFrame = FrameInfo::Get();
+    const auto& ThisFrameTime = ThisFrame.GetTimeInfo();
+    const auto& CarsSeenThisFrame = ThisFrame.GetCarsSeen();
+    
+    std::string Output;
+    Output += "\n\nEXAMPLE FORMAT\n" + FrameInfo::PrintExampleFormat();
+    Output += "\n\nTHIS FRAME\n" + ThisFrame.Print(ThisFrameTime, 0, CarsSeenThisFrame);
+
+    GlobalCvarManager->log(Output);
+}
+void CinematicsBuddy::TestPrintFloat()
+{
+    GlobalCvarManager->log("POSITIVE VALUES");
+    GlobalCvarManager->log(CBUtils::PrintFloat(0.00000019f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(0.00000190f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(0.00001900f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(0.00019000f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(0.00190000f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(0.01900000f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(0.19000000f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(1.90000000f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(19.0000000f, 6));
+
+    GlobalCvarManager->log("NEGATIVE VALUES");
+    GlobalCvarManager->log(CBUtils::PrintFloat(-0.00000019f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(-0.00000190f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(-0.00001900f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(-0.00019000f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(-0.00190000f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(-0.01900000f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(-0.19000000f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(-1.90000000f, 6));
+    GlobalCvarManager->log(CBUtils::PrintFloat(-19.0000000f, 6));
+}
+void CinematicsBuddy::DebugRender(CanvasWrapper Canvas)
+{
+    if(IsValidCamOverrideMode())
+    {
+        Camera->DebugRender(Canvas);
+    }
 }

@@ -98,7 +98,12 @@ void CinematicsBuddy::GenerateSettingsFile()
         nl("1|Enable Overrides. NOTE: This may conflict with SpectatorControls. Recommend disabling those overrides while using these.|" + cv(CVAR_ENABLE_CAM_OVERRIDE));
         nl("10|" + cv(CVAR_ENABLE_CAM_OVERRIDE));
             nl("4|Camera Movement Speed|" + cv(CVAR_CAM_MOVEMENT_SPEED) + "|0|3");
-            nl("4|Camera Rotation Speed|" + cv(CVAR_CAM_ROTATION_SPEED) + "|0|3");
+            nl("4|Camera Movement Acceleration|" + cv(CVAR_CAM_MOVEMENT_ACCEL) + "|0|5");
+            nl("4|Camera Rotation Acceleration|" + cv(CVAR_CAM_ROTATION_ACCEL) + "|0|5");
+            nl("4|Mouse Sensitivity|" + cv(CVAR_MOUSE_SENSITIVITY) + "|0|25");
+            nl("4|Gamepad Sensitivity|" + cv(CVAR_GAMEPAD_SENSITIVITY) + "|0|50");
+            nl("4|FOV Rotation Scale|" + cv(CVAR_FOV_ROTATION_SCALE) + "|0|2");
+            nl("6|Toggle roll binding|" + cv(CVAR_ROLL_BINDING) + "|" + GetBindingsList());
         nl("11|");//Enable overrides
 
     nl("11|");//!FileIsWriting
@@ -106,4 +111,49 @@ void CinematicsBuddy::GenerateSettingsFile()
 
     SettingsFile.close();
     GlobalCvarManager->executeCommand("cl_settings_refreshplugins");
+}
+
+std::string CinematicsBuddy::GetBindingsList()
+{
+    static std::string Output;
+    static bool bHaveFilledList = false;
+
+    if(!bHaveFilledList)
+    {
+        //Fill list
+        std::vector<std::pair<std::string, std::string>> BindingsList;
+        BindingsList.emplace_back("Left thumbstick press", "XboxTypeS_LeftThumbStick");
+        BindingsList.emplace_back("Right thumbstick press", "XboxTypeS_RightThumbStick");
+        BindingsList.emplace_back("DPad up", "XboxTypeS_DPad_Up");
+        BindingsList.emplace_back("DPad left", "XboxTypeS_DPad_Left");
+        BindingsList.emplace_back("DPad right", "XboxTypeS_DPad_Right");
+        BindingsList.emplace_back("DPad down", "XboxTypeS_DPad_Down");
+        BindingsList.emplace_back("Back button", "XboxTypeS_Back");
+        BindingsList.emplace_back("Start button", "XboxTypeS_Start");
+        BindingsList.emplace_back("Xbox Y - PS4 Triangle", "XboxTypeS_Y");
+        BindingsList.emplace_back("Xbox X - PS4 Square", "XboxTypeS_X");
+        BindingsList.emplace_back("Xbox B - PS4 Circle", "XboxTypeS_B");
+        BindingsList.emplace_back("Xbox A - PS4 X", "XboxTypeS_A");
+        BindingsList.emplace_back("Xbox LB - PS4 L1", "XboxTypeS_LeftShoulder");
+        BindingsList.emplace_back("Xbox RB - PS4 R1", "XboxTypeS_RightShoulder");
+        BindingsList.emplace_back("Xbox LT - PS4 L2", "XboxTypeS_LeftTrigger");
+        BindingsList.emplace_back("Xbox RT - PS4 R2", "XboxTypeS_RightTrigger");
+        BindingsList.emplace_back("Left thumbstick X axis", "XboxTypeS_LeftX");
+        BindingsList.emplace_back("Left thumbstick Y axis", "XboxTypeS_LeftY");
+        BindingsList.emplace_back("Right thumbstick X axis", "XboxTypeS_RightX");
+        BindingsList.emplace_back("Right thumbstick Y axis", "XboxTypeS_RightY");
+
+        //Compile list into one string
+        for(const auto& Binding : BindingsList)
+        {
+            Output += Binding.first + "@" + Binding.second + "&";
+        }
+
+        //Remove last "&"
+        Output.pop_back();
+
+        bHaveFilledList = true;
+    }
+
+    return Output;
 }
