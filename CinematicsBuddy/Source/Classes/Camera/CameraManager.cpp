@@ -12,49 +12,67 @@
 
 */
 
-CameraManager::CameraManager()
-    :
-Inputs(std::make_shared<InputsManager>()),
-Graphs(std::make_shared<BMGraphs>(GlobalCvarManager, GlobalGameWrapper)),
-bUseOverrides(false),
-bUseLocalMatrix(true),
-bRoll(false),
-MovementSpeed(1.f),
-MovementAccel(1.f),
-RotationSpeed(1.f),
-RotationAccelMouse(1.f),
-RotationAccelGamepad(1.f),
-MouseSensitivity(10.f),
-GamepadSensitivity(20.f),
-FOVRotationScale(.9f),
-BaseMovementSpeed(2000.f),
-BaseMovementAccel(2.f),
-BaseRotationSpeed(1.f),
-BaseRotationAccel(1.f) {}
-
 void CameraManager::InitCvars()
 {
+    Inputs = std::make_shared<InputsManager>();
 
+    MAKE_CVAR_BIND_TO_STRING(m_bUseOverrides,        CVAR_ENABLE_CAM_OVERRIDE, "Enables camera overriding features",       true);
+    MAKE_CVAR_BIND_TO_STRING(m_bUseLocalMatrix,      CVAR_CAM_LOCAL_MATRIX,    "Uses the local orientation of the camera", true);
+	MAKE_CVAR_BIND_TO_STRING(m_MovementSpeed,        CVAR_CAM_MOVEMENT_SPEED,  "Camera movement speed multiplier",                        true, true, 0, true, 3);
+    MAKE_CVAR_BIND_TO_STRING(m_MovementAccel,        CVAR_CAM_MOVEMENT_ACCEL,  "Camera movement acceleration speed",                      true, true, 0, true, 5);
+	MAKE_CVAR_BIND_TO_STRING(m_RotationSpeed,        CVAR_ROT_SPEED,           "Camera rotation speed multiplier (doesn't affect mouse)", true, true, 0, true, 3);
+    MAKE_CVAR_BIND_TO_STRING(m_RotationAccelMouse,   CVAR_ROT_ACCEL_MOUSE,     "Camera rotation acceleration speed (mouse)",              true, true, 0, true, 5);
+    MAKE_CVAR_BIND_TO_STRING(m_RotationAccelGamepad, CVAR_ROT_ACCEL_GAMEPAD,   "Camera rotation acceleration speed (controller)",         true, true, 0, true, 5);
+    MAKE_CVAR_BIND_TO_STRING(m_MouseSensitivity,     CVAR_MOUSE_SENSITIVITY,   "Camera rotation speed when using mouse",                  true, true, 0, true, 25);
+    MAKE_CVAR_BIND_TO_STRING(m_GamepadSensitivity,   CVAR_GAMEPAD_SENSITIVITY, "Camera rotation speed when using gamepad",                true, true, 0, true, 50);
+    MAKE_CVAR_BIND_TO_STRING(m_FOVRotationScale,     CVAR_FOV_ROTATION_SCALE,  "Multiplier for slowing camera rotation when zoomed in",   true, true, 0, true, 2);
+    MAKE_CVAR_BIND_STRING(   m_RollBinding,          CVAR_ROLL_BINDING,        "Button bound to bRoll modifier to change camera yaw input to roll", true);
+    ON_CVAR_CHANGED(CVAR_ROLL_BINDING, CameraManager, RecacheRollBinding);
 
-    //#TODO: For all composition classes, init their respective cvars in their classes to clean up onLoad
-    //You can get rid of most of the addOnValueChanged binds with that as well since you'll be setting members directly
-    //  You can also remove all of the public SetXYZ functions from each class
+    //Cache the current binding for roll
+    RecacheRollBinding();
 
-
-    //Also get rid of all unnecessary constructors and just initialize members when you declare them in a header file
-
-
+    // TESTS - REMOVE WHEN DONE //
+    ON_CVAR_CHANGED(CVAR_ENABLE_CAM_OVERRIDE, CameraManager, OnUseOverridesChanged);
+    Graphs = std::make_shared<BMGraphs>(GlobalCvarManager, GlobalGameWrapper);
 }
 
-void CameraManager::PlayerInputTick(float Delta, bool InbRoll)
+void CameraManager::OnUseOverridesChanged()
 {
-    if(!bUseOverrides)
+    // TESTS - REMOVE WHEN DONE //
+    Graphs->EndRender();
+    if(*m_bUseOverrides)
+    {
+        GraphInitData InitData;
+        InitData.Type = EGraphType::GRAPH_Line;
+        InitData.Title = "Camera Relative Velocities";
+        InitData.Labels = 
+        {
+            LabelInfo{"Forward Velocity",  LinearColor{255, 0,   0,   255}},
+            LabelInfo{"Right Velocity",    LinearColor{0,   255, 0,   255}},
+            LabelInfo{"Up Velocity",       LinearColor{0,   0,   255, 255}},
+            LabelInfo{"Forward Input",     LinearColor{255, 180, 180, 255}},
+            LabelInfo{"Right Input",       LinearColor{180, 255, 180, 255}},
+            LabelInfo{"Up Input",          LinearColor{180, 180, 255, 255}}
+        };
+        Graphs->BeginRender(InitData);
+    }
+}
+
+void CameraManager::RecacheRollBinding()
+{
+    RollBindingIndex = GlobalGameWrapper->GetFNameIndexByString(*m_RollBinding);
+}
+
+void CameraManager::PlayerInputTick(float Delta)
+{
+    if(!*m_bUseOverrides)
     {
         return;
     }
 
     //Get the inputs and then nullify them before they reach the game
-    bRoll = InbRoll;
+    bRoll = GlobalGameWrapper->IsKeyPressed(RollBindingIndex);
 	Inputs->PlayerInputTick(Delta, bRoll);
 
     //Apply inputs to camera
@@ -76,7 +94,7 @@ void CameraManager::UpdateCameraTransformation(float Delta)
 
 void CameraManager::UpdateCameraMatrix(CameraWrapper TheCamera)
 {
-    if(bUseLocalMatrix)
+    if(*m_bUseLocalMatrix)
     {
         //Use fully local matrix
         Quat CameraQuat = RotatorToQuat(TheCamera.GetRotation());
@@ -97,8 +115,8 @@ void CameraManager::UpdateCameraMatrix(CameraWrapper TheCamera)
 void CameraManager::UpdateVelocity(float Delta)
 {
     //Calculate some variables used throughout the function
-    float MaxSpeed = BaseMovementSpeed * MovementSpeed;
-    float AccelSpeed = BaseMovementAccel * MovementAccel;
+    float MaxSpeed = BaseMovementSpeed * *m_MovementSpeed;
+    float AccelSpeed = BaseMovementAccel * *m_MovementAccel;
     float ImpulseStrength = MaxSpeed * Delta * AccelSpeed;
 
     //Get the camera's speed as a percentage per axis
@@ -163,7 +181,7 @@ void CameraManager::UpdateAngularVelocity(float Delta)
     //Roll is set by both keyboard and controller as a rate, along with Pitch and Yaw on controller
     //Pitch and Yaw are set by mouse via movement deltas which give large numbers, so speed should not be used
 
-    float MaxSpeed = BaseRotationSpeed * RotationSpeed;
+    float MaxSpeed = BaseRotationSpeed * *m_RotationSpeed;
 }
 
 void CameraManager::UpdatePosition(float Delta, CameraWrapper TheCamera)
@@ -181,7 +199,7 @@ void CameraManager::UpdateRotation(float Delta, CameraWrapper TheCamera)
 // UTILITY //
 float CameraManager::GetSpeedComponent(Vector Direction)
 {
-    float MaxSpeed = BaseMovementSpeed * MovementSpeed;
+    float MaxSpeed = BaseMovementSpeed * *m_MovementSpeed;
     return Vector::dot(Velocity, Direction) / MaxSpeed;
 }
 
@@ -255,7 +273,7 @@ void CameraManager::StartInputsTest()
 
 void CameraManager::DebugRender(CanvasWrapper Canvas)
 {
-    if(!bUseOverrides)
+    if(!*m_bUseOverrides)
     {
         return;
     }
@@ -302,6 +320,5 @@ void CameraManager::DebugRender(CanvasWrapper Canvas)
     }
 
 
-    // TESTS - REMOVE WHEN DONE //
     //Graphs->Render(Canvas);
 }

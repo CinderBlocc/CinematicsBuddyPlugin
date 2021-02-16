@@ -12,6 +12,12 @@ extern std::shared_ptr<GameWrapper>        GlobalGameWrapper;
 #define PLUGIN_VERSION "0.9.8"
 #define EXTENSION_NAME ".txt"
 
+//Macros for simplifying cvar creation
+#define MAKE_CVAR(...) GlobalCvarManager->registerCvar(##__VA_ARGS__)
+#define MAKE_CVAR_BIND_STRING(cvar, cvarname, description, ...) GlobalCvarManager->registerCvar(cvarname, *cvar, description, ##__VA_ARGS__).bindTo(cvar)
+#define MAKE_CVAR_BIND_TO_STRING(cvar, cvarname, description, ...) GlobalCvarManager->registerCvar(cvarname, std::to_string(*cvar), description, ##__VA_ARGS__).bindTo(cvar)
+#define ON_CVAR_CHANGED(cvarname, classname, funcname) GlobalCvarManager->getCvar(cvarname).addOnValueChanged(std::bind(&classname::funcname, this))
+
 //Recording cvars
 #define CVAR_SET_SPECIAL_PATH    "CB_bSetFilePath"
 #define CVAR_SPECIAL_PATH        "CB_FilePath"
@@ -59,19 +65,4 @@ enum class ERecordingSettingChanged
     R_bBufferEnabled,
     R_MaxBufferLength,
     R_MaxRecordingLength
-};
-
-enum class ECamOverrideChanged
-{
-    C_bUseOverrides = 0,
-    C_bUseLocalMatrix,
-    C_MovementSpeed,
-    C_MovementAccel,
-    C_RotationSpeed,
-    C_RotationAccelMouse,
-    C_RotationAccelGamepad,
-    C_MouseSensitivity,
-    C_GamepadSensitivity,
-    C_FOVRotationScale,
-    C_RollBinding
 };

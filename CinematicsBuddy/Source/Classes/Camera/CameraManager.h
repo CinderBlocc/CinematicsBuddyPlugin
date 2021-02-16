@@ -9,48 +9,12 @@ class InputsManager;
 class CameraManager
 {
 public:
-    CameraManager();
-
     void InitCvars();
-
-    void PlayerInputTick(float Delta, bool InbRoll);
-    
-    //Set state values
-    void SetbUseOverrides(bool bNewValue)
-    {
-        bUseOverrides = bNewValue;
-
-        // TESTS - REMOVE WHEN DONE //
-        Graphs->EndRender();
-        if(bUseOverrides)
-        {
-            GraphInitData InitData;
-            InitData.Type = EGraphType::GRAPH_Line;
-            InitData.Title = "Camera Relative Velocities";
-            InitData.Labels = 
-            {
-                LabelInfo{"Forward Velocity",  LinearColor{255, 0,   0,   255}},
-                LabelInfo{"Right Velocity",    LinearColor{0,   255, 0,   255}},
-                LabelInfo{"Up Velocity",       LinearColor{0,   0,   255, 255}},
-                LabelInfo{"Forward Input",     LinearColor{255, 180, 180, 255}},
-                LabelInfo{"Right Input",       LinearColor{180, 255, 180, 255}},
-                LabelInfo{"Up Input",          LinearColor{180, 180, 255, 255}}
-            };
-            Graphs->BeginRender(InitData);
-        }
-    }
-    void SetbUseLocalMatrix(bool bNewValue)      { bUseLocalMatrix      = bNewValue; }
-    void SetMovementSpeed(float NewValue)        { MovementSpeed        = NewValue;  }
-    void SetMovementAccel(float NewValue)        { MovementAccel        = NewValue;  }
-    void SetRotationSpeed(float NewValue)        { RotationSpeed        = NewValue;  }
-    void SetRotationAccelMouse(float NewValue)   { RotationAccelMouse   = NewValue;  }
-    void SetRotationAccelGamepad(float NewValue) { RotationAccelGamepad = NewValue;  }
-    void SetMouseSensitivity(float NewValue)     { MouseSensitivity     = NewValue;  }
-    void SetGamepadSensitivity(float NewValue)   { GamepadSensitivity   = NewValue;  }
-    void SetFOVRotationScale(float NewValue)     { FOVRotationScale     = NewValue;  }
+    void PlayerInputTick(float Delta);
 
     // TESTS - REMOVE WHEN DONE //
     std::shared_ptr<BMGraphs> Graphs;
+    void OnUseOverridesChanged();
     void StartInputsTest();
     void DebugRender(CanvasWrapper Canvas);
 
@@ -58,33 +22,35 @@ private:
     std::shared_ptr<InputsManager> Inputs;
 
     //State variables set by plugin
-    std::shared_ptr<float> TestClassCvar = std::make_shared<float>(0.f);
-    bool bUseOverrides;
-    bool bUseLocalMatrix;
-    bool bRoll;
-    float MovementSpeed;
-    float MovementAccel;
-    float RotationSpeed;
-    float RotationAccelMouse;
-    float RotationAccelGamepad;
-    float MouseSensitivity;
-    float GamepadSensitivity;
-    float FOVRotationScale;
+    std::shared_ptr<bool>  m_bUseOverrides         = std::make_shared<bool>(false);
+    std::shared_ptr<bool>  m_bUseLocalMatrix       = std::make_shared<bool>(true);
+    std::shared_ptr<float> m_MovementSpeed         = std::make_shared<float>(1.f);
+    std::shared_ptr<float> m_MovementAccel         = std::make_shared<float>(1.f);
+    std::shared_ptr<float> m_RotationSpeed         = std::make_shared<float>(1.f);
+    std::shared_ptr<float> m_RotationAccelMouse    = std::make_shared<float>(1.f);
+    std::shared_ptr<float> m_RotationAccelGamepad  = std::make_shared<float>(1.f);
+    std::shared_ptr<float> m_MouseSensitivity      = std::make_shared<float>(10.f);
+    std::shared_ptr<float> m_GamepadSensitivity    = std::make_shared<float>(20.f);
+    std::shared_ptr<float> m_FOVRotationScale      = std::make_shared<float>(0.9f);
+    std::shared_ptr<std::string> m_RollBinding     = std::make_shared<std::string>("XboxTypeS_RightShoulder");
+    int RollBindingIndex = 0;
+    bool bRoll = false;
+    void RecacheRollBinding();
 
     //Internal state variables
-    float BaseMovementSpeed;
-    float BaseMovementAccel;
-    float BaseRotationSpeed;
-    float BaseRotationAccel;
+    float BaseMovementSpeed = 2000.f;
+    float BaseMovementAccel = 2.f;
+    float BaseRotationSpeed = 1.f;
+    float BaseRotationAccel = 1.f;
     
     //Speed of movement and rotation
-    Vector Velocity;
-    Vector AngularVelocity;
+    Vector Velocity        = {0, 0, 0};
+    Vector AngularVelocity = {0, 0, 0};
 
     //Camera matrix
-    Vector Forward;
-    Vector Right;
-    Vector Up;
+    Vector Forward = {1, 0, 0};
+    Vector Right   = {0, 1, 0};
+    Vector Up      = {0, 0, 1};
 
     //Functions to update camera transformation
     void UpdateCameraTransformation(float Delta);
