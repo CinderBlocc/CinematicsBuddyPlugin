@@ -141,6 +141,7 @@ void CinematicsBuddy::onLoad()
     // TESTS - REMOVE WHEN DONE //
     GlobalCvarManager->registerNotifier("CBTestExportFormat", [this](std::vector<std::string> params){TestExportFormat();}, "Prints data from current frame", PERMISSION_ALL);
     GlobalCvarManager->registerNotifier("CBTestPrintFloat", [this](std::vector<std::string> params){TestPrintFloat();}, "Tests the decimal saving PrintFloat function", PERMISSION_ALL);
+    GlobalCvarManager->registerNotifier("CBTestInputs", [this](std::vector<std::string> params){TestInputs();}, "Tests the acceleration smoothing methods", PERMISSION_ALL);
     GlobalGameWrapper->RegisterDrawable(std::bind(&CinematicsBuddy::DebugRender, this, std::placeholders::_1));
 
     GenerateSettingsFile();
@@ -420,6 +421,11 @@ void CinematicsBuddy::TestPrintFloat()
     GlobalCvarManager->log(CBUtils::PrintFloat(-0.19000000f, 6));
     GlobalCvarManager->log(CBUtils::PrintFloat(-1.90000000f, 6));
     GlobalCvarManager->log(CBUtils::PrintFloat(-19.0000000f, 6));
+}
+void CinematicsBuddy::TestInputs()
+{
+    GlobalCvarManager->getCvar(CVAR_ENABLE_CAM_OVERRIDE).setValue(true);
+    Camera->StartInputsTest();
 }
 void CinematicsBuddy::DebugRender(CanvasWrapper Canvas)
 {

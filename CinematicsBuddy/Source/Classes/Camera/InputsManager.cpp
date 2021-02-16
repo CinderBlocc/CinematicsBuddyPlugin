@@ -66,6 +66,34 @@ void InputsManager::GetInputs(PlayerControllerWrapper Controller, bool bRoll)
     {
         Roll = Controller.GetALookRoll();
     }
+
+
+    // TESTS - REMOVE WHEN DONE //
+    if(bTestIsRunning)
+    {
+        using namespace std::chrono;
+        float TestTime = duration_cast<duration<float>>(steady_clock::now() - TestStartTime).count();
+        if(TestTime >= 0.f && TestTime < 5.f)
+        {
+            Forward = -1.f;
+        }
+        else if(TestTime >= 5.f && TestTime < 10.f)
+        {
+            Forward = 0.f;
+        }
+        else if(TestTime >= 10.f && TestTime < 15.f)
+        {
+            Forward = 1.f;
+        }
+        else if(TestTime >= 15.f && TestTime < 20.f)
+        {
+            Forward = -1.f;
+        }
+        else if(TestTime >= 20.f)
+        {
+            bTestIsRunning = false;
+        }
+    }
 }
 
 void InputsManager::NullifyInputs(PlayerControllerWrapper Controller)

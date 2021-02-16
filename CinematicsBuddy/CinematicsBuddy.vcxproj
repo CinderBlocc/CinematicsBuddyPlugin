@@ -68,6 +68,7 @@
     <ClCompile Include="Source\Main\CinematicsBuddy.cpp" />
     <ClCompile Include="Source\SupportFiles\CBUtils.cpp" />
     <ClCompile Include="Source\SupportFiles\SettingsFileGenerator.cpp" />
+    <ClCompile Include="Vendor\BMGraphs\BMGraphs\BMGraphs.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Classes\Camera\CameraManager.h" />
@@ -82,6 +83,8 @@
     <ClInclude Include="Source\Main\CinematicsBuddy.h" />
     <ClInclude Include="Source\SupportFiles\CBUtils.h" />
     <ClInclude Include="Source\SupportFiles\MacrosStructsEnums.h" />
+    <ClInclude Include="Vendor\BMGraphs\BMGraphs\BMGraphs.h" />
+    <ClInclude Include="Vendor\BMGraphs\BMGraphs\BMGraphsMacrosStructsEnums.h" />
     <ClInclude Include="Vendor\SimpleJSON\json.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

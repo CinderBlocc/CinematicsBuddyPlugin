@@ -37,6 +37,9 @@
     <Filter Include="Source\Classes\Misc">
       <UniqueIdentifier>{5d3dd5f9-9728-4920-9cf9-e3f42b8be87f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Vendor\BMGraphs">
+      <UniqueIdentifier>{5236e75b-e5fd-4d09-9100-6526066a053f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\bakkesmod\plugins\settings\CinematicsBuddy.set">
@@ -80,6 +83,9 @@
     <ClCompile Include="Source\Classes\Camera\InputsManager.cpp">
       <Filter>Source\Classes\Camera</Filter>
     </ClCompile>
+    <ClCompile Include="Vendor\BMGraphs\BMGraphs\BMGraphs.cpp">
+      <Filter>Vendor\BMGraphs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Main\CinematicsBuddy.h">
@@ -120,6 +126,12 @@
     </ClInclude>
     <ClInclude Include="Source\Classes\Camera\InputsManager.h">
       <Filter>Source\Classes\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Vendor\BMGraphs\BMGraphs\BMGraphs.h">
+      <Filter>Vendor\BMGraphs</Filter>
+    </ClInclude>
+    <ClInclude Include="Vendor\BMGraphs\BMGraphs\BMGraphsMacrosStructsEnums.h">
+      <Filter>Vendor\BMGraphs</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

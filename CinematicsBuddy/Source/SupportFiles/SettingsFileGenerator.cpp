@@ -95,7 +95,8 @@ void CinematicsBuddy::GenerateSettingsFile()
         blank;
     
         nl("9|CAMERA OVERRIDES");
-        nl("1|Enable Overrides. NOTE: This may conflict with SpectatorControls. Recommend disabling those overrides while using these.|" + cv(CVAR_ENABLE_CAM_OVERRIDE));
+        nl("9|NOTE: This may conflict with SpectatorControls. Recommend disabling those overrides while using these.");
+        nl("1|Enable Overrides|" + cv(CVAR_ENABLE_CAM_OVERRIDE));
         nl("10|" + cv(CVAR_ENABLE_CAM_OVERRIDE));
             nl("7|");
             nl("1|Use local orientation|" + cv(CVAR_CAM_LOCAL_MATRIX));

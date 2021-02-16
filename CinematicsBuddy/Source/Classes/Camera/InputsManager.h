@@ -1,5 +1,6 @@
 #pragma once
 #include "bakkesmod/plugin/bakkesmodplugin.h"
+#include <chrono>
 
 class InputsManager
 {
@@ -10,6 +11,9 @@ public:
 
     // TESTS - REMOVE WHEN DONE //
     void DebugRender(class CanvasWrapper Canvas, std::vector<std::string>& RenderStrings);
+    void RunTest()  { TestStartTime = std::chrono::steady_clock::now(); bTestIsRunning = true;  }
+    std::chrono::steady_clock::time_point TestStartTime;
+    bool bTestIsRunning = false;
 
     //Get input values
     float GetForward() { return Forward; }

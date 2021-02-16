@@ -73,6 +73,7 @@ public:
     // TESTING - REMOVE WHEN DONE //
     void TestExportFormat();
     void TestPrintFloat();
+    void TestInputs();
     void DebugRender(CanvasWrapper Canvas);
 };
 

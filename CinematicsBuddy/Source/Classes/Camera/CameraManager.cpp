@@ -6,6 +6,7 @@
 CameraManager::CameraManager()
     :
 Inputs(std::make_shared<InputsManager>()),
+Graphs(std::make_shared<BMGraphs>(GlobalCvarManager, GlobalGameWrapper)),
 bUseOverrides(false),
 bUseLocalMatrix(true),
 bRoll(false),
@@ -16,7 +17,7 @@ MouseSensitivity(10.f),
 GamepadSensitivity(20.f),
 FOVRotationScale(.9f),
 BaseSpeed(2000.f),
-MaxSpeed(2000.f) {}
+BaseAccel(2.f) {}
 
 void CameraManager::PlayerInputTick(float Delta, bool InbRoll)
 {
@@ -68,11 +69,10 @@ void CameraManager::UpdateCameraMatrix(CameraWrapper TheCamera)
 
 void CameraManager::UpdateVelocity(float Delta)
 {
-    //#TODO: Acceleration/Brake inputs should only be reduced if they continue adding velocity in the current speed direction
-    //If they are adding velocity in the opposite direction from the current speed, they should not be reduced at all
-
-    //Calculate the max speed
+    //Calculate some variables used throughout the function
     float MaxSpeed = BaseSpeed * MovementSpeed;
+    float AccelSpeed = BaseAccel * MovementAccel;
+    float ImpulseStrength = MaxSpeed * Delta * AccelSpeed;
 
     //Get the camera's speed as a percentage per axis
     float ForwardSpeedPerc = GetSpeedComponent(Forward);
@@ -89,16 +89,14 @@ void CameraManager::UpdateVelocity(float Delta)
     Vector RightInputVec   = Right   * RightInputPerc;
     Vector UpInputVec      = Up      * UpInputPerc;
 
-    //Get impulse per axis     
-    //Reduced perc should reduce the impulse strength the closer the speed is to max on that axis
-    Vector ForwardImpulse = ForwardInputVec * GetReducedPerc(ForwardInputPerc, ForwardSpeedPerc);
-    Vector RightImpulse   = RightInputVec   * GetReducedPerc(RightInputPerc, RightSpeedPerc);
-    Vector UpImpulse      = UpInputVec      * GetReducedPerc(UpInputPerc, UpSpeedPerc);
+    //Calculate acceleration force per axis
+    Vector ForwardAcceleration = ForwardInputVec * GetReducedPerc(ForwardInputPerc, ForwardSpeedPerc);
+    Vector RightAcceleration   = RightInputVec   * GetReducedPerc(RightInputPerc, RightSpeedPerc);
+    Vector UpAcceleration      = UpInputVec      * GetReducedPerc(UpInputPerc, UpSpeedPerc);
     
     //Calculate impulse created by inputs
-    float ImpulseStrength = MaxSpeed * Delta * MovementAccel;
-    Vector ImpulseDirection = ForwardImpulse + RightImpulse + UpImpulse;
-    Vector Impulse = ImpulseDirection * ImpulseStrength;
+    Vector AccelerationDirection = ForwardAcceleration + RightAcceleration + UpAcceleration;
+    Vector Acceleration = AccelerationDirection * ImpulseStrength;
 
     //Calculate automatic braking force (only apply brakes if no input on that axis)
     Vector ForwardBrake = Forward * GetBrakeForce(ForwardInputPerc, ForwardSpeedPerc);
@@ -106,12 +104,28 @@ void CameraManager::UpdateVelocity(float Delta)
     Vector UpBrake      = Up      * GetBrakeForce(UpInputPerc, UpSpeedPerc);
     
     //Calculate impulse created by braking
-    float BrakeStrength = MaxSpeed * Delta * MovementAccel;
     Vector BrakeDirection = ForwardBrake + RightBrake + UpBrake;
-    Vector Brake = BrakeDirection * BrakeStrength;
+    Vector Brake = BrakeDirection * ImpulseStrength;
 
     //Apply the impulses
-    Velocity = Velocity + Impulse - Brake;
+    Velocity += Acceleration - Brake;
+
+
+    // TESTS - REMOVE WHEN DONE //
+    static int EveryXNumber = 0;
+    if(EveryXNumber == 3)
+    {
+        std::vector<LineGraphDataSingle> LineData;
+        LineData.push_back({ "Forward Velocity",  ForwardSpeedPerc });
+        LineData.push_back({ "Right Velocity",    RightSpeedPerc   });
+        LineData.push_back({ "Up Velocity",       UpSpeedPerc      });
+        LineData.push_back({ "Forward Input",     ForwardInputPerc });
+        LineData.push_back({ "Right Input",       RightInputPerc   });
+        LineData.push_back({ "Up Input",          UpInputPerc      });
+        Graphs->InputData(LineData);
+        EveryXNumber = 0;
+    }
+    ++EveryXNumber;
 }
 
 void CameraManager::UpdateAngularVelocity(float Delta)
@@ -134,6 +148,7 @@ void CameraManager::UpdateRotation(float Delta, CameraWrapper TheCamera)
 // UTILITY //
 float CameraManager::GetSpeedComponent(Vector Direction)
 {
+    float MaxSpeed = BaseSpeed * MovementSpeed;
     return Vector::dot(Velocity, Direction) / MaxSpeed;
 }
 
@@ -144,18 +159,18 @@ float CameraManager::GetInvertedPerc(float InPerc)
 
 float CameraManager::GetWeightedPerc(float InPerc)
 {
-    //#TODO: Some sort of ease-in ease-out function applied to Output
-    //Likely a sin wave shifted up and sliced
+    //return InPerc;
 
-    //Ease-out only, or ease-in ease-out?
-
+    //Some ease functions don't like negative values
+    //Preserve the negative status for later and use absolute value
     float NegativeMult = InPerc < 0.f ? -1.f : 1.f;
+    InPerc = abs(InPerc);
 
     //Ease-out
-    float EasedPerc = sin((abs(InPerc) * CONST_PI_F) / 2.f);
+    float EasedPerc = sin((InPerc * CONST_PI_F) / 2.f);
 
     //Ease-in ease-out
-    //float EasedPerc = -(cos(abs(InPerc) * CONST_PI_F) - 1.f) / 2.f;
+    //float EasedPerc = -(cos(InPerc * CONST_PI_F) - 1.f) / 2.f;
 
     return EasedPerc * NegativeMult;
 }
@@ -192,8 +207,23 @@ float CameraManager::RemapPercentage(float CurrentPerc, float CurrentMin, float 
 
 
 // TESTS - REMOVE WHEN DONE //
+void CameraManager::StartInputsTest()
+{
+    Velocity = {0,0,0};
+    CameraWrapper GameCam = GlobalGameWrapper->GetCamera();
+    if(!GameCam.IsNull())
+    {
+        GameCam.SetLocation(Vector{0,0,100});
+        GameCam.SetRotation(Rotator{0,0,0});
+    }
+
+    Inputs->RunTest();
+}
+
 void CameraManager::DebugRender(CanvasWrapper Canvas)
 {
+    return;
+
     if(!bUseOverrides)
     {
         return;
@@ -239,4 +269,8 @@ void CameraManager::DebugRender(CanvasWrapper Canvas)
         Canvas.DrawString(Str);
         base.Y += 20;
     }
+
+
+    // TESTS - REMOVE WHEN DONE //
+    Graphs->Render(Canvas);
 }
