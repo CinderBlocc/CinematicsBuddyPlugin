@@ -23,6 +23,14 @@
             - Timed buffer using chrono, similar to the deque of RecordedData in AnimationBuffer
     - Write export file asynchronously. Large files will hang up the game for a long time, and even small files cause a hitch
         - Leave UI greyed out until file writing is completed
+
+
+    MAXSCRIPT NOTES:
+        - When attempting to export FBX to other package, parenting might not export correctly.
+            - In the script (button in UI), add an option to bake the animation.
+            - Create a clone of the car mesh, then bake all of the position/rotation data onto the mesh.
+            - Add all the cloned cars to the selection, along with the field, ball, and camera. Export selected to FBX.
+                - Let the user choose the FBX settings, so make sure that dialog pops up
 */
 
 /*

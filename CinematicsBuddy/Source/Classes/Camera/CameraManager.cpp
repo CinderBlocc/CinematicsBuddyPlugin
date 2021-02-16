@@ -32,6 +32,20 @@ BaseMovementAccel(2.f),
 BaseRotationSpeed(1.f),
 BaseRotationAccel(1.f) {}
 
+void CameraManager::InitCvars()
+{
+
+
+    //#TODO: For all composition classes, init their respective cvars in their classes to clean up onLoad
+    //You can get rid of most of the addOnValueChanged binds with that as well since you'll be setting members directly
+    //  You can also remove all of the public SetXYZ functions from each class
+
+
+    //Also get rid of all unnecessary constructors and just initialize members when you declare them in a header file
+
+
+}
+
 void CameraManager::PlayerInputTick(float Delta, bool InbRoll)
 {
     if(!bUseOverrides)

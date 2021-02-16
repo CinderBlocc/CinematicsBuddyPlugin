@@ -11,6 +11,8 @@ class CameraManager
 public:
     CameraManager();
 
+    void InitCvars();
+
     void PlayerInputTick(float Delta, bool InbRoll);
     
     //Set state values
@@ -56,6 +58,7 @@ private:
     std::shared_ptr<InputsManager> Inputs;
 
     //State variables set by plugin
+    std::shared_ptr<float> TestClassCvar = std::make_shared<float>(0.f);
     bool bUseOverrides;
     bool bUseLocalMatrix;
     bool bRoll;
