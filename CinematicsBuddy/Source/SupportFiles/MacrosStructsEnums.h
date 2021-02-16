@@ -28,7 +28,9 @@ extern std::shared_ptr<GameWrapper>        GlobalGameWrapper;
 #define CVAR_CAM_LOCAL_MATRIX    "CB_bUseLocalMatrix"
 #define CVAR_CAM_MOVEMENT_SPEED  "CB_CamMovementSpeed"
 #define CVAR_CAM_MOVEMENT_ACCEL  "CB_CamMovementAccel"
-#define CVAR_CAM_ROTATION_ACCEL  "CB_CamRotationAccel"
+#define CVAR_ROT_SPEED           "CB_CamRotationSpeed"
+#define CVAR_ROT_ACCEL_MOUSE     "CB_CamRotationAccelMouse"
+#define CVAR_ROT_ACCEL_GAMEPAD   "CB_CamRotationAccelGamepad"
 #define CVAR_MOUSE_SENSITIVITY   "CB_MouseSensitivity"
 #define CVAR_GAMEPAD_SENSITIVITY "CB_GamepadSensitivity"
 #define CVAR_FOV_ROTATION_SCALE  "CB_FOVRotationScale" //#TODO: The more zoomed in, the less sensitive the rotation
@@ -65,7 +67,9 @@ enum class ECamOverrideChanged
     C_bUseLocalMatrix,
     C_MovementSpeed,
     C_MovementAccel,
-    C_RotationAccel,
+    C_RotationSpeed,
+    C_RotationAccelMouse,
+    C_RotationAccelGamepad,
     C_MouseSensitivity,
     C_GamepadSensitivity,
     C_FOVRotationScale,

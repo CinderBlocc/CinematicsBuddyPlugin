@@ -3,6 +3,15 @@
 #include "SupportFiles/CBUtils.h"
 #include "SupportFiles/MacrosStructsEnums.h"
 
+/*
+
+    #TODO:
+        - Separate the camera matrix into two separate ones?
+            - One for local location and one for local rotation
+            - Sometimes people might want the old "world space" movement, but keep the local rotation
+
+*/
+
 CameraManager::CameraManager()
     :
 Inputs(std::make_shared<InputsManager>()),
@@ -12,12 +21,16 @@ bUseLocalMatrix(true),
 bRoll(false),
 MovementSpeed(1.f),
 MovementAccel(1.f),
-RotationAccel(1.f),
+RotationSpeed(1.f),
+RotationAccelMouse(1.f),
+RotationAccelGamepad(1.f),
 MouseSensitivity(10.f),
 GamepadSensitivity(20.f),
 FOVRotationScale(.9f),
-BaseSpeed(2000.f),
-BaseAccel(2.f) {}
+BaseMovementSpeed(2000.f),
+BaseMovementAccel(2.f),
+BaseRotationSpeed(1.f),
+BaseRotationAccel(1.f) {}
 
 void CameraManager::PlayerInputTick(float Delta, bool InbRoll)
 {
@@ -70,8 +83,8 @@ void CameraManager::UpdateCameraMatrix(CameraWrapper TheCamera)
 void CameraManager::UpdateVelocity(float Delta)
 {
     //Calculate some variables used throughout the function
-    float MaxSpeed = BaseSpeed * MovementSpeed;
-    float AccelSpeed = BaseAccel * MovementAccel;
+    float MaxSpeed = BaseMovementSpeed * MovementSpeed;
+    float AccelSpeed = BaseMovementAccel * MovementAccel;
     float ImpulseStrength = MaxSpeed * Delta * AccelSpeed;
 
     //Get the camera's speed as a percentage per axis
@@ -131,6 +144,12 @@ void CameraManager::UpdateVelocity(float Delta)
 void CameraManager::UpdateAngularVelocity(float Delta)
 {
     //#TODO: Take FOVRotationScale into account here, along with camera FOV
+
+    //RotationSpeed should only be taken into account for Pitch and Yaw if bUsingGamepad is true
+    //Roll is set by both keyboard and controller as a rate, along with Pitch and Yaw on controller
+    //Pitch and Yaw are set by mouse via movement deltas which give large numbers, so speed should not be used
+
+    float MaxSpeed = BaseRotationSpeed * RotationSpeed;
 }
 
 void CameraManager::UpdatePosition(float Delta, CameraWrapper TheCamera)
@@ -148,7 +167,7 @@ void CameraManager::UpdateRotation(float Delta, CameraWrapper TheCamera)
 // UTILITY //
 float CameraManager::GetSpeedComponent(Vector Direction)
 {
-    float MaxSpeed = BaseSpeed * MovementSpeed;
+    float MaxSpeed = BaseMovementSpeed * MovementSpeed;
     return Vector::dot(Velocity, Direction) / MaxSpeed;
 }
 
@@ -222,8 +241,6 @@ void CameraManager::StartInputsTest()
 
 void CameraManager::DebugRender(CanvasWrapper Canvas)
 {
-    return;
-
     if(!bUseOverrides)
     {
         return;
@@ -237,12 +254,12 @@ void CameraManager::DebugRender(CanvasWrapper Canvas)
     //Create RenderStrings and fill it with some values
     std::vector<std::string> RenderStrings;
     RenderStrings.push_back("bRoll: "              + std::to_string(bRoll));
-    RenderStrings.push_back("MovementSpeed: "      + std::to_string(MovementSpeed));
-    RenderStrings.push_back("MovementAccel: "      + std::to_string(MovementAccel));
-    RenderStrings.push_back("RotationAccel: "      + std::to_string(RotationAccel));
-    RenderStrings.push_back("MouseSensitivity: "   + std::to_string(MouseSensitivity));
-    RenderStrings.push_back("GamepadSensitivity: " + std::to_string(GamepadSensitivity));
-    RenderStrings.push_back("FOVRotationScale: "   + std::to_string(FOVRotationScale));
+    //RenderStrings.push_back("MovementSpeed: "      + std::to_string(MovementSpeed));
+    //RenderStrings.push_back("MovementAccel: "      + std::to_string(MovementAccel));
+    //RenderStrings.push_back("RotationAccel: "      + std::to_string(RotationAccelMouse));
+    //RenderStrings.push_back("MouseSensitivity: "   + std::to_string(MouseSensitivity));
+    //RenderStrings.push_back("GamepadSensitivity: " + std::to_string(GamepadSensitivity));
+    //RenderStrings.push_back("FOVRotationScale: "   + std::to_string(FOVRotationScale));
 
     //Get values from InputsManager
     Inputs->DebugRender(Canvas, RenderStrings);
@@ -272,5 +289,5 @@ void CameraManager::DebugRender(CanvasWrapper Canvas)
 
 
     // TESTS - REMOVE WHEN DONE //
-    Graphs->Render(Canvas);
+    //Graphs->Render(Canvas);
 }

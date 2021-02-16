@@ -18,6 +18,7 @@ public:
     {
         bUseOverrides = bNewValue;
 
+        // TESTS - REMOVE WHEN DONE //
         Graphs->EndRender();
         if(bUseOverrides)
         {
@@ -36,13 +37,15 @@ public:
             Graphs->BeginRender(InitData);
         }
     }
-    void SetbUseLocalMatrix(bool bNewValue)    { bUseLocalMatrix    = bNewValue; }
-    void SetMovementSpeed(float NewValue)      { MovementSpeed      = NewValue;  }
-    void SetMovementAccel(float NewValue)      { MovementAccel      = NewValue;  }
-    void SetRotationAccel(float NewValue)      { RotationAccel      = NewValue;  }
-    void SetMouseSensitivity(float NewValue)   { MouseSensitivity   = NewValue;  }
-    void SetGamepadSensitivity(float NewValue) { GamepadSensitivity = NewValue;  }
-    void SetFOVRotationScale(float NewValue)   { FOVRotationScale   = NewValue;  }
+    void SetbUseLocalMatrix(bool bNewValue)      { bUseLocalMatrix      = bNewValue; }
+    void SetMovementSpeed(float NewValue)        { MovementSpeed        = NewValue;  }
+    void SetMovementAccel(float NewValue)        { MovementAccel        = NewValue;  }
+    void SetRotationSpeed(float NewValue)        { RotationSpeed        = NewValue;  }
+    void SetRotationAccelMouse(float NewValue)   { RotationAccelMouse   = NewValue;  }
+    void SetRotationAccelGamepad(float NewValue) { RotationAccelGamepad = NewValue;  }
+    void SetMouseSensitivity(float NewValue)     { MouseSensitivity     = NewValue;  }
+    void SetGamepadSensitivity(float NewValue)   { GamepadSensitivity   = NewValue;  }
+    void SetFOVRotationScale(float NewValue)     { FOVRotationScale     = NewValue;  }
 
     // TESTS - REMOVE WHEN DONE //
     std::shared_ptr<BMGraphs> Graphs;
@@ -58,14 +61,18 @@ private:
     bool bRoll;
     float MovementSpeed;
     float MovementAccel;
-    float RotationAccel;
+    float RotationSpeed;
+    float RotationAccelMouse;
+    float RotationAccelGamepad;
     float MouseSensitivity;
     float GamepadSensitivity;
     float FOVRotationScale;
 
     //Internal state variables
-    float BaseSpeed;
-    float BaseAccel;
+    float BaseMovementSpeed;
+    float BaseMovementAccel;
+    float BaseRotationSpeed;
+    float BaseRotationAccel;
     
     //Speed of movement and rotation
     Vector Velocity;
@@ -90,5 +97,5 @@ private:
     float GetWeightedPerc(float InPerc);
     float GetReducedPerc(float InputPerc, float SpeedPerc);
     float GetBrakeForce(float InputPerc, float SpeedPerc);
-    float RemapPercentage(float CurrentPerc, float CurrentMin, float CurrentMax, float NewMin, float NewMax);
+    float RemapPercentage(float CurrentPerc, float CurrentMin, float CurrentMax, float NewMin, float NewMax); //#TODO: Remove this? Is it used anywhere?
 };

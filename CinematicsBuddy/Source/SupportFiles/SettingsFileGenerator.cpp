@@ -100,9 +100,11 @@ void CinematicsBuddy::GenerateSettingsFile()
         nl("10|" + cv(CVAR_ENABLE_CAM_OVERRIDE));
             nl("7|");
             nl("1|Use local orientation|" + cv(CVAR_CAM_LOCAL_MATRIX));
-            nl("4|Camera Movement Speed|" + cv(CVAR_CAM_MOVEMENT_SPEED) + "|0|3");
-            nl("4|Camera Movement Acceleration|" + cv(CVAR_CAM_MOVEMENT_ACCEL) + "|0|5");
-            nl("4|Camera Rotation Acceleration|" + cv(CVAR_CAM_ROTATION_ACCEL) + "|0|5");
+            nl("4|Movement Speed|" + cv(CVAR_CAM_MOVEMENT_SPEED) + "|0|3");
+            nl("4|Movement Acceleration|" + cv(CVAR_CAM_MOVEMENT_ACCEL) + "|0|5");
+            nl("4|Rotation Speed (doesn't affect mouse)|" + cv(CVAR_ROT_SPEED) + "|0|3");
+            nl("4|Rotation Acceleration (Mouse)|" + cv(CVAR_ROT_ACCEL_MOUSE) + "|0|5");
+            nl("4|Rotation Acceleration (Controller)|" + cv(CVAR_ROT_ACCEL_GAMEPAD) + "|0|5");
             nl("4|Mouse Sensitivity|" + cv(CVAR_MOUSE_SENSITIVITY) + "|0|25");
             nl("4|Gamepad Sensitivity|" + cv(CVAR_GAMEPAD_SENSITIVITY) + "|0|50");
             nl("4|FOV Rotation Scale|" + cv(CVAR_FOV_ROTATION_SCALE) + "|0|2");

@@ -26,7 +26,9 @@ private:
     std::shared_ptr<bool>  bUseLocalMatrix;
     std::shared_ptr<float> CamMovementSpeed;
     std::shared_ptr<float> CamMovementAccel;
-    std::shared_ptr<float> CamRotationAccel;
+    std::shared_ptr<float> CamRotationSpeed;
+    std::shared_ptr<float> CamRotationAccelMouse;
+    std::shared_ptr<float> CamRotationAccelGamepad;
     std::shared_ptr<float> CamMouseSensitivity;
     std::shared_ptr<float> CamGamepadSensitivity;
     std::shared_ptr<float> CamFOVRotationScale;

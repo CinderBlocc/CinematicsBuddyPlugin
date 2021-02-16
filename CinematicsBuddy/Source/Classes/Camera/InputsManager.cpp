@@ -43,11 +43,8 @@ void InputsManager::GetInputs(PlayerControllerWrapper Controller, bool bRoll)
 {
     //Retrieve all the state values
     bUsingGamepad = Controller.GetbUsingGamepad();
-    bRoll = Controller.GetbRoll(); // #TODO: Replace this with cvar/IsKeyPressed method to avoid delay. Since that isn't set up yet, just pull from game
 
     //Retrieve the inputs
-    //#TODO: Use bUsingGamepad here to multiply inputs by GamepadLookScale? Give the final inputs to CameraManager instead of premultiplied inputs?
-    //In that same vein, should final inputs be multiplied by Delta as well?
     Forward = Controller.GetAForward();
     Right = Controller.GetAStrafe();
     Up = Controller.GetAUp();
@@ -64,7 +61,17 @@ void InputsManager::GetInputs(PlayerControllerWrapper Controller, bool bRoll)
     }
     else
     {
-        Roll = Controller.GetALookRoll();
+        //When pressing keyboard roll buttons, roll is +- 83.3333 which is the same as 250 / 3
+        //Compress it to -1 to 1 range to match controller inputs
+        constexpr float LookRollRate = 250.f / 3.f;
+        Roll = Controller.GetALookRoll() / LookRollRate;
+
+        //Sometimes with keyboard the roll input will go slightly above or below 1 and -1
+        //Clamp it to -1 to 1 range
+        if(abs(Roll) > 1.f)
+        {
+            Roll /= abs(Roll);
+        }
     }
 
 

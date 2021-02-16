@@ -97,20 +97,24 @@ void CinematicsBuddy::onLoad()
     GlobalCvarManager->registerCvar(CVAR_IMPORT_FILE_NAME, "", "Set the import file name", true).bindTo(ImportFileName);
     
     //Camera override cvars
-    bUseCamOverrides      = std::make_shared<bool>(false);
-    bUseLocalMatrix       = std::make_shared<bool>(false);
-    CamMovementSpeed      = std::make_shared<float>(0.f);
-    CamMovementAccel      = std::make_shared<float>(0.f);
-    CamRotationAccel      = std::make_shared<float>(0.f);
-    CamMouseSensitivity   = std::make_shared<float>(0.f);
-    CamGamepadSensitivity = std::make_shared<float>(0.f);
-    CamFOVRotationScale   = std::make_shared<float>(0.f);
-    CamRollBinding        = std::make_shared<std::string>("");
+    bUseCamOverrides        = std::make_shared<bool>(false);
+    bUseLocalMatrix         = std::make_shared<bool>(false);
+    CamMovementSpeed        = std::make_shared<float>(0.f);
+    CamMovementAccel        = std::make_shared<float>(0.f);
+    CamRotationSpeed        = std::make_shared<float>(0.f);
+    CamRotationAccelMouse   = std::make_shared<float>(0.f);
+    CamRotationAccelGamepad = std::make_shared<float>(0.f);
+    CamMouseSensitivity     = std::make_shared<float>(0.f);
+    CamGamepadSensitivity   = std::make_shared<float>(0.f);
+    CamFOVRotationScale     = std::make_shared<float>(0.f);
+    CamRollBinding          = std::make_shared<std::string>("");
     GlobalCvarManager->registerCvar(CVAR_ENABLE_CAM_OVERRIDE, "0",   "Enables camera overriding features", true).bindTo(bUseCamOverrides);
     GlobalCvarManager->registerCvar(CVAR_CAM_LOCAL_MATRIX,    "1",   "Uses the local orientation of the camera", true).bindTo(bUseLocalMatrix);
 	GlobalCvarManager->registerCvar(CVAR_CAM_MOVEMENT_SPEED,  "1",   "Camera movement speed multiplier", true, true, 0, true, 3).bindTo(CamMovementSpeed);
     GlobalCvarManager->registerCvar(CVAR_CAM_MOVEMENT_ACCEL,  "1",   "Camera movement acceleration speed", true, true, 0, true, 5).bindTo(CamMovementAccel);
-    GlobalCvarManager->registerCvar(CVAR_CAM_ROTATION_ACCEL,  "1",   "Camera rotation acceleration speed", true, true, 0, true, 5).bindTo(CamRotationAccel);
+	GlobalCvarManager->registerCvar(CVAR_ROT_SPEED,           "1",   "Camera rotation speed multiplier (doesn't affect mouse)", true, true, 0, true, 3).bindTo(CamRotationSpeed);
+    GlobalCvarManager->registerCvar(CVAR_ROT_ACCEL_MOUSE,     "1",   "Camera rotation acceleration speed (mouse)", true, true, 0, true, 5).bindTo(CamRotationAccelMouse);
+    GlobalCvarManager->registerCvar(CVAR_ROT_ACCEL_GAMEPAD,   "1",   "Camera rotation acceleration speed (controller)", true, true, 0, true, 5).bindTo(CamRotationAccelGamepad);
     GlobalCvarManager->registerCvar(CVAR_MOUSE_SENSITIVITY,   "10",  "Camera rotation speed when using mouse", true, true, 0, true, 25).bindTo(CamMouseSensitivity);
     GlobalCvarManager->registerCvar(CVAR_GAMEPAD_SENSITIVITY, "20",  "Camera rotation speed when using gamepad", true, true, 0, true, 50).bindTo(CamGamepadSensitivity);
     GlobalCvarManager->registerCvar(CVAR_FOV_ROTATION_SCALE,  "0.9", "Multiplier for slowing camera rotation when zoomed in", true, true, 0, true, 2).bindTo(CamFOVRotationScale);
@@ -119,7 +123,9 @@ void CinematicsBuddy::onLoad()
     GlobalCvarManager->getCvar(CVAR_CAM_LOCAL_MATRIX).addOnValueChanged(    std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_bUseLocalMatrix));
     GlobalCvarManager->getCvar(CVAR_CAM_MOVEMENT_SPEED).addOnValueChanged(  std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_MovementSpeed));
     GlobalCvarManager->getCvar(CVAR_CAM_MOVEMENT_ACCEL).addOnValueChanged(  std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_MovementAccel));
-    GlobalCvarManager->getCvar(CVAR_CAM_ROTATION_ACCEL).addOnValueChanged(  std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_RotationAccel));
+    GlobalCvarManager->getCvar(CVAR_ROT_SPEED).addOnValueChanged(           std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_RotationSpeed));
+    GlobalCvarManager->getCvar(CVAR_ROT_ACCEL_MOUSE).addOnValueChanged(     std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_RotationAccelMouse));
+    GlobalCvarManager->getCvar(CVAR_ROT_ACCEL_GAMEPAD).addOnValueChanged(   std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_RotationAccelGamepad));
     GlobalCvarManager->getCvar(CVAR_MOUSE_SENSITIVITY).addOnValueChanged(   std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_MouseSensitivity));
     GlobalCvarManager->getCvar(CVAR_GAMEPAD_SENSITIVITY).addOnValueChanged( std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_GamepadSensitivity));
     GlobalCvarManager->getCvar(CVAR_FOV_ROTATION_SCALE).addOnValueChanged(  std::bind(&CinematicsBuddy::OnCamOverridesChanged, this, ECamOverrideChanged::C_FOVRotationScale));
@@ -144,6 +150,10 @@ void CinematicsBuddy::onLoad()
     GlobalCvarManager->registerNotifier("CBTestInputs", [this](std::vector<std::string> params){TestInputs();}, "Tests the acceleration smoothing methods", PERMISSION_ALL);
     GlobalGameWrapper->RegisterDrawable(std::bind(&CinematicsBuddy::DebugRender, this, std::placeholders::_1));
 
+    //Cache the current binding for roll
+    OnCamOverridesChanged(ECamOverrideChanged::C_RollBinding);
+    
+    //Dynamically generate the UI
     GenerateSettingsFile();
 }
 void CinematicsBuddy::onUnload(){}
@@ -196,14 +206,16 @@ void CinematicsBuddy::OnCamOverridesChanged(ECamOverrideChanged ChangedValue)
 {
     switch(ChangedValue)
     {
-        case ECamOverrideChanged::C_bUseOverrides:      return Camera->SetbUseOverrides(*bUseCamOverrides);
-        case ECamOverrideChanged::C_bUseLocalMatrix:    return Camera->SetbUseLocalMatrix(*bUseLocalMatrix);
-        case ECamOverrideChanged::C_MovementSpeed:      return Camera->SetMovementSpeed(*CamMovementSpeed);
-        case ECamOverrideChanged::C_MovementAccel:      return Camera->SetMovementAccel(*CamMovementAccel);
-        case ECamOverrideChanged::C_RotationAccel:      return Camera->SetRotationAccel(*CamRotationAccel);
-        case ECamOverrideChanged::C_MouseSensitivity:   return Camera->SetMouseSensitivity(*CamMouseSensitivity);
-        case ECamOverrideChanged::C_GamepadSensitivity: return Camera->SetGamepadSensitivity(*CamGamepadSensitivity);
-        case ECamOverrideChanged::C_FOVRotationScale:   return Camera->SetFOVRotationScale(*CamFOVRotationScale);
+        case ECamOverrideChanged::C_bUseOverrides:        return Camera->SetbUseOverrides(*bUseCamOverrides);
+        case ECamOverrideChanged::C_bUseLocalMatrix:      return Camera->SetbUseLocalMatrix(*bUseLocalMatrix);
+        case ECamOverrideChanged::C_MovementSpeed:        return Camera->SetMovementSpeed(*CamMovementSpeed);
+        case ECamOverrideChanged::C_MovementAccel:        return Camera->SetMovementAccel(*CamMovementAccel);
+        case ECamOverrideChanged::C_RotationSpeed:        return Camera->SetRotationSpeed(*CamRotationSpeed);
+        case ECamOverrideChanged::C_RotationAccelMouse:   return Camera->SetRotationAccelMouse(*CamRotationAccelMouse);
+        case ECamOverrideChanged::C_RotationAccelGamepad: return Camera->SetRotationAccelGamepad(*CamRotationAccelGamepad);
+        case ECamOverrideChanged::C_MouseSensitivity:     return Camera->SetMouseSensitivity(*CamMouseSensitivity);
+        case ECamOverrideChanged::C_GamepadSensitivity:   return Camera->SetGamepadSensitivity(*CamGamepadSensitivity);
+        case ECamOverrideChanged::C_FOVRotationScale:     return Camera->SetFOVRotationScale(*CamFOVRotationScale);
         case ECamOverrideChanged::C_RollBinding:
         {
             CamRollBindingIndex = GlobalGameWrapper->GetFNameIndexByString(*CamRollBinding);
