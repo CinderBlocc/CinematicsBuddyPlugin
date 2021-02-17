@@ -7,6 +7,10 @@
 class CameraWrapper;
 class CanvasWrapper;
 class InputsManager;
+namespace RT
+{
+    class Matrix3;
+}
 
 class CameraManager
 {
@@ -25,7 +29,10 @@ private:
 
     //State variables set by plugin
     std::shared_ptr<bool>  m_bUseOverrides         = std::make_shared<bool>(false);
-    std::shared_ptr<bool>  m_bUseLocalMatrix       = std::make_shared<bool>(true);
+    std::shared_ptr<bool>  m_bUseLocalMovement     = std::make_shared<bool>(true);
+    std::shared_ptr<bool>  m_bUseLocalRotation     = std::make_shared<bool>(true);
+    std::shared_ptr<bool>  m_bHardFloors           = std::make_shared<bool>(true);
+    std::shared_ptr<float> m_FloorHeight           = std::make_shared<float>(10.f);
     std::shared_ptr<float> m_MovementSpeed         = std::make_shared<float>(1.f);
     std::shared_ptr<float> m_MovementAccel         = std::make_shared<float>(1.f);
     std::shared_ptr<float> m_RotationSpeed         = std::make_shared<float>(1.f);
@@ -42,29 +49,24 @@ private:
     //Internal state variables
     float BaseMovementSpeed = 2000.f;
     float BaseMovementAccel = 2.f;
-    float BaseRotationSpeed = 500.f;
-    float BaseRotationAccel = 1.f;
+    float BaseRotationSpeed = 100.f;
+    float BaseRotationAccel = 2.f;
     
     //Speed of movement and rotation
     Vector Velocity        = {0, 0, 0};
     Vector AngularVelocity = {0, 0, 0};
 
-    //Camera matrix
-    Vector Forward = {1, 0, 0};
-    Vector Right   = {0, 1, 0};
-    Vector Up      = {0, 0, 1};
-
     //Functions to update camera transformation
     void UpdateCameraTransformation(float Delta);
-    void UpdateCameraMatrix(CameraWrapper TheCamera);
-    void UpdateVelocity(float Delta);
-    void UpdateAngularVelocity(float Delta);
+    void UpdateVelocity(float Delta, RT::Matrix3 MovementMatrix);
+    void UpdateAngularVelocity(float Delta, RT::Matrix3 RotationMatrix);
     void UpdatePosition(float Delta, CameraWrapper TheCamera);
     void UpdateRotation(float Delta, CameraWrapper TheCamera);
 
     //Utility
     bool  IsValidMode();
     float GetDelta();
+    RT::Matrix3 GetCameraMatrix(bool bFullyLocal);
     float GetSpeedComponent(Vector Direction);
     float GetAngularSpeedComponent(Vector Direction);
     float GetInvertedPerc(float InPerc);

@@ -10,6 +10,7 @@ extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 // MACROS //
 #define PLUGIN_VERSION "0.9.8"
 #define EXTENSION_NAME ".txt"
+#define NO_SELECTION   "-- NONE --"
 
 //Mutual recording cvars
 #define CVAR_INCREMENT_FILES     "CB_bIncrementFileNames"
@@ -32,7 +33,10 @@ extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 
 //Camera override cvars
 #define CVAR_ENABLE_CAM_OVERRIDE "CB_Camera_bUseCamOverrides"
-#define CVAR_CAM_LOCAL_MATRIX    "CB_Camera_bUseLocalMatrix"
+#define CVAR_CAM_LOCAL_MOVEMENT  "CB_Camera_bUseLocalMovement"
+#define CVAR_CAM_LOCAL_ROTATION  "CB_Camera_bUseLocalRotation"
+#define CVAR_CAM_HARD_FLOORS     "CB_Camera_bHardFloors"
+#define CVAR_CAM_FLOOR_HEIGHT    "CB_Camera_FloorHeight"
 #define CVAR_CAM_MOVEMENT_SPEED  "CB_Camera_MovementSpeed"
 #define CVAR_CAM_MOVEMENT_ACCEL  "CB_Camera_MovementAccel"
 #define CVAR_ROT_SPEED           "CB_Camera_RotationSpeed"
@@ -42,6 +46,7 @@ extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 #define CVAR_GAMEPAD_SENSITIVITY "CB_Camera_GamepadSensitivity"
 #define CVAR_FOV_ROTATION_SCALE  "CB_Camera_FOVRotationScale" //#TODO: The more zoomed in, the less sensitive the rotation
 #define CVAR_ROLL_BINDING        "CB_Camera_RollBinding"
+#define CVAR_ROLL_REPLACES_PITCH "CB_Camera_RollReplacesPitch"
 
 //Notifiers
 #define NOTIFIER_RECORD_START   "CBRecordStart"

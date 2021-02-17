@@ -1,4 +1,5 @@
 #include "UIManager.h"
+#include "UIElement.h"
 #include "bakkesmod/plugin/bakkesmodplugin.h"
 #include "SupportFiles/MacrosStructsEnums.h"
 #include <filesystem>
@@ -101,7 +102,16 @@ void UIManager::GenerateSettingsFile()
         nl("1|Enable Overrides|" + cv(CVAR_ENABLE_CAM_OVERRIDE));
         nl("10|" + cv(CVAR_ENABLE_CAM_OVERRIDE));
             nl("7|");
-            nl("1|Use local orientation|" + cv(CVAR_CAM_LOCAL_MATRIX));
+            nl("1|Local movement|" + cv(CVAR_CAM_LOCAL_MOVEMENT));
+            nl("7|");
+            nl("1|Local rotation|" + cv(CVAR_CAM_LOCAL_ROTATION));
+            nl("7|");
+            nl("1|Hard floors|" + cv(CVAR_CAM_HARD_FLOORS));
+            nl("7|");
+            nl("1|Roll replaces pitch instead of yaw|" + cv(CVAR_ROLL_REPLACES_PITCH));
+            nl("10|" + cv(CVAR_CAM_HARD_FLOORS));
+                nl("4|Floor Height|" + cv(CVAR_CAM_FLOOR_HEIGHT) + "|-50|50");
+            nl("11|");//Hard floors
             nl("4|Movement Speed|" + cv(CVAR_CAM_MOVEMENT_SPEED) + "|0|5");
             nl("4|Movement Acceleration|" + cv(CVAR_CAM_MOVEMENT_ACCEL) + "|0|5");
             nl("4|Rotation Speed (doesn't affect mouse)|" + cv(CVAR_ROT_SPEED) + "|0|3");
@@ -129,6 +139,7 @@ std::string UIManager::GetBindingsList()
     {
         //Fill list
         std::vector<std::pair<std::string, std::string>> BindingsList;
+        BindingsList.emplace_back(NO_SELECTION, NO_SELECTION);
         BindingsList.emplace_back("Left thumbstick press", "XboxTypeS_LeftThumbStick");
         BindingsList.emplace_back("Right thumbstick press", "XboxTypeS_RightThumbStick");
         BindingsList.emplace_back("DPad up", "XboxTypeS_DPad_Up");
@@ -163,4 +174,9 @@ std::string UIManager::GetBindingsList()
     }
 
     return Output;
+}
+
+void UIManager::AddElement(const UIElement& NewElement)
+{
+    
 }

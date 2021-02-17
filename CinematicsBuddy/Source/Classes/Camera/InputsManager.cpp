@@ -2,6 +2,11 @@
 #include "SupportFiles/MacrosStructsEnums.h"
 #include "bakkesmod/plugin/bakkesmodplugin.h"
 
+InputsManager::InputsManager()
+{
+    MAKE_CVAR_BIND_TO_STRING(bRollReplacesPitch, CVAR_ROLL_REPLACES_PITCH, "Roll binding replaces pitch instead of yaw", true);
+}
+
 void InputsManager::PlayerInputTick(float Delta, bool bRoll)
 {
     PlayerControllerWrapper Controller = GlobalGameWrapper->GetPlayerController();
@@ -27,8 +32,16 @@ void InputsManager::GetInputs(PlayerControllerWrapper Controller, bool bRoll)
     {
         if(bRoll)
         {
-            Roll = Yaw;
-            Yaw = 0.f;
+            if(*bRollReplacesPitch)
+            {
+                Roll = Pitch;
+                Pitch = 0.f;
+            }
+            else
+            {
+                Roll = Yaw;
+                Yaw = 0.f;
+            }
         }
     }
     else

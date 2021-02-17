@@ -4,15 +4,16 @@
 #include "SupportFiles/MacrosStructsEnums.h"
 #include "bakkesmod/plugin/bakkesmodplugin.h"
 #include "BMGraphs/BMGraphs/BMGraphs.h"
+#include "RenderingTools/RenderingTools.h"
 
 /*
 
     #TODO:
-        - Add angular velocity
+        - Why does rotation snap back to 0,0,0 sometimes?
 
-        - Separate the camera matrix into two separate ones?
-            - One for local location and one for local rotation
-            - Sometimes people might want the old "world space" movement, but keep the local rotation
+        - When using non-local rotation and rolled, pitching will eventually reset roll back to 0
+
+        - Add mouse input
 
         - Option to read configs and apply their values to the camera
             - Make a custom parser? Not sure if the exec config command can user relative pathing
@@ -22,6 +23,11 @@
                     - Should be able to use relative pathing starting from the main CB configs folder. Subfolders for certain projects or cine types would be nice
 
         - Option to preserve momentum in world space?
+
+        - FOV acceleration. Attach to left bumper?
+            - Instead, for both pitch and FOV, add a dropdown menu letting the user choose which input should be swapped
+                - Remove the pitch/roll checkbox once you add this
+                - This will be much easier to add with templatized cvar creation. You could feed the settings into the struct and have them auto generate in UI
 
         - Take FOV into account for pitch and yaw rotation speed. The more zoomed in, the less speed
 
@@ -35,17 +41,20 @@ CameraManager::CameraManager()
     Inputs = std::make_shared<InputsManager>();
 
     //Register cvars
-    MAKE_CVAR_BIND_TO_STRING(m_bUseOverrides,        CVAR_ENABLE_CAM_OVERRIDE, "Enables camera overriding features",       true);
-    MAKE_CVAR_BIND_TO_STRING(m_bUseLocalMatrix,      CVAR_CAM_LOCAL_MATRIX,    "Uses the local orientation of the camera", true);
-	MAKE_CVAR_BIND_TO_STRING(m_MovementSpeed,        CVAR_CAM_MOVEMENT_SPEED,  "Camera movement speed multiplier",                        true, true, 0, true, 5);
-    MAKE_CVAR_BIND_TO_STRING(m_MovementAccel,        CVAR_CAM_MOVEMENT_ACCEL,  "Camera movement acceleration speed",                      true, true, 0, true, 5);
-	MAKE_CVAR_BIND_TO_STRING(m_RotationSpeed,        CVAR_ROT_SPEED,           "Camera rotation speed multiplier (doesn't affect mouse)", true, true, 0, true, 3);
-    MAKE_CVAR_BIND_TO_STRING(m_RotationAccelMouse,   CVAR_ROT_ACCEL_MOUSE,     "Camera rotation acceleration speed (mouse)",              true, true, 0, true, 5);
-    MAKE_CVAR_BIND_TO_STRING(m_RotationAccelGamepad, CVAR_ROT_ACCEL_GAMEPAD,   "Camera rotation acceleration speed (controller)",         true, true, 0, true, 5);
-    MAKE_CVAR_BIND_TO_STRING(m_MouseSensitivity,     CVAR_MOUSE_SENSITIVITY,   "Camera rotation speed when using mouse",                  true, true, 0, true, 25);
-    MAKE_CVAR_BIND_TO_STRING(m_GamepadSensitivity,   CVAR_GAMEPAD_SENSITIVITY, "Camera rotation speed when using gamepad",                true, true, 0, true, 50);
-    MAKE_CVAR_BIND_TO_STRING(m_FOVRotationScale,     CVAR_FOV_ROTATION_SCALE,  "Multiplier for slowing camera rotation when zoomed in",   true, true, 0, true, 2);
-    MAKE_CVAR_BIND_STRING(   m_RollBinding,          CVAR_ROLL_BINDING,        "Button bound to bRoll modifier to change camera yaw input to roll", true);
+    MAKE_CVAR_BIND_TO_STRING(m_bUseOverrides,        CVAR_ENABLE_CAM_OVERRIDE, "Enables camera overriding features",                      true);
+    MAKE_CVAR_BIND_TO_STRING(m_bUseLocalMovement,    CVAR_CAM_LOCAL_MOVEMENT,  "Uses the local orientation of the camera for movement",   true);
+    MAKE_CVAR_BIND_TO_STRING(m_bUseLocalRotation,    CVAR_CAM_LOCAL_ROTATION,  "Uses the local orientation of the camera for rotation",   true);
+    MAKE_CVAR_BIND_TO_STRING(m_bHardFloors,          CVAR_CAM_HARD_FLOORS,     "Prevents the camera from going through the floor",        true);
+	MAKE_CVAR_BIND_TO_STRING(m_FloorHeight,          CVAR_CAM_FLOOR_HEIGHT,    "Lowest height the camera can go",                         true, true, -50, true, 50);
+	MAKE_CVAR_BIND_TO_STRING(m_MovementSpeed,        CVAR_CAM_MOVEMENT_SPEED,  "Camera movement speed multiplier",                        true, true, 0,   true, 5);
+    MAKE_CVAR_BIND_TO_STRING(m_MovementAccel,        CVAR_CAM_MOVEMENT_ACCEL,  "Camera movement acceleration speed",                      true, true, 0,   true, 5);
+	MAKE_CVAR_BIND_TO_STRING(m_RotationSpeed,        CVAR_ROT_SPEED,           "Camera rotation speed multiplier (doesn't affect mouse)", true, true, 0,   true, 3);
+    MAKE_CVAR_BIND_TO_STRING(m_RotationAccelMouse,   CVAR_ROT_ACCEL_MOUSE,     "Camera rotation acceleration speed (mouse)",              true, true, 0,   true, 5);
+    MAKE_CVAR_BIND_TO_STRING(m_RotationAccelGamepad, CVAR_ROT_ACCEL_GAMEPAD,   "Camera rotation acceleration speed (controller)",         true, true, 0,   true, 5);
+    MAKE_CVAR_BIND_TO_STRING(m_MouseSensitivity,     CVAR_MOUSE_SENSITIVITY,   "Camera rotation speed when using mouse",                  true, true, 0,   true, 25);
+    MAKE_CVAR_BIND_TO_STRING(m_GamepadSensitivity,   CVAR_GAMEPAD_SENSITIVITY, "Camera rotation speed when using gamepad",                true, true, 0,   true, 50);
+    MAKE_CVAR_BIND_TO_STRING(m_FOVRotationScale,     CVAR_FOV_ROTATION_SCALE,  "Multiplier for slowing camera rotation when zoomed in",   true, true, 0,   true, 2);
+    MAKE_CVAR_BIND_STRING(   m_RollBinding,          CVAR_ROLL_BINDING,        "Modifier to change camera yaw input to roll",             true);
     ON_CVAR_CHANGED(CVAR_ROLL_BINDING, CameraManager, CacheRollBinding);
     CacheRollBinding();
 
@@ -107,35 +116,16 @@ void CameraManager::UpdateCameraTransformation(float Delta)
     CameraWrapper TheCamera = GlobalGameWrapper->GetCamera();
     if(!TheCamera.IsNull())
     {
-        UpdateCameraMatrix(TheCamera);
-        UpdateVelocity(Delta);
-        UpdateAngularVelocity(Delta);
+        RT::Matrix3 MovementMatrix = GetCameraMatrix(*m_bUseLocalMovement);
+        RT::Matrix3 RotationMatrix = GetCameraMatrix(*m_bUseLocalRotation);
+        UpdateVelocity(Delta, MovementMatrix);
+        UpdateAngularVelocity(Delta, RotationMatrix);
         UpdatePosition(Delta, TheCamera);
         UpdateRotation(Delta, TheCamera);
     }
 }
 
-void CameraManager::UpdateCameraMatrix(CameraWrapper TheCamera)
-{
-    if(*m_bUseLocalMatrix)
-    {
-        //Use fully local matrix
-        Quat CameraQuat = RotatorToQuat(TheCamera.GetRotation());
-        Forward = RotateVectorWithQuat(Vector(1, 0, 0), CameraQuat).getNormalized();
-        Right   = RotateVectorWithQuat(Vector(0, 1, 0), CameraQuat).getNormalized();
-        Up      = RotateVectorWithQuat(Vector(0, 0, 1), CameraQuat).getNormalized();
-    }
-    else
-    {
-        //Approximate the game's camera matrix
-        Quat CameraQuat = RotatorToQuat(TheCamera.GetRotation());
-        Forward = RotateVectorWithQuat(Vector(1, 0, 0), CameraQuat); Forward.Z = 0.f; Forward.normalize();
-        Right   = RotateVectorWithQuat(Vector(0, 1, 0), CameraQuat); Right.Z   = 0.f; Right.normalize();
-        Up      = Vector(0, 0, 1);
-    }
-}
-
-void CameraManager::UpdateVelocity(float Delta)
+void CameraManager::UpdateVelocity(float Delta, RT::Matrix3 InMatrix)
 {
     //Calculate some variables used throughout the function
     float MaxSpeed = BaseMovementSpeed * *m_MovementSpeed;
@@ -143,9 +133,9 @@ void CameraManager::UpdateVelocity(float Delta)
     float ImpulseStrength = MaxSpeed * Delta * AccelSpeed;
 
     //Get the camera's speed as a percentage per axis
-    float ForwardSpeedPerc = GetSpeedComponent(Forward);
-    float RightSpeedPerc   = GetSpeedComponent(Right);
-    float UpSpeedPerc      = GetSpeedComponent(Up);
+    float ForwardSpeedPerc = GetSpeedComponent(InMatrix.forward);
+    float RightSpeedPerc   = GetSpeedComponent(InMatrix.right);
+    float UpSpeedPerc      = GetSpeedComponent(InMatrix.up);
 
     //Get input percentages
     float ForwardInputPerc = Inputs->GetForward();
@@ -153,9 +143,9 @@ void CameraManager::UpdateVelocity(float Delta)
     float UpInputPerc      = Inputs->GetUp();
 
     //Convert those inputs into vector inputs
-    Vector ForwardInputVec = Forward * ForwardInputPerc;
-    Vector RightInputVec   = Right   * RightInputPerc;
-    Vector UpInputVec      = Up      * UpInputPerc;
+    Vector ForwardInputVec = InMatrix.forward * ForwardInputPerc;
+    Vector RightInputVec   = InMatrix.right   * RightInputPerc;
+    Vector UpInputVec      = InMatrix.up      * UpInputPerc;
 
     //Calculate acceleration force per axis
     Vector ForwardAcceleration = ForwardInputVec * GetReducedPerc(ForwardInputPerc, ForwardSpeedPerc);
@@ -167,9 +157,9 @@ void CameraManager::UpdateVelocity(float Delta)
     Vector Acceleration = AccelerationDirection * ImpulseStrength;
 
     //Calculate automatic braking force (only apply brakes if no input on that axis)
-    Vector ForwardBrake = Forward * GetBrakeForce(ForwardInputPerc, ForwardSpeedPerc);
-    Vector RightBrake   = Right   * GetBrakeForce(RightInputPerc, RightSpeedPerc);
-    Vector UpBrake      = Up      * GetBrakeForce(UpInputPerc, UpSpeedPerc);
+    Vector ForwardBrake = InMatrix.forward * GetBrakeForce(ForwardInputPerc, ForwardSpeedPerc);
+    Vector RightBrake   = InMatrix.right   * GetBrakeForce(RightInputPerc, RightSpeedPerc);
+    Vector UpBrake      = InMatrix.up      * GetBrakeForce(UpInputPerc, UpSpeedPerc);
     
     //Calculate impulse created by braking
     Vector BrakeDirection = ForwardBrake + RightBrake + UpBrake;
@@ -196,7 +186,7 @@ void CameraManager::UpdateVelocity(float Delta)
     ++EveryXNumber;
 }
 
-void CameraManager::UpdateAngularVelocity(float Delta)
+void CameraManager::UpdateAngularVelocity(float Delta, RT::Matrix3 InMatrix)
 {
     //#TODO: Take FOVRotationScale into account here, along with camera FOV
 
@@ -211,17 +201,17 @@ void CameraManager::UpdateAngularVelocity(float Delta)
     float GamepadImpulseStrength = MaxSpeed * Delta * GamepadAccelSpeed;
 
     //Get the camera's angular speed as a percentage per axis
-    float PitchSpeedPerc = GetAngularSpeedComponent(Right);
-    float YawSpeedPerc   = GetAngularSpeedComponent(Up);
-    float RollSpeedPerc  = GetAngularSpeedComponent(Forward);
+    float PitchSpeedPerc = GetAngularSpeedComponent(InMatrix.right);
+    float YawSpeedPerc   = GetAngularSpeedComponent(InMatrix.up);
+    float RollSpeedPerc  = GetAngularSpeedComponent(InMatrix.forward);
 
     //Get input percentages
     float PitchInputPerc = 0.f;
     float YawInputPerc = 0.f;
-    float RollInputPerc = Inputs->GetRoll();
+    float RollInputPerc = Inputs->GetRoll() * -1.f;
     if(Inputs->GetbUsingGamepad())
     {
-        PitchInputPerc = Inputs->GetPitch();
+        PitchInputPerc = Inputs->GetPitch() * -1.f;
         YawInputPerc   = Inputs->GetYaw();
     }
     else
@@ -230,9 +220,9 @@ void CameraManager::UpdateAngularVelocity(float Delta)
     }
 
     //Convert those inputs into vector inputs
-    Vector PitchInputVec = Right   * PitchInputPerc;
-    Vector YawInputVec   = Up      * YawInputPerc;
-    Vector RollInputVec  = Forward * RollInputPerc;
+    Vector PitchInputVec = InMatrix.right   * PitchInputPerc;
+    Vector YawInputVec   = InMatrix.up      * YawInputPerc;
+    Vector RollInputVec  = InMatrix.forward * RollInputPerc;
 
     //Calculate acceleration force per axis
     Vector PitchAcceleration = PitchInputVec * GetReducedPerc(PitchInputPerc, PitchSpeedPerc);
@@ -243,13 +233,28 @@ void CameraManager::UpdateAngularVelocity(float Delta)
     Vector AccelerationDirection = PitchAcceleration + YawAcceleration + RollAcceleration;
     Vector Acceleration = AccelerationDirection * GamepadImpulseStrength;
 
+    //Calculate automatic braking force (only apply brakes if no input on that axis)
+    Vector PitchBrake = InMatrix.right   * GetBrakeForce(PitchInputPerc, PitchSpeedPerc);
+    Vector YawBrake   = InMatrix.up      * GetBrakeForce(YawInputPerc,   YawSpeedPerc);
+    Vector RollBrake  = InMatrix.forward * GetBrakeForce(RollInputPerc,  RollSpeedPerc);
+    
+    //Calculate impulse created by braking
+    Vector BrakeDirection = PitchBrake + YawBrake + RollBrake;
+    Vector Brake = BrakeDirection * GamepadImpulseStrength;
+
     //Apply the impulses
-    AngularVelocity += Acceleration;
+    AngularVelocity += Acceleration - Brake;
 }
 
 void CameraManager::UpdatePosition(float Delta, CameraWrapper TheCamera)
 {
     Vector NewLocation = TheCamera.GetLocation() + Velocity * Delta;
+
+    if(*m_bHardFloors)
+    {
+        NewLocation.Z = max(NewLocation.Z, *m_FloorHeight);
+    }
+
     TheCamera.SetLocation(NewLocation);
 }
 
@@ -259,10 +264,10 @@ void CameraManager::UpdateRotation(float Delta, CameraWrapper TheCamera)
     float RotationAmount = AngularVelocity.magnitude() * Delta * (CONST_PI_F / 180.f);
     Quat NewRotation = AngleAxisRotation(RotationAmount, RotationAxis);
 
-    Quat CurrentRotation = RotatorToQuat(TheCamera.GetRotation());
-    Rotator FinalRotation = QuatToRotator(NewRotation * CurrentRotation * NewRotation.conjugate());
+    RT::Matrix3 CurrentMatrix(TheCamera.GetRotation());
+    CurrentMatrix.RotateWithQuat(NewRotation);
     
-    TheCamera.SetRotation(FinalRotation);
+    TheCamera.SetRotation(CurrentMatrix.ToRotator());
 }
 
 
@@ -300,6 +305,29 @@ float CameraManager::GetDelta()
     PreviousTime = CurrentTime;
 
     return InputDelta;
+}
+
+RT::Matrix3 CameraManager::GetCameraMatrix(bool bFullyLocal)
+{
+    CameraWrapper TheCamera = GlobalGameWrapper->GetCamera();
+    if(TheCamera.IsNull())
+    {
+        return RT::Matrix3();
+    }
+
+    //Return the matrix constructed from the camera's current orientation
+    if(bFullyLocal)
+    {
+        return RT::Matrix3(TheCamera.GetRotation());
+    }
+
+    //Approximate the game's camera matrix. Local pitch and roll, world yaw
+    RT::Matrix3 Output(TheCamera.GetRotation());
+    Output.forward.Z = 0.f; Output.forward.normalize();
+    Output.right.Z   = 0.f; Output.right.normalize();
+    Output.up = Vector(0, 0, 1);
+
+    return Output;
 }
 
 float CameraManager::GetSpeedComponent(Vector Direction)
@@ -397,18 +425,22 @@ void CameraManager::StartInputsTest()
 
 void CameraManager::DebugRender(CanvasWrapper Canvas)
 {
+    return;
+
     if(!IsValidMode())
     {
         return;
     }
 
     //Get the camera's speed as a percentage per axis
-    float ForwardSpeedPerc = GetSpeedComponent(Forward);
-    float RightSpeedPerc   = GetSpeedComponent(Right);
-    float UpSpeedPerc      = GetSpeedComponent(Up);
-    float PitchSpeedPerc   = GetAngularSpeedComponent(Right);
-    float YawSpeedPerc     = GetAngularSpeedComponent(Up);
-    float RollSpeedPerc    = GetAngularSpeedComponent(Forward);
+    RT::Matrix3 MovementMatrix = GetCameraMatrix(*m_bUseLocalMovement);
+    RT::Matrix3 RotationMatrix = GetCameraMatrix(*m_bUseLocalRotation);
+    float ForwardSpeedPerc = GetSpeedComponent(MovementMatrix.forward);
+    float RightSpeedPerc   = GetSpeedComponent(MovementMatrix.right);
+    float UpSpeedPerc      = GetSpeedComponent(MovementMatrix.up);
+    float PitchSpeedPerc   = GetAngularSpeedComponent(RotationMatrix.right);
+    float YawSpeedPerc     = GetAngularSpeedComponent(RotationMatrix.up);
+    float RollSpeedPerc    = GetAngularSpeedComponent(RotationMatrix.forward);
 
     //Angular junk
     Vector RotationAxis = AngularVelocity.getNormalized();

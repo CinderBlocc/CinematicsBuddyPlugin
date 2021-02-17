@@ -1,3 +1,6 @@
 [submodule "CinematicsBuddy/Vendor/BMGraphs"]
 	path = CinematicsBuddy/Vendor/BMGraphs
 	url = https://github.com/CinderBlocc/BMGraphs.git
+[submodule "CinematicsBuddy/Vendor/RenderingTools"]
+	path = CinematicsBuddy/Vendor/RenderingTools
+	url = https://github.com/CinderBlocc/RenderingTools.git

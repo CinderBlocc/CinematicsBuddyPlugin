@@ -8,17 +8,20 @@ class PlayerControllerWrapper;
 class InputsManager
 {
 public:
+    InputsManager();
+
     //Get input values from game
     void PlayerInputTick(float Delta, bool bRoll);
 
     //Give input values to other classes
-    float GetForward()       { return Forward;       }
-    float GetRight()         { return Right;         }
-    float GetUp()            { return Up;            }
-    float GetPitch()         { return Pitch;         }
-    float GetYaw()           { return Yaw;           }
-    float GetRoll()          { return Roll;          }
+    float GetForward() { return Forward; }
+    float GetRight()   { return Right;   }
+    float GetUp()      { return Up;      }
+    float GetPitch()   { return Pitch;   }
+    float GetYaw()     { return Yaw;     }
+    float GetRoll()    { return Roll;    }
     bool  GetbUsingGamepad() { return bUsingGamepad; }
+    bool  GetbRollReplacesPitch() { return *bRollReplacesPitch; }
 
     // TESTS - REMOVE WHEN DONE //
     void RunTest()  { TestStartTime = std::chrono::steady_clock::now(); bTestIsRunning = true;  }
@@ -37,6 +40,7 @@ private:
     float Pitch   = 0.f;
     float Yaw     = 0.f;
     float Roll    = 0.f;
+    std::shared_ptr<bool> bRollReplacesPitch = std::make_shared<bool>(false);
 
     //State variables read from game
     bool bUsingGamepad = false;
