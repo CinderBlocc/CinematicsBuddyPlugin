@@ -204,7 +204,47 @@ void CameraManager::UpdateAngularVelocity(float Delta)
     //Roll is set by both keyboard and controller as a rate, along with Pitch and Yaw on controller
     //Pitch and Yaw are set by mouse via movement deltas which give large numbers, so speed should not be used
 
+    //Calculate some variables used throughout the function
     float MaxSpeed = BaseRotationSpeed * *m_RotationSpeed;
+    float MouseAccelSpeed = BaseRotationAccel * *m_RotationAccelMouse;
+    float GamepadAccelSpeed = BaseRotationAccel * *m_RotationAccelGamepad;
+    float GamepadImpulseStrength = MaxSpeed * Delta * GamepadAccelSpeed;
+
+    //Get the camera's angular speed as a percentage per axis
+    float PitchSpeedPerc = GetAngularSpeedComponent(Right);
+    float YawSpeedPerc   = GetAngularSpeedComponent(Up);
+    float RollSpeedPerc  = GetAngularSpeedComponent(Forward);
+
+    //Get input percentages
+    float PitchInputPerc = 0.f;
+    float YawInputPerc = 0.f;
+    float RollInputPerc = Inputs->GetRoll();
+    if(Inputs->GetbUsingGamepad())
+    {
+        PitchInputPerc = Inputs->GetPitch();
+        YawInputPerc   = Inputs->GetYaw();
+    }
+    else
+    {
+        
+    }
+
+    //Convert those inputs into vector inputs
+    Vector PitchInputVec = Right   * PitchInputPerc;
+    Vector YawInputVec   = Up      * YawInputPerc;
+    Vector RollInputVec  = Forward * RollInputPerc;
+
+    //Calculate acceleration force per axis
+    Vector PitchAcceleration = PitchInputVec * GetReducedPerc(PitchInputPerc, PitchSpeedPerc);
+    Vector YawAcceleration   = YawInputVec   * GetReducedPerc(YawInputPerc,   YawSpeedPerc);
+    Vector RollAcceleration  = RollInputVec  * GetReducedPerc(RollInputPerc,  RollSpeedPerc);
+
+    //Calculate impulse created by inputs
+    Vector AccelerationDirection = PitchAcceleration + YawAcceleration + RollAcceleration;
+    Vector Acceleration = AccelerationDirection * GamepadImpulseStrength;
+
+    //Apply the impulses
+    AngularVelocity += Acceleration;
 }
 
 void CameraManager::UpdatePosition(float Delta, CameraWrapper TheCamera)
@@ -215,7 +255,14 @@ void CameraManager::UpdatePosition(float Delta, CameraWrapper TheCamera)
 
 void CameraManager::UpdateRotation(float Delta, CameraWrapper TheCamera)
 {
+    Vector RotationAxis = AngularVelocity.getNormalized();
+    float RotationAmount = AngularVelocity.magnitude() * Delta * (CONST_PI_F / 180.f);
+    Quat NewRotation = AngleAxisRotation(RotationAmount, RotationAxis);
+
+    Quat CurrentRotation = RotatorToQuat(TheCamera.GetRotation());
+    Rotator FinalRotation = QuatToRotator(NewRotation * CurrentRotation * NewRotation.conjugate());
     
+    TheCamera.SetRotation(FinalRotation);
 }
 
 
@@ -259,6 +306,12 @@ float CameraManager::GetSpeedComponent(Vector Direction)
 {
     float MaxSpeed = BaseMovementSpeed * *m_MovementSpeed;
     return Vector::dot(Velocity, Direction) / MaxSpeed;
+}
+
+float CameraManager::GetAngularSpeedComponent(Vector Direction)
+{
+    float MaxSpeed = BaseRotationSpeed * *m_RotationSpeed;
+    return Vector::dot(AngularVelocity, Direction) / MaxSpeed;
 }
 
 float CameraManager::GetInvertedPerc(float InPerc)
@@ -309,6 +362,19 @@ float CameraManager::GetBrakeForce(float InputPerc, float SpeedPerc)
     return 0.f;
 }
 
+Quat CameraManager::AngleAxisRotation(float angle, Vector axis)
+{
+	//Angle in radians
+	Quat result;
+	float angDiv2 = angle * 0.5f;
+	result.W = cosf(angDiv2);
+    result.X = axis.X * sinf(angDiv2);
+    result.Y = axis.Y * sinf(angDiv2);
+    result.Z = axis.Z * sinf(angDiv2);
+
+	return result;
+}
+
 float CameraManager::RemapPercentage(float CurrentPerc, float CurrentMin, float CurrentMax, float NewMin, float NewMax)
 {
     return NewMin + (NewMax - NewMin) * ((CurrentPerc - CurrentMin) / (CurrentMax - CurrentMin));
@@ -340,6 +406,14 @@ void CameraManager::DebugRender(CanvasWrapper Canvas)
     float ForwardSpeedPerc = GetSpeedComponent(Forward);
     float RightSpeedPerc   = GetSpeedComponent(Right);
     float UpSpeedPerc      = GetSpeedComponent(Up);
+    float PitchSpeedPerc   = GetAngularSpeedComponent(Right);
+    float YawSpeedPerc     = GetAngularSpeedComponent(Up);
+    float RollSpeedPerc    = GetAngularSpeedComponent(Forward);
+
+    //Angular junk
+    Vector RotationAxis = AngularVelocity.getNormalized();
+    float RotationAmount = AngularVelocity.magnitude() * 0.008333f * (CONST_PI_F / 180.f);//magic number is roughly the same as Delta in playertick, and converting from deg to rad
+    Quat NewRotation = AngleAxisRotation(RotationAmount, RotationAxis);
     
     //Create RenderStrings and fill it with some values
     std::vector<std::string> RenderStrings;
@@ -356,7 +430,15 @@ void CameraManager::DebugRender(CanvasWrapper Canvas)
     RenderStrings.push_back("Forward Velocity: " + CBUtils::PrintFloat(ForwardSpeedPerc, 4));
     RenderStrings.push_back("Right Velocity: "   + CBUtils::PrintFloat(RightSpeedPerc, 4));
     RenderStrings.push_back("Up Velocity: "      + CBUtils::PrintFloat(UpSpeedPerc, 4));
-    RenderStrings.push_back("AngularVelocity: "  + CBUtils::PrintVector(AngularVelocity, 6));
+    RenderStrings.emplace_back("");
+    RenderStrings.push_back("Total Angular Velocity: " + CBUtils::PrintVector(AngularVelocity, 6));
+    RenderStrings.push_back("Pitch Velocity: "         + CBUtils::PrintFloat(PitchSpeedPerc, 4));
+    RenderStrings.push_back("Yaw Velocity: "           + CBUtils::PrintFloat(YawSpeedPerc, 4));
+    RenderStrings.push_back("Roll Velocity: "          + CBUtils::PrintFloat(RollSpeedPerc, 4));
+    RenderStrings.emplace_back("");
+    RenderStrings.push_back("Rotation Axis: "   + CBUtils::PrintVector(RotationAxis, 6));
+    RenderStrings.push_back("Rotation Amount: " + CBUtils::PrintFloat(RotationAmount, 4));
+    RenderStrings.push_back("New Rotation: "    + CBUtils::PrintQuat(NewRotation, 4));
 
 
     //Draw black box behind text

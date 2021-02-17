@@ -2,6 +2,7 @@
 #include "bakkesmod/wrappers/wrapperstructs.h"
 #include <memory>
 #include <string>
+#include <vector>
 
 class CameraWrapper;
 class CanvasWrapper;
@@ -41,7 +42,7 @@ private:
     //Internal state variables
     float BaseMovementSpeed = 2000.f;
     float BaseMovementAccel = 2.f;
-    float BaseRotationSpeed = 1.f;
+    float BaseRotationSpeed = 500.f;
     float BaseRotationAccel = 1.f;
     
     //Speed of movement and rotation
@@ -65,9 +66,11 @@ private:
     bool  IsValidMode();
     float GetDelta();
     float GetSpeedComponent(Vector Direction);
+    float GetAngularSpeedComponent(Vector Direction);
     float GetInvertedPerc(float InPerc);
     float GetWeightedPerc(float InPerc);
     float GetReducedPerc(float InputPerc, float SpeedPerc);
     float GetBrakeForce(float InputPerc, float SpeedPerc);
+    Quat  AngleAxisRotation(float angle, Vector axis);
     float RemapPercentage(float CurrentPerc, float CurrentMin, float CurrentMax, float NewMin, float NewMax); //#TODO: Remove this? Is it used anywhere?
 };

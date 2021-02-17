@@ -15,6 +15,8 @@
     - Write export file asynchronously. Large files will hang up the game for a long time, and even small files cause a hitch
         - Leave UI greyed out until file writing is completed
 
+    - Write all class members with m_ prefix? Either that or remove the prefix from CameraManager's members
+
     - Rewrite cvar creation with templates?
         - Could automatically fill out the settings file with the UI type and ranges (or options for dropdown)
         - Suggestion from martinn: https://discord.com/channels/327430448596779019/448093289137307658/811341829772804171
