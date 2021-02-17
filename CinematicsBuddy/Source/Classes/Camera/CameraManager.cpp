@@ -8,11 +8,25 @@
 /*
 
     #TODO:
+        - Add angular velocity
+
         - Separate the camera matrix into two separate ones?
             - One for local location and one for local rotation
             - Sometimes people might want the old "world space" movement, but keep the local rotation
 
         - Option to read configs and apply their values to the camera
+            - Make a custom parser? Not sure if the exec config command can user relative pathing
+                - It would just be cleaner to go directly to the CB config folder anyway
+                - Make a notifier like "CBExecConfig" that would take the config name as a parameter
+                    - With a custom command like that, you could have subconfigs (configs that run a config, then change a couple settings after the first one runs)
+                    - Should be able to use relative pathing starting from the main CB configs folder. Subfolders for certain projects or cine types would be nice
+
+        - Option to preserve momentum in world space?
+
+        - Take FOV into account for pitch and yaw rotation speed. The more zoomed in, the less speed
+
+        - The goal with this is to entirely replace Spectator Controls' smoothing feature
+            - Maybe even Camera Lock too? Might be better to keep that separate
 
 */
 
@@ -209,6 +223,7 @@ void CameraManager::UpdateRotation(float Delta, CameraWrapper TheCamera)
 bool CameraManager::IsValidMode()
 {
     //#TODO: Check if camera is spectator or something? Check only if they're in replay?
+    //Test to make sure they can't move camera around while demolished
 
     if(!*m_bUseOverrides)
     {
@@ -328,23 +343,20 @@ void CameraManager::DebugRender(CanvasWrapper Canvas)
     
     //Create RenderStrings and fill it with some values
     std::vector<std::string> RenderStrings;
-    RenderStrings.push_back("bRoll: "              + std::to_string(bRoll));
-    //RenderStrings.push_back("MovementSpeed: "      + std::to_string(MovementSpeed));
-    //RenderStrings.push_back("MovementAccel: "      + std::to_string(MovementAccel));
-    //RenderStrings.push_back("RotationAccel: "      + std::to_string(RotationAccelMouse));
-    //RenderStrings.push_back("MouseSensitivity: "   + std::to_string(MouseSensitivity));
-    //RenderStrings.push_back("GamepadSensitivity: " + std::to_string(GamepadSensitivity));
-    //RenderStrings.push_back("FOVRotationScale: "   + std::to_string(FOVRotationScale));
-
-    //Get values from InputsManager
-    Inputs->DebugRender(Canvas, RenderStrings);
-
+    RenderStrings.push_back("bUsingGamepad: " + std::to_string(Inputs->GetbUsingGamepad()));
+    RenderStrings.push_back("Forward: "       + std::to_string(Inputs->GetForward()));
+    RenderStrings.push_back("Strafe: "        + std::to_string(Inputs->GetRight()));
+    RenderStrings.push_back("Up: "            + std::to_string(Inputs->GetUp()));
+    RenderStrings.push_back("Pitch: "         + std::to_string(Inputs->GetPitch()));
+    RenderStrings.push_back("Yaw: "           + std::to_string(Inputs->GetYaw()));
+    RenderStrings.push_back("Roll: "          + std::to_string(Inputs->GetRoll()));
+    RenderStrings.push_back("bRoll: "         + std::to_string(bRoll));
     RenderStrings.emplace_back("");
-    RenderStrings.push_back("Total Velocity: " + CBUtils::PrintFloat(Velocity.magnitude(), 6));
+    RenderStrings.push_back("Total Velocity: "   + CBUtils::PrintFloat(Velocity.magnitude(), 6));
     RenderStrings.push_back("Forward Velocity: " + CBUtils::PrintFloat(ForwardSpeedPerc, 4));
-    RenderStrings.push_back("Right Velocity: " + CBUtils::PrintFloat(RightSpeedPerc, 4));
-    RenderStrings.push_back("Up Velocity: " + CBUtils::PrintFloat(UpSpeedPerc, 4));
-    RenderStrings.push_back("AngularVelocity: " + CBUtils::PrintVector(AngularVelocity, 6));
+    RenderStrings.push_back("Right Velocity: "   + CBUtils::PrintFloat(RightSpeedPerc, 4));
+    RenderStrings.push_back("Up Velocity: "      + CBUtils::PrintFloat(UpSpeedPerc, 4));
+    RenderStrings.push_back("AngularVelocity: "  + CBUtils::PrintVector(AngularVelocity, 6));
 
 
     //Draw black box behind text

@@ -27,7 +27,7 @@ extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 #define CVAR_BUFFER_ENABLED      "CB_Buffer_bEnabled"
 #define CVAR_MAX_BUFFER_LENGTH   "CB_Buffer_MaxLength"
 
-//Importin cvars
+//Importing cvars
 #define CVAR_IMPORT_FILE_NAME    "CB_Import_FileName"
 
 //Camera override cvars
