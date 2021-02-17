@@ -22,20 +22,22 @@ public:
     using CarsSeenParam = const std::vector<CarSeen>&;
     using StringParam = const std::string&;
 
-    virtual void StartRecording(StringParam InPathName = "", StringParam InFileName = "", StringParam InCameraName = "");
-    virtual void StopRecording();
+    AnimationRecorder();
     
+    bool GetbIsRecording() { return bIsRecording; }
     virtual void AddData(const FrameInfo& FrameData);
 
-    bool GetbIsRecording() { return bIsRecording; }
-    void SetMaxRecordingTime(float NewTime) { MaxRecordingTime = NewTime; }
-    void SetbIncrementFiles(bool bNewValue) { bIncrementFileNames = bNewValue; }
-
 protected:
-    bool bIsRecording;
-    float MaxRecordingTime;
-    bool bIncrementFileNames;
+    bool bIncrementFileNames = true;
+    bool bIsRecording        = false;
+    float MaxRecordingTime   = 0.f;
     RecordingType RecordedData;
+    bool HaveCvarsBeenInitialzed();
+    void OnIncrementFilesChanged();
+    virtual void OnMaxRecordingTimeChanged();
+
+    virtual void StartRecording();
+    virtual void StopRecording();
 
     bool WriteFile(StringParam InPathName, StringParam InFileName, StringParam InCameraName);
     void WriteFileThread(std::ofstream& FileStream, StringParam InCameraName, RecordingParam TheRecording);

@@ -1,4 +1,5 @@
 #include "CBUtils.h"
+#include "bakkesmod/plugin/bakkesmodplugin.h"
 #include "MacrosStructsEnums.h"
 #include <sstream>
 #include <iomanip>
@@ -153,4 +154,14 @@ std::filesystem::path CBUtils::GetFinalFileName(std::filesystem::path IntendedPa
     
     Output = CheckIfExists;
     return Output;
+}
+
+std::string CBUtils::GetSpecialFilePath()
+{
+    if(GlobalCvarManager->getCvar(CVAR_SET_SPECIAL_PATH).getBoolValue())
+    {
+        return GlobalCvarManager->getCvar(CVAR_SPECIAL_PATH).getStringValue();
+    }
+    
+    return "";
 }

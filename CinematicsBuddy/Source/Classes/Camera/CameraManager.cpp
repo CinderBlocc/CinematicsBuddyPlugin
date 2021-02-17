@@ -2,6 +2,8 @@
 #include "InputsManager.h"
 #include "SupportFiles/CBUtils.h"
 #include "SupportFiles/MacrosStructsEnums.h"
+#include "bakkesmod/plugin/bakkesmodplugin.h"
+#include "BMGraphs/BMGraphs/BMGraphs.h"
 
 /*
 
@@ -10,15 +12,18 @@
             - One for local location and one for local rotation
             - Sometimes people might want the old "world space" movement, but keep the local rotation
 
+        - Option to read configs and apply their values to the camera
+
 */
 
-void CameraManager::InitCvars()
+CameraManager::CameraManager()
 {
     Inputs = std::make_shared<InputsManager>();
 
+    //Register cvars
     MAKE_CVAR_BIND_TO_STRING(m_bUseOverrides,        CVAR_ENABLE_CAM_OVERRIDE, "Enables camera overriding features",       true);
     MAKE_CVAR_BIND_TO_STRING(m_bUseLocalMatrix,      CVAR_CAM_LOCAL_MATRIX,    "Uses the local orientation of the camera", true);
-	MAKE_CVAR_BIND_TO_STRING(m_MovementSpeed,        CVAR_CAM_MOVEMENT_SPEED,  "Camera movement speed multiplier",                        true, true, 0, true, 3);
+	MAKE_CVAR_BIND_TO_STRING(m_MovementSpeed,        CVAR_CAM_MOVEMENT_SPEED,  "Camera movement speed multiplier",                        true, true, 0, true, 5);
     MAKE_CVAR_BIND_TO_STRING(m_MovementAccel,        CVAR_CAM_MOVEMENT_ACCEL,  "Camera movement acceleration speed",                      true, true, 0, true, 5);
 	MAKE_CVAR_BIND_TO_STRING(m_RotationSpeed,        CVAR_ROT_SPEED,           "Camera rotation speed multiplier (doesn't affect mouse)", true, true, 0, true, 3);
     MAKE_CVAR_BIND_TO_STRING(m_RotationAccelMouse,   CVAR_ROT_ACCEL_MOUSE,     "Camera rotation acceleration speed (mouse)",              true, true, 0, true, 5);
@@ -27,10 +32,11 @@ void CameraManager::InitCvars()
     MAKE_CVAR_BIND_TO_STRING(m_GamepadSensitivity,   CVAR_GAMEPAD_SENSITIVITY, "Camera rotation speed when using gamepad",                true, true, 0, true, 50);
     MAKE_CVAR_BIND_TO_STRING(m_FOVRotationScale,     CVAR_FOV_ROTATION_SCALE,  "Multiplier for slowing camera rotation when zoomed in",   true, true, 0, true, 2);
     MAKE_CVAR_BIND_STRING(   m_RollBinding,          CVAR_ROLL_BINDING,        "Button bound to bRoll modifier to change camera yaw input to roll", true);
-    ON_CVAR_CHANGED(CVAR_ROLL_BINDING, CameraManager, RecacheRollBinding);
+    ON_CVAR_CHANGED(CVAR_ROLL_BINDING, CameraManager, CacheRollBinding);
+    CacheRollBinding();
 
-    //Cache the current binding for roll
-    RecacheRollBinding();
+    //Register hooks
+    GlobalGameWrapper->HookEvent("Function TAGame.PlayerInput_TA.PlayerInput", std::bind(&CameraManager::PlayerInputTick, this));
 
     // TESTS - REMOVE WHEN DONE //
     ON_CVAR_CHANGED(CVAR_ENABLE_CAM_OVERRIDE, CameraManager, OnUseOverridesChanged);
@@ -59,14 +65,17 @@ void CameraManager::OnUseOverridesChanged()
     }
 }
 
-void CameraManager::RecacheRollBinding()
+void CameraManager::CacheRollBinding()
 {
     RollBindingIndex = GlobalGameWrapper->GetFNameIndexByString(*m_RollBinding);
 }
 
-void CameraManager::PlayerInputTick(float Delta)
+void CameraManager::PlayerInputTick()
 {
-    if(!*m_bUseOverrides)
+    //Get delta regardless of validity so there isn't suddenly a massive jump when it becomes valid again
+    float Delta = GetDelta();
+
+    if(!IsValidMode())
     {
         return;
     }
@@ -197,6 +206,40 @@ void CameraManager::UpdateRotation(float Delta, CameraWrapper TheCamera)
 
 
 // UTILITY //
+bool CameraManager::IsValidMode()
+{
+    //#TODO: Check if camera is spectator or something? Check only if they're in replay?
+
+    if(!*m_bUseOverrides)
+    {
+        return false;
+    }
+
+    if(!GlobalGameWrapper->IsInReplay())
+    {
+        return false;
+    }
+
+    return true;
+}
+
+float CameraManager::GetDelta()
+{
+    using namespace std::chrono;
+
+    //PreviousTime is "static" so it is only created and initialized once
+    static steady_clock::time_point PreviousTime = steady_clock::now();
+    
+    //Store the current time and calculate the delta from that
+    steady_clock::time_point CurrentTime = steady_clock::now();
+    float InputDelta = duration_cast<duration<float>>(CurrentTime - PreviousTime).count();
+    
+    //Set PreviousTime for the next delta call
+    PreviousTime = CurrentTime;
+
+    return InputDelta;
+}
+
 float CameraManager::GetSpeedComponent(Vector Direction)
 {
     float MaxSpeed = BaseMovementSpeed * *m_MovementSpeed;
@@ -273,7 +316,7 @@ void CameraManager::StartInputsTest()
 
 void CameraManager::DebugRender(CanvasWrapper Canvas)
 {
-    if(!*m_bUseOverrides)
+    if(!IsValidMode())
     {
         return;
     }

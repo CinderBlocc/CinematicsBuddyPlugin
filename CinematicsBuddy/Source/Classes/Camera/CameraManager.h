@@ -1,24 +1,25 @@
 #pragma once
-#include "bakkesmod/plugin/bakkesmodplugin.h"
-#include "BMGraphs/BMGraphs/BMGraphs.h"
+#include "bakkesmod/wrappers/wrapperstructs.h"
 #include <memory>
+#include <string>
 
+class CameraWrapper;
 class CanvasWrapper;
 class InputsManager;
 
 class CameraManager
 {
 public:
-    void InitCvars();
-    void PlayerInputTick(float Delta);
+    CameraManager();
 
     // TESTS - REMOVE WHEN DONE //
-    std::shared_ptr<BMGraphs> Graphs;
+    std::shared_ptr<class BMGraphs> Graphs;
     void OnUseOverridesChanged();
     void StartInputsTest();
     void DebugRender(CanvasWrapper Canvas);
 
 private:
+    void PlayerInputTick();
     std::shared_ptr<InputsManager> Inputs;
 
     //State variables set by plugin
@@ -35,7 +36,7 @@ private:
     std::shared_ptr<std::string> m_RollBinding     = std::make_shared<std::string>("XboxTypeS_RightShoulder");
     int RollBindingIndex = 0;
     bool bRoll = false;
-    void RecacheRollBinding();
+    void CacheRollBinding();
 
     //Internal state variables
     float BaseMovementSpeed = 2000.f;
@@ -61,6 +62,8 @@ private:
     void UpdateRotation(float Delta, CameraWrapper TheCamera);
 
     //Utility
+    bool  IsValidMode();
+    float GetDelta();
     float GetSpeedComponent(Vector Direction);
     float GetInvertedPerc(float InPerc);
     float GetWeightedPerc(float InPerc);

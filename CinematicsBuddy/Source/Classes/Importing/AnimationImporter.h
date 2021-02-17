@@ -5,9 +5,13 @@
 class AnimationImporter
 {
 public:
-    void InitCvars();
-    void ImportCameraAnimation(const std::string& ImportFile);
+    AnimationImporter();
+
+    void ApplyCameraAnimation();
 
 private:
     std::shared_ptr<std::string> ImportFileName = std::make_shared<std::string>("");
+    
+    void ImportCameraAnimation();
+    void ClearCameraAnimation();
 };

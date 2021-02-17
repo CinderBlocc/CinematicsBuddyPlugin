@@ -1,12 +1,14 @@
-#include "Main/CinematicsBuddy.h"
+#include "UIManager.h"
+#include "bakkesmod/plugin/bakkesmodplugin.h"
 #include "SupportFiles/MacrosStructsEnums.h"
+#include <filesystem>
 #include <fstream>
 
 #define nl(x) SettingsFile << std::string(x) << '\n'
 #define blank SettingsFile << '\n'
 #define cv(x) std::string(x)
 
-void CinematicsBuddy::GenerateSettingsFile()
+void UIManager::GenerateSettingsFile()
 {
     std::filesystem::path SettingsFilePath = GlobalGameWrapper->GetBakkesModPath() / "plugins" / "settings";
     if(!std::filesystem::exists(SettingsFilePath))
@@ -100,7 +102,7 @@ void CinematicsBuddy::GenerateSettingsFile()
         nl("10|" + cv(CVAR_ENABLE_CAM_OVERRIDE));
             nl("7|");
             nl("1|Use local orientation|" + cv(CVAR_CAM_LOCAL_MATRIX));
-            nl("4|Movement Speed|" + cv(CVAR_CAM_MOVEMENT_SPEED) + "|0|3");
+            nl("4|Movement Speed|" + cv(CVAR_CAM_MOVEMENT_SPEED) + "|0|5");
             nl("4|Movement Acceleration|" + cv(CVAR_CAM_MOVEMENT_ACCEL) + "|0|5");
             nl("4|Rotation Speed (doesn't affect mouse)|" + cv(CVAR_ROT_SPEED) + "|0|3");
             nl("4|Rotation Acceleration (Mouse)|" + cv(CVAR_ROT_ACCEL_MOUSE) + "|0|5");
@@ -118,7 +120,7 @@ void CinematicsBuddy::GenerateSettingsFile()
     GlobalCvarManager->executeCommand("cl_settings_refreshplugins");
 }
 
-std::string CinematicsBuddy::GetBindingsList()
+std::string UIManager::GetBindingsList()
 {
     static std::string Output;
     static bool bHaveFilledList = false;

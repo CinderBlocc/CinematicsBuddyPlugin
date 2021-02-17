@@ -1,18 +1,43 @@
 #include "AnimationBuffer.h"
 #include "DataCollectors/FrameInfo.h"
 #include "SupportFiles/CBUtils.h"
+#include "SupportFiles/MacrosStructsEnums.h"
 #include <chrono>
 
 AnimationBuffer::AnimationBuffer()
 {
-    bIncrementFileNames = true;
-    bIsRecording = false;
-    MaxRecordingTime = 30.f;
+    //Register cvars
+	MAKE_CVAR_BIND_TO_STRING(bIsBufferActive, CVAR_BUFFER_ENABLED, "Enable constant recording buffer", false);
+    MAKE_CVAR_BIND_TO_STRING(BufferSize, CVAR_MAX_BUFFER_LENGTH, "Number of seconds to buffer", true, true, 0, true, 1000);
+    ON_CVAR_CHANGED(CVAR_BUFFER_ENABLED, AnimationBuffer, OnBufferEnabledChanged);
+    ON_CVAR_CHANGED(CVAR_MAX_BUFFER_LENGTH, AnimationBuffer, OnMaxRecordingTimeChanged);
+    OnMaxRecordingTimeChanged();
+
+    //Register notifiers
+    MAKE_NOTIFIER(NOTIFIER_BUFFER_CAPTURE, CaptureBuffer, "Captures the data in the buffer");
+	MAKE_NOTIFIER(NOTIFIER_BUFFER_CLEAR,   ClearBuffer,   "Cleares the data from the buffer");
 }
 
-void AnimationBuffer::StartRecording(StringParam InPathName, StringParam InFileName, StringParam InCameraName)
+void AnimationBuffer::OnBufferEnabledChanged()
 {
-    AnimationRecorder::StartRecording(InPathName, InFileName, InCameraName);
+    if(*bIsBufferActive)
+    {
+        StartRecording();
+    }
+    else
+    {
+        StopRecording();
+    }
+}
+
+void AnimationBuffer::OnMaxRecordingTimeChanged()
+{
+    MaxRecordingTime = *BufferSize;
+}
+
+void AnimationBuffer::StartRecording()
+{
+    AnimationRecorder::StartRecording();
 
     if(bIsRecording)
     {
@@ -31,12 +56,17 @@ void AnimationBuffer::StopRecording()
     RecordedData.clear();
 }
 
-void AnimationBuffer::CaptureBuffer(StringParam InPathName, StringParam InFileName, StringParam InCameraName)
+void AnimationBuffer::CaptureBuffer()
 {
     if(!bIsRecording)
     {
         return;
     }
+
+    //Get useful parameters from cvars
+    std::string InPathName   = CBUtils::GetSpecialFilePath();
+    std::string InFileName   = GlobalCvarManager->getCvar(CVAR_FILE_NAME).getStringValue();
+    std::string InCameraName = GlobalCvarManager->getCvar(CVAR_CAMERA_NAME).getStringValue();
 
     std::string BufferFileName = InFileName + "_Buffer_" + CBUtils::GetCurrentTimeAsString();
     WriteFile(InPathName, BufferFileName, InCameraName);
@@ -49,10 +79,9 @@ void AnimationBuffer::ClearBuffer()
 
 void AnimationBuffer::AddData(const FrameInfo& FrameData)
 {
-    AnimationRecorder::AddData(FrameData);
-
     if(bIsRecording)
     {
+        AnimationRecorder::AddData(FrameData);
         CleanOutdatedData();
     }
 }

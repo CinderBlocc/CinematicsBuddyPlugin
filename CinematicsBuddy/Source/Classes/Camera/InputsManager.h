@@ -1,6 +1,11 @@
 #pragma once
-#include "bakkesmod/plugin/bakkesmodplugin.h"
+#include <vector>
+#include <string>
 #include <chrono>
+#include <memory>
+
+class PlayerControllerWrapper;
+class CanvasWrapper;
 
 class InputsManager
 {
@@ -10,7 +15,7 @@ public:
     void PlayerInputTick(float Delta, bool bRoll);
 
     // TESTS - REMOVE WHEN DONE //
-    void DebugRender(class CanvasWrapper Canvas, std::vector<std::string>& RenderStrings);
+    void DebugRender(CanvasWrapper Canvas, std::vector<std::string>& RenderStrings);
     void RunTest()  { TestStartTime = std::chrono::steady_clock::now(); bTestIsRunning = true;  }
     std::chrono::steady_clock::time_point TestStartTime;
     bool bTestIsRunning = false;

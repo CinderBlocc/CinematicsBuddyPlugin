@@ -1,4 +1,5 @@
 #include "CBTimer.h"
+#include "bakkesmod/plugin/bakkesmodplugin.h"
 #include "SupportFiles/MacrosStructsEnums.h"
 
 using namespace std::chrono;

@@ -5,30 +5,59 @@
 #include "Misc/CBTimer.h"
 #include <chrono>
 
-void AnimationRecorder::StartRecording(StringParam InPathName, StringParam InFileName, StringParam InCameraName)
+AnimationRecorder::AnimationRecorder()
+{
+    //Register cvars only once
+    if(!HaveCvarsBeenInitialzed())
+    {
+        GlobalCvarManager->registerCvar(CVAR_IS_FILE_WRITING,  "0", "Handle UI state if file is writing", false, false, 0, false, 0, false);
+	    GlobalCvarManager->registerCvar(CVAR_INCREMENT_FILES,  "1", "Automatically append a unique number to file names", true);
+	    GlobalCvarManager->registerCvar(CVAR_SET_SPECIAL_PATH, "0", "Enable if you want to use a non-default path", true);
+	    GlobalCvarManager->registerCvar(CVAR_SPECIAL_PATH,     "", "Set the special export file path. Leave blank for default", true);
+	    GlobalCvarManager->registerCvar(CVAR_FILE_NAME,        "", "Set the export file name", true);
+	    GlobalCvarManager->registerCvar(CVAR_CAMERA_NAME,      "", "Set the camera name", true);
+    }
+
+    //Bind the function per class
+    ON_CVAR_CHANGED(CVAR_INCREMENT_FILES, AnimationRecorder, OnIncrementFilesChanged);
+}
+
+bool AnimationRecorder::HaveCvarsBeenInitialzed()
+{
+    static bool bHaveBeenInitialized = false;
+
+    if(!bHaveBeenInitialized)
+    {
+        bHaveBeenInitialized = true;
+        return false;
+    }
+
+    return true;
+}
+
+void AnimationRecorder::OnIncrementFilesChanged()
+{
+    bIncrementFileNames = GlobalCvarManager->getCvar(CVAR_INCREMENT_FILES).getBoolValue();
+}
+
+void AnimationRecorder::OnMaxRecordingTimeChanged()
 {
     //Stub function
-    if(bIsRecording)
-    {
-        return;
-    }
+}
+
+void AnimationRecorder::StartRecording()
+{
+    //Stub function
 }
 
 void AnimationRecorder::StopRecording()
 {
     //Stub function
-    if(!bIsRecording)
-    {
-        return;
-    }
 }
 
 void AnimationRecorder::AddData(const FrameInfo& FrameData)
 {
-    if(bIsRecording)
-    {
-        RecordedData.push_back(FrameData);
-    }
+    RecordedData.push_back(FrameData);
 }
 
 bool AnimationRecorder::WriteFile(StringParam InPathName, StringParam InFileName, StringParam InCameraName)

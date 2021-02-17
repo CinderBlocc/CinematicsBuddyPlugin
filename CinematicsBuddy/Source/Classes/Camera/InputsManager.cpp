@@ -1,5 +1,6 @@
 #include "InputsManager.h"
 #include "SupportFiles/MacrosStructsEnums.h"
+#include "bakkesmod/plugin/bakkesmodplugin.h"
 
 /*
 

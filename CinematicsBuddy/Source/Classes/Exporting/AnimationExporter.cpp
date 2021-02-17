@@ -1,26 +1,44 @@
 #include "AnimationExporter.h"
-#include "SupportFiles/CBUtils.h"
 #include "DataCollectors/FrameInfo.h"
+#include "SupportFiles/CBUtils.h"
 #include "SupportFiles/MacrosStructsEnums.h"
 #include <vector>
 
 AnimationExporter::AnimationExporter()
 {
-    bIncrementFileNames = true;
-    bIsRecording = false;
-    MaxRecordingTime = 300.f;
-    FramesInTempFile = 0;
+    //Register cvars
+    MAKE_CVAR_BIND_TO_STRING(RecordSize, CVAR_MAX_RECORD_LENGTH, "Number of seconds to record", true, true, 0, true, 1000);
+    MAKE_CVAR_BIND_TO_STRING(bIsRecordingActive, CVAR_IS_RECORDING_ACTIVE, "Internal info about the state of the recording", false, false, 0, false, 0, false);
+    ON_CVAR_CHANGED(CVAR_MAX_RECORD_LENGTH, AnimationExporter, OnMaxRecordingTimeChanged);
+    OnMaxRecordingTimeChanged();
+
+    //Register notifiers
+    MAKE_NOTIFIER(NOTIFIER_RECORD_START, StartRecording, "Starts capturing animation data");
+	MAKE_NOTIFIER(NOTIFIER_RECORD_STOP,  StopRecording,  "Stops capturing animation data");
+
+    //Register hooks
+    GlobalGameWrapper->HookEvent("Function ProjectX.EngineShare_X.EventPreLoadMap", std::bind(&AnimationExporter::OnNewMapLoading, this));
 }
 
-void AnimationExporter::StartRecording(StringParam InPathName, StringParam InFileName, StringParam InCameraName)
+void AnimationExporter::OnMaxRecordingTimeChanged()
 {
-    AnimationRecorder::StartRecording(InPathName, InFileName, InCameraName);
+    MaxRecordingTime = *RecordSize;
+}
+
+void AnimationExporter::StartRecording()
+{
+    AnimationRecorder::StartRecording();
 
     //Don't restart the recording if it's already running
     if(bIsRecording)
     {
         return;
     }
+
+    //Get useful parameters from cvars
+    std::string InPathName   = CBUtils::GetSpecialFilePath();
+    std::string InFileName   = GlobalCvarManager->getCvar(CVAR_FILE_NAME).getStringValue();
+    std::string InCameraName = GlobalCvarManager->getCvar(CVAR_CAMERA_NAME).getStringValue();
 
     //Let all the warnings get collected before returning
     bool bCanStartRecording = true;
@@ -85,12 +103,19 @@ void AnimationExporter::StopRecording()
     GlobalCvarManager->getCvar(CVAR_IS_RECORDING_ACTIVE).setValue(false);
 }
 
+void AnimationExporter::OnNewMapLoading()
+{
+    //Game is about to switch to a new mode and destroy the current mode
+    //In order to get replay metadata, the recording needs to stop here
+    StopRecording();
+}
+
 void AnimationExporter::AddData(const FrameInfo& FrameData)
 {
-    AnimationRecorder::AddData(FrameData);
-
     if(bIsRecording)
     {
+        AnimationRecorder::AddData(FrameData);
+
         const FrameInfo& FirstFrame = RecordedData.empty() ? FrameData : RecordedData[0];
 
         //Write to the temp file in case a crash happens midway through recording

@@ -1,5 +1,8 @@
 #pragma once
-#include "bakkesmod/plugin/bakkesmodplugin.h"
+#include <filesystem>
+
+struct Vector;
+struct Quat;
 
 namespace CBUtils
 {
@@ -11,4 +14,5 @@ namespace CBUtils
     std::string GetCurrentTimeAsString();
     std::filesystem::path GetExportPathFromString(const std::string& InPathName, bool bLogInfo = false);
     std::filesystem::path GetFinalFileName(std::filesystem::path IntendedPath, const std::string& InFileName, int IncrementLevel);
+    std::string GetSpecialFilePath();
 }
