@@ -46,6 +46,9 @@ private:
     bool bRoll = false;
     void CacheRollBinding();
 
+    std::string GetBindingOptions();
+    std::string GetInputOptions();
+
     //Internal state variables
     float BaseMovementSpeed = 2000.f;
     float BaseMovementAccel = 2.f;

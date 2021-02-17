@@ -175,8 +175,3 @@ std::string UIManager::GetBindingsList()
 
     return Output;
 }
-
-void UIManager::AddElement(const UIElement& NewElement)
-{
-    
-}
