@@ -7,6 +7,7 @@
 class CameraWrapper;
 class CanvasWrapper;
 class InputsManager;
+class UIManager;
 namespace RT
 {
     class Matrix3;
@@ -15,7 +16,7 @@ namespace RT
 class CameraManager
 {
 public:
-    CameraManager();
+    CameraManager(std::shared_ptr<UIManager> TheUI);
 
     // TESTS - REMOVE WHEN DONE //
     std::shared_ptr<class BMGraphs> Graphs;
@@ -26,6 +27,7 @@ public:
 private:
     void PlayerInputTick();
     std::shared_ptr<InputsManager> Inputs;
+    std::shared_ptr<UIManager> UI;
 
     //State variables set by plugin
     std::shared_ptr<bool>  m_bUseOverrides         = std::make_shared<bool>(false);

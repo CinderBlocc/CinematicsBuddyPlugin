@@ -60,5 +60,5 @@ extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 #define MAKE_CVAR(...) GlobalCvarManager->registerCvar(##__VA_ARGS__)
 #define MAKE_CVAR_BIND_STRING(cvar, cvarname, description, ...) GlobalCvarManager->registerCvar(cvarname, *cvar, description, ##__VA_ARGS__).bindTo(cvar)
 #define MAKE_CVAR_BIND_TO_STRING(cvar, cvarname, description, ...) GlobalCvarManager->registerCvar(cvarname, std::to_string(*cvar), description, ##__VA_ARGS__).bindTo(cvar)
-#define ON_CVAR_CHANGED(cvarname, classname, funcname) GlobalCvarManager->getCvar(cvarname).addOnValueChanged(std::bind(&classname::funcname, this))
+#define ON_CVAR_CHANGED(cvarname, funcname) GlobalCvarManager->getCvar(cvarname).addOnValueChanged(std::bind(&funcname, this))
 #define MAKE_NOTIFIER(notifiername, funcname, description) GlobalCvarManager->registerNotifier(notifiername, [this](std::vector<std::string> params){funcname();}, description, PERMISSION_ALL);

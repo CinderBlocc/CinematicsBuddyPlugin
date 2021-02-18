@@ -63,11 +63,11 @@ void CinematicsBuddy::onLoad()
     GlobalGameWrapper = gameWrapper;
 
     //Initialize each class. Check their constructors for cvars and notifiers
-    Importer = std::make_shared<AnimationImporter>();
-    Exporter = std::make_shared<AnimationExporter>();
-    Buffer   = std::make_shared<AnimationBuffer>();
-    Camera   = std::make_shared<CameraManager>();
     UI       = std::make_shared<UIManager>();
+    Importer = std::make_shared<AnimationImporter>(UI);
+    Exporter = std::make_shared<AnimationExporter>(UI);
+    Buffer   = std::make_shared<AnimationBuffer>(UI);
+    Camera   = std::make_shared<CameraManager>(UI);
 	
     //Hook viewport tick for both recording the animation per tick, and applying imported animation per tick
     GlobalGameWrapper->HookEvent("Function Engine.GameViewportClient.Tick", std::bind(&CinematicsBuddy::OnViewportTick, this));

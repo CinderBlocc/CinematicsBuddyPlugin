@@ -1,15 +1,19 @@
 #include "AnimationRecorder.h"
 #include "SupportFiles/CBUtils.h"
 #include "SupportFiles/MacrosStructsEnums.h"
+#include "UI/UIManager.h"
 #include "SimpleJSON/json.hpp"
 #include "Misc/CBTimer.h"
 #include <chrono>
 
-AnimationRecorder::AnimationRecorder()
+AnimationRecorder::AnimationRecorder(std::shared_ptr<UIManager> TheUI)
 {
+    UI = TheUI;
+
     //Register cvars only once
     if(!HaveCvarsBeenInitialzed())
     {
+        //#TODO: Bind these cvars to shared pointers in the class that initilized the cvars. Use those cvars when writing the file instead of using the getCvar method
         GlobalCvarManager->registerCvar(CVAR_IS_FILE_WRITING,  "0", "Handle UI state if file is writing", false, false, 0, false, 0, false);
 	    GlobalCvarManager->registerCvar(CVAR_INCREMENT_FILES,  "1", "Automatically append a unique number to file names", true);
 	    GlobalCvarManager->registerCvar(CVAR_SET_SPECIAL_PATH, "0", "Enable if you want to use a non-default path", true);
@@ -17,9 +21,13 @@ AnimationRecorder::AnimationRecorder()
 	    GlobalCvarManager->registerCvar(CVAR_FILE_NAME,        "", "Set the export file name", true);
 	    GlobalCvarManager->registerCvar(CVAR_CAMERA_NAME,      "", "Set the camera name", true);
     }
+    else
+    {
+        //#TODO: Get the cvars and bind them to this class' shared pointers
+    }
 
     //Bind the function per class
-    ON_CVAR_CHANGED(CVAR_INCREMENT_FILES, AnimationRecorder, OnIncrementFilesChanged);
+    ON_CVAR_CHANGED(CVAR_INCREMENT_FILES, AnimationRecorder::OnIncrementFilesChanged);
 }
 
 bool AnimationRecorder::HaveCvarsBeenInitialzed()

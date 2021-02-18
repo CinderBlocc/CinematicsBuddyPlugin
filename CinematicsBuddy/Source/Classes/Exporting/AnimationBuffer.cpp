@@ -2,15 +2,17 @@
 #include "DataCollectors/FrameInfo.h"
 #include "SupportFiles/CBUtils.h"
 #include "SupportFiles/MacrosStructsEnums.h"
+#include "UI/UIManager.h"
 #include <chrono>
 
-AnimationBuffer::AnimationBuffer()
+AnimationBuffer::AnimationBuffer(std::shared_ptr<UIManager> TheUI)
+    : AnimationRecorder(TheUI)
 {
     //Register cvars
 	MAKE_CVAR_BIND_TO_STRING(bIsBufferActive, CVAR_BUFFER_ENABLED, "Enable constant recording buffer", false);
     MAKE_CVAR_BIND_TO_STRING(BufferSize, CVAR_MAX_BUFFER_LENGTH, "Number of seconds to buffer", true, true, 0, true, 1000);
-    ON_CVAR_CHANGED(CVAR_BUFFER_ENABLED, AnimationBuffer, OnBufferEnabledChanged);
-    ON_CVAR_CHANGED(CVAR_MAX_BUFFER_LENGTH, AnimationBuffer, OnMaxRecordingTimeChanged);
+    ON_CVAR_CHANGED(CVAR_BUFFER_ENABLED, AnimationBuffer::OnBufferEnabledChanged);
+    ON_CVAR_CHANGED(CVAR_MAX_BUFFER_LENGTH, AnimationBuffer::OnMaxRecordingTimeChanged);
     OnMaxRecordingTimeChanged();
 
     //Register notifiers

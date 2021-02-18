@@ -1,10 +1,16 @@
 #include "InputsManager.h"
 #include "SupportFiles/MacrosStructsEnums.h"
 #include "bakkesmod/plugin/bakkesmodplugin.h"
+#include "UI/UIManager.h"
 
-InputsManager::InputsManager()
+InputsManager::InputsManager(std::shared_ptr<UIManager> TheUI)
 {
-    MAKE_CVAR_BIND_TO_STRING(bRollReplacesPitch, CVAR_ROLL_REPLACES_PITCH, "Roll binding replaces pitch instead of yaw", true);
+    UI = TheUI;
+
+    //Register cvars
+    UI->AddElement(UIElement(bRollReplacesPitch, CVAR_ROLL_REPLACES_PITCH, "Roll replaces pitch instead of yaw", "Roll binding replaces pitch instead of yaw"));
+
+    //MAKE_CVAR_BIND_TO_STRING(bRollReplacesPitch, CVAR_ROLL_REPLACES_PITCH, "Roll binding replaces pitch instead of yaw", true);
 }
 
 void InputsManager::PlayerInputTick(float Delta, bool bRoll)

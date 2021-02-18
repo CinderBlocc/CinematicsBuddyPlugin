@@ -3,8 +3,9 @@
 #include "SupportFiles/CBUtils.h"
 #include "SupportFiles/MacrosStructsEnums.h"
 #include "bakkesmod/plugin/bakkesmodplugin.h"
-#include "BMGraphs/BMGraphs/BMGraphs.h"
+#include "UI/UIManager.h"
 #include "RenderingTools/RenderingTools.h"
+#include "BMGraphs/BMGraphs/BMGraphs.h"
 
 /*
 
@@ -36,16 +37,23 @@
 
 */
 
-CameraManager::CameraManager()
+CameraManager::CameraManager(std::shared_ptr<UIManager> TheUI)
 {
-    Inputs = std::make_shared<InputsManager>();
+    Inputs = std::make_shared<InputsManager>(TheUI);
+    UI = TheUI;
 
     //Register cvars
-    MAKE_CVAR_BIND_TO_STRING(m_bUseOverrides,        CVAR_ENABLE_CAM_OVERRIDE, "Enables camera overriding features",                      true);
-    MAKE_CVAR_BIND_TO_STRING(m_bUseLocalMovement,    CVAR_CAM_LOCAL_MOVEMENT,  "Uses the local orientation of the camera for movement",   true);
-    MAKE_CVAR_BIND_TO_STRING(m_bUseLocalRotation,    CVAR_CAM_LOCAL_ROTATION,  "Uses the local orientation of the camera for rotation",   true);
-    MAKE_CVAR_BIND_TO_STRING(m_bHardFloors,          CVAR_CAM_HARD_FLOORS,     "Prevents the camera from going through the floor",        true);
-	MAKE_CVAR_BIND_TO_STRING(m_FloorHeight,          CVAR_CAM_FLOOR_HEIGHT,    "Lowest height the camera can go",                         true, true, -50, true, 50);
+    UI->AddElement(UIElement(m_bUseOverrides,     CVAR_ENABLE_CAM_OVERRIDE, "Enable Overrides", "Enables camera overriding features"));
+    UI->AddElement(UIElement(m_bUseLocalMovement, CVAR_CAM_LOCAL_MOVEMENT,  "Local movement",   "Uses the local orientation of the camera for movement"));
+    UI->AddElement(UIElement(m_bUseLocalRotation, CVAR_CAM_LOCAL_ROTATION,  "Local rotation",   "Uses the local orientation of the camera for rotation"));
+    UI->AddElement(UIElement(m_bHardFloors,       CVAR_CAM_HARD_FLOORS,     "Hard floors",      "Prevents the camera from going through the floor"));
+    UI->AddElement(UIElement(m_FloorHeight,       CVAR_CAM_FLOOR_HEIGHT,    "Floor Height",     "Lowest height the camera can go", -50.f, 50.f));
+
+    //MAKE_CVAR_BIND_TO_STRING(m_bUseOverrides,        CVAR_ENABLE_CAM_OVERRIDE, "Enables camera overriding features",                      true);
+    //MAKE_CVAR_BIND_TO_STRING(m_bUseLocalMovement,    CVAR_CAM_LOCAL_MOVEMENT,  "Uses the local orientation of the camera for movement",   true);
+    //MAKE_CVAR_BIND_TO_STRING(m_bUseLocalRotation,    CVAR_CAM_LOCAL_ROTATION,  "Uses the local orientation of the camera for rotation",   true);
+    //MAKE_CVAR_BIND_TO_STRING(m_bHardFloors,          CVAR_CAM_HARD_FLOORS,     "Prevents the camera from going through the floor",        true);
+	//MAKE_CVAR_BIND_TO_STRING(m_FloorHeight,          CVAR_CAM_FLOOR_HEIGHT,    "Lowest height the camera can go",                         true, true, -50, true, 50);
 	MAKE_CVAR_BIND_TO_STRING(m_MovementSpeed,        CVAR_CAM_MOVEMENT_SPEED,  "Camera movement speed multiplier",                        true, true, 0,   true, 5);
     MAKE_CVAR_BIND_TO_STRING(m_MovementAccel,        CVAR_CAM_MOVEMENT_ACCEL,  "Camera movement acceleration speed",                      true, true, 0,   true, 5);
 	MAKE_CVAR_BIND_TO_STRING(m_RotationSpeed,        CVAR_ROT_SPEED,           "Camera rotation speed multiplier (doesn't affect mouse)", true, true, 0,   true, 3);
@@ -55,15 +63,61 @@ CameraManager::CameraManager()
     MAKE_CVAR_BIND_TO_STRING(m_GamepadSensitivity,   CVAR_GAMEPAD_SENSITIVITY, "Camera rotation speed when using gamepad",                true, true, 0,   true, 50);
     MAKE_CVAR_BIND_TO_STRING(m_FOVRotationScale,     CVAR_FOV_ROTATION_SCALE,  "Multiplier for slowing camera rotation when zoomed in",   true, true, 0,   true, 2);
     MAKE_CVAR_BIND_STRING(   m_RollBinding,          CVAR_ROLL_BINDING,        "Modifier to change camera yaw input to roll",             true);
-    ON_CVAR_CHANGED(CVAR_ROLL_BINDING, CameraManager, CacheRollBinding);
+    ON_CVAR_CHANGED(CVAR_ROLL_BINDING, CameraManager::CacheRollBinding);
     CacheRollBinding();
 
     //Register hooks
     GlobalGameWrapper->HookEvent("Function TAGame.PlayerInput_TA.PlayerInput", std::bind(&CameraManager::PlayerInputTick, this));
 
     // TESTS - REMOVE WHEN DONE //
-    ON_CVAR_CHANGED(CVAR_ENABLE_CAM_OVERRIDE, CameraManager, OnUseOverridesChanged);
+    ON_CVAR_CHANGED(CVAR_ENABLE_CAM_OVERRIDE, CameraManager::OnUseOverridesChanged);
     Graphs = std::make_shared<BMGraphs>(GlobalCvarManager, GlobalGameWrapper);
+}
+
+std::string CameraManager::GetBindingOptions()
+{
+    static std::string Output;
+    static bool bHaveFilledList = false;
+
+    if(!bHaveFilledList)
+    {
+        //Fill list
+        std::vector<std::pair<std::string, std::string>> BindingsList;
+        BindingsList.emplace_back(NO_SELECTION, NO_SELECTION);
+        BindingsList.emplace_back("Left thumbstick press", "XboxTypeS_LeftThumbStick");
+        BindingsList.emplace_back("Right thumbstick press", "XboxTypeS_RightThumbStick");
+        BindingsList.emplace_back("DPad up", "XboxTypeS_DPad_Up");
+        BindingsList.emplace_back("DPad left", "XboxTypeS_DPad_Left");
+        BindingsList.emplace_back("DPad right", "XboxTypeS_DPad_Right");
+        BindingsList.emplace_back("DPad down", "XboxTypeS_DPad_Down");
+        BindingsList.emplace_back("Back button", "XboxTypeS_Back");
+        BindingsList.emplace_back("Start button", "XboxTypeS_Start");
+        BindingsList.emplace_back("Xbox Y - PS4 Triangle", "XboxTypeS_Y");
+        BindingsList.emplace_back("Xbox X - PS4 Square", "XboxTypeS_X");
+        BindingsList.emplace_back("Xbox B - PS4 Circle", "XboxTypeS_B");
+        BindingsList.emplace_back("Xbox A - PS4 X", "XboxTypeS_A");
+        BindingsList.emplace_back("Xbox LB - PS4 L1", "XboxTypeS_LeftShoulder");
+        BindingsList.emplace_back("Xbox RB - PS4 R1", "XboxTypeS_RightShoulder");
+        BindingsList.emplace_back("Xbox LT - PS4 L2", "XboxTypeS_LeftTrigger");
+        BindingsList.emplace_back("Xbox RT - PS4 R2", "XboxTypeS_RightTrigger");
+        BindingsList.emplace_back("Left thumbstick X axis", "XboxTypeS_LeftX");
+        BindingsList.emplace_back("Left thumbstick Y axis", "XboxTypeS_LeftY");
+        BindingsList.emplace_back("Right thumbstick X axis", "XboxTypeS_RightX");
+        BindingsList.emplace_back("Right thumbstick Y axis", "XboxTypeS_RightY");
+
+        //Compile list into one string
+        for(const auto& Binding : BindingsList)
+        {
+            Output += Binding.first + "@" + Binding.second + "&";
+        }
+
+        //Remove last "&"
+        Output.pop_back();
+
+        bHaveFilledList = true;
+    }
+
+    return Output;
 }
 
 void CameraManager::OnUseOverridesChanged()

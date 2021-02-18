@@ -1,9 +1,12 @@
 #include "AnimationImporter.h"
 #include "bakkesmod/plugin/bakkesmodplugin.h"
 #include "SupportFiles/MacrosStructsEnums.h"
+#include "UI/UIManager.h"
 
-AnimationImporter::AnimationImporter()
+AnimationImporter::AnimationImporter(std::shared_ptr<UIManager> TheUI)
 {
+    UI = TheUI;
+
     //Register cvars
     MAKE_CVAR_BIND_STRING(ImportFileName, CVAR_IMPORT_FILE_NAME, "Set the import file name", true);
 

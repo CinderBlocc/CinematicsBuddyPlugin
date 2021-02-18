@@ -2,14 +2,16 @@
 #include "DataCollectors/FrameInfo.h"
 #include "SupportFiles/CBUtils.h"
 #include "SupportFiles/MacrosStructsEnums.h"
+#include "UI/UIManager.h"
 #include <vector>
 
-AnimationExporter::AnimationExporter()
+AnimationExporter::AnimationExporter(std::shared_ptr<UIManager> TheUI)
+    : AnimationRecorder(TheUI)
 {
     //Register cvars
     MAKE_CVAR_BIND_TO_STRING(RecordSize, CVAR_MAX_RECORD_LENGTH, "Number of seconds to record", true, true, 0, true, 1000);
     MAKE_CVAR_BIND_TO_STRING(bIsRecordingActive, CVAR_IS_RECORDING_ACTIVE, "Internal info about the state of the recording", false, false, 0, false, 0, false);
-    ON_CVAR_CHANGED(CVAR_MAX_RECORD_LENGTH, AnimationExporter, OnMaxRecordingTimeChanged);
+    ON_CVAR_CHANGED(CVAR_MAX_RECORD_LENGTH, AnimationExporter::OnMaxRecordingTimeChanged);
     OnMaxRecordingTimeChanged();
 
     //Register notifiers

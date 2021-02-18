@@ -4,11 +4,12 @@
 #include <memory>
 
 class PlayerControllerWrapper;
+class UIManager;
 
 class InputsManager
 {
 public:
-    InputsManager();
+    InputsManager(std::shared_ptr<UIManager> TheUI);
 
     //Get input values from game
     void PlayerInputTick(float Delta, bool bRoll);
@@ -30,8 +31,7 @@ public:
     bool bTestIsRunning = false;
 
 private:
-    void GetInputs(PlayerControllerWrapper Controller, bool bRoll);
-    void NullifyInputs(PlayerControllerWrapper Controller);
+    std::shared_ptr<UIManager> UI;
 
     //Inputs read from game (and modified)
     float Forward = 0.f;
@@ -44,4 +44,7 @@ private:
 
     //State variables read from game
     bool bUsingGamepad = false;
+    
+    void GetInputs(PlayerControllerWrapper Controller, bool bRoll);
+    void NullifyInputs(PlayerControllerWrapper Controller);
 };
