@@ -9,8 +9,10 @@ AnimationExporter::AnimationExporter(std::shared_ptr<UIManager> TheUI)
     : AnimationRecorder(TheUI)
 {
     //Register cvars
-    MAKE_CVAR_BIND_TO_STRING(RecordSize, CVAR_MAX_RECORD_LENGTH, "Number of seconds to record", true, true, 0, true, 1000);
-    MAKE_CVAR_BIND_TO_STRING(bIsRecordingActive, CVAR_IS_RECORDING_ACTIVE, "Internal info about the state of the recording", false, false, 0, false, 0, false);
+    UI->AddElement({RecordSize,         CVAR_MAX_RECORD_LENGTH,   "Max recording length (seconds)", "Number of seconds to record",        0,        1000                 });
+    UI->AddElement({bIsRecordingActive, CVAR_IS_RECORDING_ACTIVE, "##RecordingActive", "Internal info about the state of the recording", -1000001, -1000001, false, false});
+    
+    //Bind an addOnValueChanged function to the recording time cvar
     ON_CVAR_CHANGED(CVAR_MAX_RECORD_LENGTH, AnimationExporter::OnMaxRecordingTimeChanged);
     OnMaxRecordingTimeChanged();
 
@@ -39,8 +41,8 @@ void AnimationExporter::StartRecording()
 
     //Get useful parameters from cvars
     std::string InPathName   = CBUtils::GetSpecialFilePath();
-    std::string InFileName   = GlobalCvarManager->getCvar(CVAR_FILE_NAME).getStringValue();
-    std::string InCameraName = GlobalCvarManager->getCvar(CVAR_CAMERA_NAME).getStringValue();
+    std::string InFileName   = *m_FileName;//GlobalCvarManager->getCvar(CVAR_FILE_NAME).getStringValue();
+    std::string InCameraName = *m_CameraName;//GlobalCvarManager->getCvar(CVAR_CAMERA_NAME).getStringValue();
 
     //Let all the warnings get collected before returning
     bool bCanStartRecording = true;

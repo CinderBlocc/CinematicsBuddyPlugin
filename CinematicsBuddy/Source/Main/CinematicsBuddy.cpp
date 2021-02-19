@@ -11,15 +11,11 @@
 /*
     #TODO
 
+    - Create AddElement constructor for notifiers
     - Camera override rotation
     - Write export file asynchronously. Large files will hang up the game for a long time, and even small files cause a hitch
         - Leave UI greyed out until file writing is completed
-
     - Write all class members with m_ prefix? Either that or remove the prefix from CameraManager's members
-
-    - Rewrite cvar creation with templates?
-        - Could automatically fill out the settings file with the UI type and ranges (or options for dropdown)
-        - Suggestion from martinn: https://discord.com/channels/327430448596779019/448093289137307658/811341829772804171
 
 
     MAXSCRIPT NOTES:
@@ -28,6 +24,7 @@
             - Create a clone of the car mesh, then bake all of the position/rotation data onto the mesh.
             - Add all the cloned cars to the selection, along with the field, ball, and camera. Export selected to FBX.
                 - Let the user choose the FBX settings, so make sure that dialog pops up
+
 
     - Camera animation importing
 		- IMPORT INTERPOLATION

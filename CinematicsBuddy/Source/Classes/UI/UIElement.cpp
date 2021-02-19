@@ -3,6 +3,30 @@
 #include "SupportFiles/MacrosStructsEnums.h"
 #include "SupportFiles/CBUtils.h"
 
+void UIElement::FillValues(StrParam InName, StrParam InUILabel, StrParam InDescription, float InMinVal, float InMaxVal, bool InbSearchable, bool InbSaveToCfg)
+{
+    ElementName = InName;
+    UILabel = InUILabel;
+    Description = InDescription;
+    if(InMinVal >= -1000000)
+    {
+        bHasMin = true;
+        MinVal = InMinVal;
+    }
+    if(InMaxVal >= -1000000)
+    {
+        bHasMax = true;
+        MaxVal = InMaxVal;
+    }
+    bSearchable = InbSearchable;
+    bSaveToCfg = InbSaveToCfg;
+}
+
+CVarWrapper UIElement::RegisterCvar()
+{
+    return GlobalCvarManager->registerCvar(ElementName, DefaultValue, Description, bSearchable, bHasMin, MinVal, bHasMax, MaxVal, bSaveToCfg);
+}
+
 void UIElement::AddDropdownOptions(const DropdownOptionsType& InOptions)
 {
     DropdownOptions = InOptions;
@@ -12,17 +36,16 @@ std::string UIElement::Print(EUI ElementType, bool bInvertIfGrayedComponent) con
 {
     switch(ElementType)
     {
-        case EUI::Button:      { return "0|"  + ElementName; }
-        case EUI::Checkbox:    { return "1|"  + ElementName; }
-        case EUI::FloatRange:  { return "2|"  + ElementName + "|" + CBUtils::PrintFloat(MinVal, 3) + "|" + CBUtils::PrintFloat(MaxVal, 3); }
-        case EUI::IntRange:    { return "3|"  + ElementName + "|" + std::to_string(static_cast<int>(MinVal)) + "|" + std::to_string(static_cast<int>(MaxVal)); }
-        case EUI::Float:       { return "4|"  + ElementName + "|" + CBUtils::PrintFloat(MinVal, 3) + "|" + CBUtils::PrintFloat(MaxVal, 3); }
-        case EUI::Int:         { return "5|"  + ElementName + "|" + std::to_string(static_cast<int>(MinVal)) + "|" + std::to_string(static_cast<int>(MaxVal)); }
-        case EUI::Dropdown:    { return "6|"  + ElementName + "|" + PrintOptions(); }
+        case EUI::Checkbox:    { return "1|"  + UILabel + "|" + ElementName; }
+        case EUI::FloatRange:  { return "2|"  + UILabel + "|" + ElementName + "|" + CBUtils::PrintFloat(MinVal, 3) + "|" + CBUtils::PrintFloat(MaxVal, 3); }
+        case EUI::IntRange:    { return "3|"  + UILabel + "|" + ElementName + "|" + std::to_string(static_cast<int>(MinVal)) + "|" + std::to_string(static_cast<int>(MaxVal)); }
+        case EUI::Float:       { return "4|"  + UILabel + "|" + ElementName + "|" + CBUtils::PrintFloat(MinVal, 3) + "|" + CBUtils::PrintFloat(MaxVal, 3); }
+        case EUI::Int:         { return "5|"  + UILabel + "|" + ElementName + "|" + std::to_string(static_cast<int>(MinVal)) + "|" + std::to_string(static_cast<int>(MaxVal)); }
+        case EUI::Dropdown:    { return "6|"  + UILabel + "|" + ElementName + "|" + PrintOptions(); }
         case EUI::GrayedBegin: { std::string Header = "10|"; if(bInvertIfGrayedComponent) { Header += "!"; } return Header + ElementName; }
         case EUI::GrayedEnd:   { return "11|"; }
-        case EUI::Textbox:     { return "12|" + ElementName; }
-        case EUI::ColorEdit:   { return "13|" + ElementName; }
+        case EUI::Textbox:     { return "12|" + UILabel + "|" + ElementName; }
+        case EUI::ColorEdit:   { return "13|" + UILabel + "|" + ElementName; }
         default: { return ""; }
     }
 }

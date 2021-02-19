@@ -9,8 +9,6 @@ InputsManager::InputsManager(std::shared_ptr<UIManager> TheUI)
 
     //Register cvars
     UI->AddElement(UIElement(bRollReplacesPitch, CVAR_ROLL_REPLACES_PITCH, "Roll replaces pitch instead of yaw", "Roll binding replaces pitch instead of yaw"));
-
-    //MAKE_CVAR_BIND_TO_STRING(bRollReplacesPitch, CVAR_ROLL_REPLACES_PITCH, "Roll binding replaces pitch instead of yaw", true);
 }
 
 void InputsManager::PlayerInputTick(float Delta, bool bRoll)

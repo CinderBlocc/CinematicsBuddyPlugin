@@ -32,12 +32,17 @@ public:
 protected:
     std::shared_ptr<UIManager> UI;
 
-    bool bIncrementFileNames = true;
+    std::shared_ptr<bool> m_bIsFileWriting      = std::make_shared<bool>(false);
+    std::shared_ptr<bool> m_bIncrementFileNames = std::make_shared<bool>(true);
+    std::shared_ptr<bool> m_bSetSpecialPath     = std::make_shared<bool>(false);
+    std::shared_ptr<std::string> m_SpecialPath  = std::make_shared<std::string>("");
+    std::shared_ptr<std::string> m_FileName     = std::make_shared<std::string>("");
+    std::shared_ptr<std::string> m_CameraName   = std::make_shared<std::string>("");
+
     bool bIsRecording        = false;
     float MaxRecordingTime   = 0.f;
     RecordingType RecordedData;
     bool HaveCvarsBeenInitialzed();
-    void OnIncrementFilesChanged();
     virtual void OnMaxRecordingTimeChanged();
 
     virtual void StartRecording();

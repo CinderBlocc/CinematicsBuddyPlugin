@@ -9,8 +9,10 @@ AnimationBuffer::AnimationBuffer(std::shared_ptr<UIManager> TheUI)
     : AnimationRecorder(TheUI)
 {
     //Register cvars
-	MAKE_CVAR_BIND_TO_STRING(bIsBufferActive, CVAR_BUFFER_ENABLED, "Enable constant recording buffer", false);
-    MAKE_CVAR_BIND_TO_STRING(BufferSize, CVAR_MAX_BUFFER_LENGTH, "Number of seconds to buffer", true, true, 0, true, 1000);
+    UI->AddElement({bIsBufferActive, CVAR_BUFFER_ENABLED,    "Enable Buffer",               "Enable constant recording buffer"    });
+    UI->AddElement({BufferSize,      CVAR_MAX_BUFFER_LENGTH, "Max buffer length (seconds)", "Number of seconds to buffer", 0, 1000});
+    
+    //Bind addOnValueChanged functions to the enabled and recording time cvars
     ON_CVAR_CHANGED(CVAR_BUFFER_ENABLED, AnimationBuffer::OnBufferEnabledChanged);
     ON_CVAR_CHANGED(CVAR_MAX_BUFFER_LENGTH, AnimationBuffer::OnMaxRecordingTimeChanged);
     OnMaxRecordingTimeChanged();
@@ -67,8 +69,8 @@ void AnimationBuffer::CaptureBuffer()
 
     //Get useful parameters from cvars
     std::string InPathName   = CBUtils::GetSpecialFilePath();
-    std::string InFileName   = GlobalCvarManager->getCvar(CVAR_FILE_NAME).getStringValue();
-    std::string InCameraName = GlobalCvarManager->getCvar(CVAR_CAMERA_NAME).getStringValue();
+    std::string InFileName   = *m_FileName;//GlobalCvarManager->getCvar(CVAR_FILE_NAME).getStringValue();
+    std::string InCameraName = *m_CameraName;//GlobalCvarManager->getCvar(CVAR_CAMERA_NAME).getStringValue();
 
     std::string BufferFileName = InFileName + "_Buffer_" + CBUtils::GetCurrentTimeAsString();
     WriteFile(InPathName, BufferFileName, InCameraName);

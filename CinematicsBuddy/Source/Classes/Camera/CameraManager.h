@@ -44,18 +44,23 @@ private:
     std::shared_ptr<float> m_GamepadSensitivity    = std::make_shared<float>(20.f);
     std::shared_ptr<float> m_FOVRotationScale      = std::make_shared<float>(0.9f);
     std::shared_ptr<std::string> m_RollBinding     = std::make_shared<std::string>("XboxTypeS_RightShoulder");
+  //std::shared_ptr<std::string> m_FOVBinding     = std::make_shared<std::string>("XboxTypeS_LeftShoulder");
     int RollBindingIndex = 0;
+  //int FOVBindingIndex  = 0;
     bool bRoll = false;
+  //bool bFOV  = false;
     void CacheRollBinding();
-
-    std::string GetBindingOptions();
-    std::string GetInputOptions();
+    void CacheFOVBinding();
+    void SetBindingOptions();
+    void SetInputSwapOptions();
 
     //Internal state variables
     float BaseMovementSpeed = 2000.f;
     float BaseMovementAccel = 2.f;
     float BaseRotationSpeed = 100.f;
     float BaseRotationAccel = 2.f;
+  //float BaseFOVSpeed = 100.f;
+  //float BaseFOVAccel = 2.f;
     
     //Speed of movement and rotation
     Vector Velocity        = {0, 0, 0};

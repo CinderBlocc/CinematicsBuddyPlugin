@@ -8,7 +8,7 @@ AnimationImporter::AnimationImporter(std::shared_ptr<UIManager> TheUI)
     UI = TheUI;
 
     //Register cvars
-    MAKE_CVAR_BIND_STRING(ImportFileName, CVAR_IMPORT_FILE_NAME, "Set the import file name", true);
+    UI->AddElement({ImportFileName, CVAR_IMPORT_FILE_NAME, "File Name##Import", "Set the import file name"});
 
     //Register notifiers
     MAKE_NOTIFIER(NOTIFIER_IMPORT_FILE,  ImportCameraAnimation, "Imports a camera animation from a file");

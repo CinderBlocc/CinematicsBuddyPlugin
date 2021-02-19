@@ -13,21 +13,24 @@ AnimationRecorder::AnimationRecorder(std::shared_ptr<UIManager> TheUI)
     //Register cvars only once
     if(!HaveCvarsBeenInitialzed())
     {
-        //#TODO: Bind these cvars to shared pointers in the class that initilized the cvars. Use those cvars when writing the file instead of using the getCvar method
-        GlobalCvarManager->registerCvar(CVAR_IS_FILE_WRITING,  "0", "Handle UI state if file is writing", false, false, 0, false, 0, false);
-	    GlobalCvarManager->registerCvar(CVAR_INCREMENT_FILES,  "1", "Automatically append a unique number to file names", true);
-	    GlobalCvarManager->registerCvar(CVAR_SET_SPECIAL_PATH, "0", "Enable if you want to use a non-default path", true);
-	    GlobalCvarManager->registerCvar(CVAR_SPECIAL_PATH,     "", "Set the special export file path. Leave blank for default", true);
-	    GlobalCvarManager->registerCvar(CVAR_FILE_NAME,        "", "Set the export file name", true);
-	    GlobalCvarManager->registerCvar(CVAR_CAMERA_NAME,      "", "Set the camera name", true);
+        //Register and bind cvars
+        UI->AddElement({m_bIsFileWriting,      CVAR_IS_FILE_WRITING,  "##IsFileWriting",   "Handle UI state if file is writing", -1000001, -1000001, false, false});
+        UI->AddElement({m_bIncrementFileNames, CVAR_INCREMENT_FILES,  "Automatically increment file names", "Automatically append a unique number to file names" });
+        UI->AddElement({m_bSetSpecialPath,     CVAR_SET_SPECIAL_PATH, "##UseSpecialPath",  "Enable if you want to use a non-default path"                        });
+        UI->AddElement({m_SpecialPath,         CVAR_SPECIAL_PATH,     "##SpecialPath",     "Set the special export file path. Leave blank for default"           });
+        UI->AddElement({m_FileName,            CVAR_FILE_NAME,        "File Name##Export", "Set the export file name"                                            });
+        UI->AddElement({m_CameraName,          CVAR_CAMERA_NAME,      "Camera Name",       "Set the camera name"                                                 });
     }
     else
     {
-        //#TODO: Get the cvars and bind them to this class' shared pointers
+        //Bind existing cvars
+        GlobalCvarManager->getCvar(CVAR_IS_FILE_WRITING).bindTo(m_bIsFileWriting);
+        GlobalCvarManager->getCvar(CVAR_INCREMENT_FILES).bindTo(m_bIncrementFileNames);
+        GlobalCvarManager->getCvar(CVAR_SET_SPECIAL_PATH).bindTo(m_bSetSpecialPath);
+        GlobalCvarManager->getCvar(CVAR_SPECIAL_PATH).bindTo(m_SpecialPath);
+        GlobalCvarManager->getCvar(CVAR_FILE_NAME).bindTo(m_FileName);
+        GlobalCvarManager->getCvar(CVAR_CAMERA_NAME).bindTo(m_CameraName);
     }
-
-    //Bind the function per class
-    ON_CVAR_CHANGED(CVAR_INCREMENT_FILES, AnimationRecorder::OnIncrementFilesChanged);
 }
 
 bool AnimationRecorder::HaveCvarsBeenInitialzed()
@@ -41,11 +44,6 @@ bool AnimationRecorder::HaveCvarsBeenInitialzed()
     }
 
     return true;
-}
-
-void AnimationRecorder::OnIncrementFilesChanged()
-{
-    bIncrementFileNames = GlobalCvarManager->getCvar(CVAR_INCREMENT_FILES).getBoolValue();
 }
 
 void AnimationRecorder::OnMaxRecordingTimeChanged()
@@ -84,7 +82,7 @@ bool AnimationRecorder::WriteFile(StringParam InPathName, StringParam InFileName
         GlobalCvarManager->log("ERROR: Cannot save file. File path (" + OutputFilePath.string() + ") is invalid.");
         return false;
     }
-    OutputFilePath = CBUtils::GetFinalFileName(OutputFilePath, InFileName, (bIncrementFileNames ? 0 : -1));
+    OutputFilePath = CBUtils::GetFinalFileName(OutputFilePath, InFileName, (*m_bIncrementFileNames ? 0 : -1));
     std::ofstream OutputFile(OutputFilePath);
 
     //Write to the file

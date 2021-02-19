@@ -3,8 +3,10 @@
 #include "SupportFiles/CBUtils.h"
 #include "SupportFiles/MacrosStructsEnums.h"
 #include "bakkesmod/plugin/bakkesmodplugin.h"
-#include "UI/UIManager.h"
 #include "RenderingTools/RenderingTools.h"
+#include "UI/UIManager.h"
+
+// TESTS - REMOVE WHEN DONE //
 #include "BMGraphs/BMGraphs/BMGraphs.h"
 
 /*
@@ -13,6 +15,7 @@
         - Why does rotation snap back to 0,0,0 sometimes?
 
         - When using non-local rotation and rolled, pitching will eventually reset roll back to 0
+            - Maybe forward.Z shouldnt be set to 0, only right.Z should be?
 
         - Add mouse input
 
@@ -24,6 +27,7 @@
                     - Should be able to use relative pathing starting from the main CB configs folder. Subfolders for certain projects or cine types would be nice
 
         - Option to preserve momentum in world space?
+            - I think it already does that. To do local you might need to store each velocity component individually
 
         - FOV acceleration. Attach to left bumper?
             - Instead, for both pitch and FOV, add a dropdown menu letting the user choose which input should be swapped
@@ -43,28 +47,31 @@ CameraManager::CameraManager(std::shared_ptr<UIManager> TheUI)
     UI = TheUI;
 
     //Register cvars
-    UI->AddElement(UIElement(m_bUseOverrides,     CVAR_ENABLE_CAM_OVERRIDE, "Enable Overrides", "Enables camera overriding features"));
-    UI->AddElement(UIElement(m_bUseLocalMovement, CVAR_CAM_LOCAL_MOVEMENT,  "Local movement",   "Uses the local orientation of the camera for movement"));
-    UI->AddElement(UIElement(m_bUseLocalRotation, CVAR_CAM_LOCAL_ROTATION,  "Local rotation",   "Uses the local orientation of the camera for rotation"));
-    UI->AddElement(UIElement(m_bHardFloors,       CVAR_CAM_HARD_FLOORS,     "Hard floors",      "Prevents the camera from going through the floor"));
-    UI->AddElement(UIElement(m_FloorHeight,       CVAR_CAM_FLOOR_HEIGHT,    "Floor Height",     "Lowest height the camera can go", -50.f, 50.f));
+    UI->AddElement({m_bUseOverrides,        CVAR_ENABLE_CAM_OVERRIDE, "Enable Overrides",                   "Enables camera overriding features"                            });
+    UI->AddElement({m_bUseLocalMovement,    CVAR_CAM_LOCAL_MOVEMENT,  "Local movement",                     "Uses the local orientation of the camera for movement"         });
+    UI->AddElement({m_bUseLocalRotation,    CVAR_CAM_LOCAL_ROTATION,  "Local rotation",                     "Uses the local orientation of the camera for rotation"         });
+    UI->AddElement({m_bHardFloors,          CVAR_CAM_HARD_FLOORS,     "Hard floors",                        "Prevents the camera from going through the floor"              });
+    UI->AddElement({m_FloorHeight,          CVAR_CAM_FLOOR_HEIGHT,    "Floor Height",                       "Lowest height the camera can go",                      -50, 50 });
+    UI->AddElement({m_MovementSpeed,        CVAR_CAM_MOVEMENT_SPEED,  "Movement Speed",                     "Camera movement speed multiplier",                      0,  5  });
+    UI->AddElement({m_MovementAccel,        CVAR_CAM_MOVEMENT_ACCEL,  "Movement Acceleration",              "Camera movement acceleration speed",                    0,  5  });
+	UI->AddElement({m_RotationSpeed,        CVAR_ROT_SPEED,           "Rotation Speed (non-mouse)",         "Camera rotation speed (non-mouse)",                     0,  3  });
+    UI->AddElement({m_RotationAccelMouse,   CVAR_ROT_ACCEL_MOUSE,     "Rotation Acceleration (Mouse)",      "Camera rotation acceleration speed (mouse)",            0,  5  });
+    UI->AddElement({m_RotationAccelGamepad, CVAR_ROT_ACCEL_GAMEPAD,   "Rotation Acceleration (Controller)", "Camera rotation acceleration speed (controller)",       0,  5  });
+    UI->AddElement({m_MouseSensitivity,     CVAR_MOUSE_SENSITIVITY,   "Mouse Sensitivity",                  "Camera rotation speed when using mouse",                0,  25 });
+    UI->AddElement({m_GamepadSensitivity,   CVAR_GAMEPAD_SENSITIVITY, "Gamepad Sensitivity",                "Camera rotation speed when using gamepad",              0,  50 });
+    UI->AddElement({m_FOVRotationScale,     CVAR_FOV_ROTATION_SCALE,  "FOV Rotation Scale",                 "Multiplier for slowing camera rotation when zoomed in", 0,  2  });
+    UI->AddElement({m_RollBinding,          CVAR_ROLL_BINDING,        "Toggle roll binding",                "Modifier to swap an input axis with roll"                      });
+  //UI->AddElement({m_FOVBinding,           CVAR_FOV_BINDING,         "Toggle FOV binding",                 "Modifier to swap an input axis with FOV"                       });
+    
+    //Add options to dropdown menus
+    SetBindingOptions();
+    SetInputSwapOptions();
 
-    //MAKE_CVAR_BIND_TO_STRING(m_bUseOverrides,        CVAR_ENABLE_CAM_OVERRIDE, "Enables camera overriding features",                      true);
-    //MAKE_CVAR_BIND_TO_STRING(m_bUseLocalMovement,    CVAR_CAM_LOCAL_MOVEMENT,  "Uses the local orientation of the camera for movement",   true);
-    //MAKE_CVAR_BIND_TO_STRING(m_bUseLocalRotation,    CVAR_CAM_LOCAL_ROTATION,  "Uses the local orientation of the camera for rotation",   true);
-    //MAKE_CVAR_BIND_TO_STRING(m_bHardFloors,          CVAR_CAM_HARD_FLOORS,     "Prevents the camera from going through the floor",        true);
-	//MAKE_CVAR_BIND_TO_STRING(m_FloorHeight,          CVAR_CAM_FLOOR_HEIGHT,    "Lowest height the camera can go",                         true, true, -50, true, 50);
-	MAKE_CVAR_BIND_TO_STRING(m_MovementSpeed,        CVAR_CAM_MOVEMENT_SPEED,  "Camera movement speed multiplier",                        true, true, 0,   true, 5);
-    MAKE_CVAR_BIND_TO_STRING(m_MovementAccel,        CVAR_CAM_MOVEMENT_ACCEL,  "Camera movement acceleration speed",                      true, true, 0,   true, 5);
-	MAKE_CVAR_BIND_TO_STRING(m_RotationSpeed,        CVAR_ROT_SPEED,           "Camera rotation speed multiplier (doesn't affect mouse)", true, true, 0,   true, 3);
-    MAKE_CVAR_BIND_TO_STRING(m_RotationAccelMouse,   CVAR_ROT_ACCEL_MOUSE,     "Camera rotation acceleration speed (mouse)",              true, true, 0,   true, 5);
-    MAKE_CVAR_BIND_TO_STRING(m_RotationAccelGamepad, CVAR_ROT_ACCEL_GAMEPAD,   "Camera rotation acceleration speed (controller)",         true, true, 0,   true, 5);
-    MAKE_CVAR_BIND_TO_STRING(m_MouseSensitivity,     CVAR_MOUSE_SENSITIVITY,   "Camera rotation speed when using mouse",                  true, true, 0,   true, 25);
-    MAKE_CVAR_BIND_TO_STRING(m_GamepadSensitivity,   CVAR_GAMEPAD_SENSITIVITY, "Camera rotation speed when using gamepad",                true, true, 0,   true, 50);
-    MAKE_CVAR_BIND_TO_STRING(m_FOVRotationScale,     CVAR_FOV_ROTATION_SCALE,  "Multiplier for slowing camera rotation when zoomed in",   true, true, 0,   true, 2);
-    MAKE_CVAR_BIND_STRING(   m_RollBinding,          CVAR_ROLL_BINDING,        "Modifier to change camera yaw input to roll",             true);
+    //Bind addOnValueChanged functions to the input bindings
     ON_CVAR_CHANGED(CVAR_ROLL_BINDING, CameraManager::CacheRollBinding);
+  //ON_CVAR_CHANGED(CVAR_FOV_BINDING, CameraManager::CacheFOVBinding);
     CacheRollBinding();
+    CacheFOVBinding();
 
     //Register hooks
     GlobalGameWrapper->HookEvent("Function TAGame.PlayerInput_TA.PlayerInput", std::bind(&CameraManager::PlayerInputTick, this));
@@ -74,50 +81,48 @@ CameraManager::CameraManager(std::shared_ptr<UIManager> TheUI)
     Graphs = std::make_shared<BMGraphs>(GlobalCvarManager, GlobalGameWrapper);
 }
 
-std::string CameraManager::GetBindingOptions()
+void CameraManager::SetBindingOptions()
 {
-    static std::string Output;
-    static bool bHaveFilledList = false;
+    UIElement::DropdownOptionsType BindingsList;
+    BindingsList.emplace_back(NO_SELECTION, NO_SELECTION);
+    BindingsList.emplace_back("Left thumbstick press", "XboxTypeS_LeftThumbStick");
+    BindingsList.emplace_back("Right thumbstick press", "XboxTypeS_RightThumbStick");
+    BindingsList.emplace_back("DPad up", "XboxTypeS_DPad_Up");
+    BindingsList.emplace_back("DPad left", "XboxTypeS_DPad_Left");
+    BindingsList.emplace_back("DPad right", "XboxTypeS_DPad_Right");
+    BindingsList.emplace_back("DPad down", "XboxTypeS_DPad_Down");
+    BindingsList.emplace_back("Back button", "XboxTypeS_Back");
+    BindingsList.emplace_back("Start button", "XboxTypeS_Start");
+    BindingsList.emplace_back("Xbox Y - PS4 Triangle", "XboxTypeS_Y");
+    BindingsList.emplace_back("Xbox X - PS4 Square", "XboxTypeS_X");
+    BindingsList.emplace_back("Xbox B - PS4 Circle", "XboxTypeS_B");
+    BindingsList.emplace_back("Xbox A - PS4 X", "XboxTypeS_A");
+    BindingsList.emplace_back("Xbox LB - PS4 L1", "XboxTypeS_LeftShoulder");
+    BindingsList.emplace_back("Xbox RB - PS4 R1", "XboxTypeS_RightShoulder");
+    BindingsList.emplace_back("Xbox LT - PS4 L2", "XboxTypeS_LeftTrigger");
+    BindingsList.emplace_back("Xbox RT - PS4 R2", "XboxTypeS_RightTrigger");
+    BindingsList.emplace_back("Left thumbstick X axis", "XboxTypeS_LeftX");
+    BindingsList.emplace_back("Left thumbstick Y axis", "XboxTypeS_LeftY");
+    BindingsList.emplace_back("Right thumbstick X axis", "XboxTypeS_RightX");
+    BindingsList.emplace_back("Right thumbstick Y axis", "XboxTypeS_RightY");
 
-    if(!bHaveFilledList)
-    {
-        //Fill list
-        std::vector<std::pair<std::string, std::string>> BindingsList;
-        BindingsList.emplace_back(NO_SELECTION, NO_SELECTION);
-        BindingsList.emplace_back("Left thumbstick press", "XboxTypeS_LeftThumbStick");
-        BindingsList.emplace_back("Right thumbstick press", "XboxTypeS_RightThumbStick");
-        BindingsList.emplace_back("DPad up", "XboxTypeS_DPad_Up");
-        BindingsList.emplace_back("DPad left", "XboxTypeS_DPad_Left");
-        BindingsList.emplace_back("DPad right", "XboxTypeS_DPad_Right");
-        BindingsList.emplace_back("DPad down", "XboxTypeS_DPad_Down");
-        BindingsList.emplace_back("Back button", "XboxTypeS_Back");
-        BindingsList.emplace_back("Start button", "XboxTypeS_Start");
-        BindingsList.emplace_back("Xbox Y - PS4 Triangle", "XboxTypeS_Y");
-        BindingsList.emplace_back("Xbox X - PS4 Square", "XboxTypeS_X");
-        BindingsList.emplace_back("Xbox B - PS4 Circle", "XboxTypeS_B");
-        BindingsList.emplace_back("Xbox A - PS4 X", "XboxTypeS_A");
-        BindingsList.emplace_back("Xbox LB - PS4 L1", "XboxTypeS_LeftShoulder");
-        BindingsList.emplace_back("Xbox RB - PS4 R1", "XboxTypeS_RightShoulder");
-        BindingsList.emplace_back("Xbox LT - PS4 L2", "XboxTypeS_LeftTrigger");
-        BindingsList.emplace_back("Xbox RT - PS4 R2", "XboxTypeS_RightTrigger");
-        BindingsList.emplace_back("Left thumbstick X axis", "XboxTypeS_LeftX");
-        BindingsList.emplace_back("Left thumbstick Y axis", "XboxTypeS_LeftY");
-        BindingsList.emplace_back("Right thumbstick X axis", "XboxTypeS_RightX");
-        BindingsList.emplace_back("Right thumbstick Y axis", "XboxTypeS_RightY");
+    UI->EditElement(CVAR_ROLL_BINDING).AddDropdownOptions(BindingsList);
+    //UI->EditElement(CVAR_FOV_BINDING).AddDropdownOptions(BindingsList); // #TODO: Uncomment this once FOV smoothing is implemented
+}
 
-        //Compile list into one string
-        for(const auto& Binding : BindingsList)
-        {
-            Output += Binding.first + "@" + Binding.second + "&";
-        }
+void CameraManager::SetInputSwapOptions()
+{
+    UIElement::DropdownOptionsType OptionsList;
 
-        //Remove last "&"
-        Output.pop_back();
+    /*
+    
+        #TODO: FILL LIST HERE - things like forward, right, pitch, etc
+        This is the list of inputs people can choose to swap with Roll or FOV
+    
+    */
 
-        bHaveFilledList = true;
-    }
-
-    return Output;
+    //UI->EditElement(RollSwapsWithWhatInput).AddDropdownOptions(OptionsList);
+    //UI->EditElement(FOVSwapsWithWhatInput).AddDropdownOptions(OptionsList);
 }
 
 void CameraManager::OnUseOverridesChanged()
@@ -145,6 +150,11 @@ void CameraManager::OnUseOverridesChanged()
 void CameraManager::CacheRollBinding()
 {
     RollBindingIndex = GlobalGameWrapper->GetFNameIndexByString(*m_RollBinding);
+}
+
+void CameraManager::CacheFOVBinding()
+{
+    //FOVBindingIndex = GlobalGameWrapper->GetFNameIndexByString(*m_FOVBinding); // #TODO: Uncomment this once FOV smoothing is implemented
 }
 
 void CameraManager::PlayerInputTick()
