@@ -44,7 +44,8 @@ void UIManager::GenerateSettingsFile()
     //Multiple nested depth grayed components to really hide this warning label
     constexpr int WarningDepth = 5;
     for(int i = 0; i < WarningDepth; ++i) { nl2(EUI::GrayedBegin, CVAR_IS_FILE_WRITING); }
-        label("File is writing! Please wait for it to finish before continuing.");
+        sameline;
+        label(" -- File is writing! Please wait for it to finish before continuing --");
     for(int i = 0; i < WarningDepth; ++i) { nl2(EUI::GrayedEnd, CVAR_IS_FILE_WRITING); }
     
     blank;
@@ -102,42 +103,49 @@ void UIManager::GenerateSettingsFile()
         button("Import Selected Animation", NOTIFIER_IMPORT_FILE);
         sameline;
         button("Clear Animation", NOTIFIER_IMPORT_CLEAR);
-    
-        blank;
-        separator;
-        blank;
-    
-        //Camera input overrides
-        label("CAMERA OVERRIDES");
-        label("NOTE: This may conflict with SpectatorControls. Recommend disabling those overrides while using these.");
-        nl2(EUI::Checkbox, CVAR_ENABLE_CAM_OVERRIDE);
-        nl2(EUI::GrayedBegin, CVAR_ENABLE_CAM_OVERRIDE);
-            sameline;
-            nl2(EUI::Checkbox, CVAR_CAM_LOCAL_MOVEMENT);
-            sameline;
-            nl2(EUI::Checkbox, CVAR_CAM_LOCAL_ROTATION);
-            sameline;
-            nl2(EUI::Checkbox, CVAR_CAM_HARD_FLOORS);
-            sameline;
-            nl2(EUI::Checkbox, CVAR_INVERT_PITCH);
-            nl2(EUI::GrayedBegin, CVAR_CAM_HARD_FLOORS);
-                nl2(EUI::Float, CVAR_CAM_FLOOR_HEIGHT);
-            nl2(EUI::GrayedEnd, CVAR_CAM_HARD_FLOORS);
-            nl2(EUI::Float, CVAR_CAM_MOVEMENT_SPEED);
-            nl2(EUI::Float, CVAR_CAM_MOVEMENT_ACCEL);
-            nl2(EUI::Float, CVAR_ROT_SPEED);
-            nl2(EUI::Float, CVAR_ROT_ACCEL_MOUSE);
-            nl2(EUI::Float, CVAR_ROT_ACCEL_GAMEPAD);
-            nl2(EUI::Float, CVAR_MOUSE_SENSITIVITY);
-            nl2(EUI::Float, CVAR_GAMEPAD_SENSITIVITY);
-            nl2(EUI::Float, CVAR_FOV_ROTATION_SCALE);
-            nl2(EUI::Dropdown, CVAR_ROLL_BINDING);
-            nl2(EUI::Dropdown, CVAR_ROLL_SWAP);
-            nl2(EUI::Dropdown, CVAR_FOV_BINDING);
-            nl2(EUI::Dropdown, CVAR_FOV_SWAP);
-        nl2(EUI::GrayedEnd, CVAR_ENABLE_CAM_OVERRIDE);
 
     nl2(EUI::GrayedEnd, CVAR_IS_FILE_WRITING);
+    
+    blank;
+    separator;
+    blank;
+    
+    //Camera input overrides
+    label("CAMERA OVERRIDES");
+    label("NOTE: This may conflict with SpectatorControls. Recommend disabling those overrides while using these.");
+    nl2(EUI::Checkbox, CVAR_ENABLE_CAM_OVERRIDE);
+    nl2(EUI::GrayedBegin, CVAR_ENABLE_CAM_OVERRIDE);
+        sameline;
+        nl2(EUI::Checkbox, CVAR_CAM_LOCAL_MOVEMENT);
+        sameline;
+        nl2(EUI::Checkbox, CVAR_CAM_LOCAL_ROTATION);
+        sameline;
+        nl2(EUI::Checkbox, CVAR_CAM_HARD_FLOORS);
+        sameline;
+        nl2(EUI::Checkbox, CVAR_INVERT_PITCH);
+        nl2(EUI::GrayedBegin, CVAR_CAM_HARD_FLOORS);
+            nl2(EUI::Float, CVAR_CAM_FLOOR_HEIGHT);
+        nl2(EUI::GrayedEnd, CVAR_CAM_HARD_FLOORS);
+        nl2(EUI::Float, CVAR_CAM_MOVEMENT_SPEED);
+        nl2(EUI::Float, CVAR_CAM_MOVEMENT_ACCEL);
+        nl2(EUI::Float, CVAR_ROT_SPEED);
+        nl2(EUI::Float, CVAR_ROT_ACCEL_MOUSE);
+        nl2(EUI::Float, CVAR_ROT_ACCEL_GAMEPAD);
+        nl2(EUI::Float, CVAR_MOUSE_SENSITIVITY);
+        nl2(EUI::Float, CVAR_GAMEPAD_SENSITIVITY);
+        nl2(EUI::Float, CVAR_FOV_ROTATION_SCALE);
+        nl2(EUI::Dropdown, CVAR_ROLL_BINDING);
+        nl2(EUI::Dropdown, CVAR_ROLL_SWAP);
+        nl2(EUI::Dropdown, CVAR_FOV_BINDING);
+        nl2(EUI::Dropdown, CVAR_FOV_SWAP);
+        label("CONFIGS");
+        nl2(EUI::Dropdown, CVAR_CONFIG_CURRENT);
+        sameline;
+        button("Update config list", NOTIFIER_CONFIG_UPDATE);
+        nl2(EUI::Textbox, CVAR_CONFIG_NEW_NAME);
+        sameline;
+        button("Save config", NOTIFIER_CONFIG_SAVE);
+    nl2(EUI::GrayedEnd, CVAR_ENABLE_CAM_OVERRIDE);
     
 
     //////////// END WRITING SETTINGS FILE ////////////

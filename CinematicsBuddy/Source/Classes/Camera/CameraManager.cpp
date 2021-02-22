@@ -13,13 +13,6 @@
         - When using non-local rotation and rolled, pitching will eventually reset roll back to 0
             - Maybe forward.Z shouldnt be set to 0, only right.Z should be?
 
-        - Option to read configs and apply their values to the camera
-            - Make a custom parser? Not sure if the exec config command can user relative pathing
-                - It would just be cleaner to go directly to the CB config folder anyway
-                - Make a notifier like "CBExecConfig" that would take the config name as a parameter
-                    - With a custom command like that, you could have subconfigs (configs that run a config, then change a couple settings after the first one runs)
-                    - Should be able to use relative pathing starting from the main CB configs folder. Subfolders for certain projects or cine types would be nice
-
         - Option to preserve momentum in world space?
             - I think it already does that. To do local you might need to store each velocity component individually
 

@@ -8,9 +8,12 @@ extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 
 
 // MACROS //
-#define PLUGIN_VERSION "0.9.8"
-#define EXTENSION_NAME ".txt"
-#define NO_SELECTION   "-- NONE --"
+#define PLUGIN_VERSION      "0.9.8"
+
+//Generic defines
+#define EXTENSION_RECORDING ".txt"
+#define EXTENSION_CONFIG    ".cfg"
+#define NO_SELECTION        "-- NONE --"
 
 //Mutual recording cvars
 #define CVAR_INCREMENT_FILES     "CB_bIncrementFileNames"

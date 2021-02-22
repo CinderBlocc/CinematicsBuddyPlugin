@@ -13,12 +13,6 @@
 
     - Camera override rotation
     - Camera override FOV
-    - Dropdown at the bottom of camera overrides section to show which config is currently active
-        - Also include textbox and button to save current settings as a new config using the specified name
-            - When they save it, refresh UI to include it in the list
-            - When they change any camera/input cvars, notify the CameraConfigManager that a change has been made so it can change the cvar of the dropdown to blank
-                - Both CameraManager and InputsManager will need a pointer to CameraConfigManager (construct in CameraManager constructor)
-                    - No need to subsribe in the other direction because configmanager will apply the new cvar values itself which will auto-trigger the addOnValueChanged functions
 
     - Write export file asynchronously. Large files will hang up the game for a long time, and even small files cause a hitch
         - Leave UI greyed out until file writing is completed

@@ -130,7 +130,7 @@ std::filesystem::path CBUtils::GetFinalFileName(std::filesystem::path IntendedPa
     //No auto-increment, just write the file with the direct name
     if(IncrementLevel < 0)
     {
-        Output += InFileName + EXTENSION_NAME;
+        Output += InFileName + EXTENSION_RECORDING;
         return Output;
     }
 
@@ -146,7 +146,7 @@ std::filesystem::path CBUtils::GetFinalFileName(std::filesystem::path IntendedPa
         CheckIfExists += InFileName + "_" + PrintDoubleDigit(IncrementLevel);
     }
 
-    CheckIfExists += EXTENSION_NAME;
+    CheckIfExists += EXTENSION_RECORDING;
     if(std::filesystem::exists(CheckIfExists))
     {
         return GetFinalFileName(IntendedPath, InFileName, ++IncrementLevel);
