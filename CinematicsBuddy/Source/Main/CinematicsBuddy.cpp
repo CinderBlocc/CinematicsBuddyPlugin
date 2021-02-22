@@ -11,8 +11,15 @@
 /*
     #TODO
 
-    - Create AddElement constructor for notifiers
     - Camera override rotation
+    - Camera override FOV
+    - Dropdown at the bottom of camera overrides section to show which config is currently active
+        - Also include textbox and button to save current settings as a new config using the specified name
+            - When they save it, refresh UI to include it in the list
+            - When they change any camera/input cvars, notify the CameraConfigManager that a change has been made so it can change the cvar of the dropdown to blank
+                - Both CameraManager and InputsManager will need a pointer to CameraConfigManager (construct in CameraManager constructor)
+                    - No need to subsribe in the other direction because configmanager will apply the new cvar values itself which will auto-trigger the addOnValueChanged functions
+
     - Write export file asynchronously. Large files will hang up the game for a long time, and even small files cause a hitch
         - Leave UI greyed out until file writing is completed
     - Write all class members with m_ prefix? Either that or remove the prefix from CameraManager's members
@@ -74,7 +81,6 @@ void CinematicsBuddy::onLoad()
 
     // TESTS - REMOVE WHEN DONE //
     GlobalCvarManager->registerNotifier("CBTestExportFormat", [this](std::vector<std::string> params){TestExportFormat();}, "Prints data from current frame", PERMISSION_ALL);
-    GlobalCvarManager->registerNotifier("CBTestInputs", [this](std::vector<std::string> params){TestInputs();}, "Tests the acceleration smoothing methods", PERMISSION_ALL);
     GlobalGameWrapper->RegisterDrawable(std::bind(&CinematicsBuddy::DebugRender, this, std::placeholders::_1));
 }
 void CinematicsBuddy::onUnload(){}
@@ -128,11 +134,6 @@ void CinematicsBuddy::TestExportFormat()
     Output += "\n\nTHIS FRAME\n" + ThisFrame.Print(ThisFrameTime, 0, CarsSeenThisFrame);
 
     GlobalCvarManager->log(Output);
-}
-void CinematicsBuddy::TestInputs()
-{
-    GlobalCvarManager->getCvar(CVAR_ENABLE_CAM_OVERRIDE).setValue(true);
-    Camera->StartInputsTest();
 }
 void CinematicsBuddy::DebugRender(CanvasWrapper Canvas)
 {

@@ -53,6 +53,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Source\Classes\Camera\CameraConfigManager.cpp" />
     <ClCompile Include="Source\Classes\Camera\CameraManager.cpp" />
     <ClCompile Include="Source\Classes\Camera\InputsManager.cpp" />
     <ClCompile Include="Source\Classes\DataCollectors\FrameInfo.cpp" />
@@ -87,6 +88,7 @@
     <ClCompile Include="Vendor\RenderingTools\Objects\VisualCamera.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Source\Classes\Camera\CameraConfigManager.h" />
     <ClInclude Include="Source\Classes\Camera\CameraManager.h" />
     <ClInclude Include="Source\Classes\Camera\InputsManager.h" />
     <ClInclude Include="Source\Classes\DataCollectors\FrameInfo.h" />

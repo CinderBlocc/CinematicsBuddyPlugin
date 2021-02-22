@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+class CameraConfigManager;
 class CameraWrapper;
 class CanvasWrapper;
 class InputsManager;
@@ -19,15 +20,13 @@ public:
     CameraManager(std::shared_ptr<UIManager> TheUI);
 
     // TESTS - REMOVE WHEN DONE //
-    std::shared_ptr<class BMGraphs> Graphs;
-    void OnUseOverridesChanged();
-    void StartInputsTest();
     void DebugRender(CanvasWrapper Canvas);
 
 private:
     void PlayerInputTick();
-    std::shared_ptr<InputsManager> Inputs;
     std::shared_ptr<UIManager> UI;
+    std::shared_ptr<InputsManager> Inputs;
+    std::shared_ptr<CameraConfigManager> Configs;
 
     //State variables set by plugin
     std::shared_ptr<bool>  m_bUseOverrides         = std::make_shared<bool>(false);
@@ -43,35 +42,26 @@ private:
     std::shared_ptr<float> m_MouseSensitivity      = std::make_shared<float>(10.f);
     std::shared_ptr<float> m_GamepadSensitivity    = std::make_shared<float>(20.f);
     std::shared_ptr<float> m_FOVRotationScale      = std::make_shared<float>(0.9f);
-    std::shared_ptr<std::string> m_RollBinding     = std::make_shared<std::string>("XboxTypeS_RightShoulder");
-  //std::shared_ptr<std::string> m_FOVBinding     = std::make_shared<std::string>("XboxTypeS_LeftShoulder");
-    int RollBindingIndex = 0;
-  //int FOVBindingIndex  = 0;
-    bool bRoll = false;
-  //bool bFOV  = false;
-    void CacheRollBinding();
-    void CacheFOVBinding();
-    void SetBindingOptions();
-    void SetInputSwapOptions();
 
     //Internal state variables
-    float BaseMovementSpeed = 2000.f;
+    float BaseMovementSpeed = 1500.f;
     float BaseMovementAccel = 2.f;
     float BaseRotationSpeed = 100.f;
     float BaseRotationAccel = 2.f;
-  //float BaseFOVSpeed = 100.f;
-  //float BaseFOVAccel = 2.f;
+    float BaseFOVSpeed = 100.f;
+    float BaseFOVAccel = 2.f;
     
     //Speed of movement and rotation
     Vector Velocity        = {0, 0, 0};
     Vector AngularVelocity = {0, 0, 0};
 
     //Functions to update camera transformation
-    void UpdateCameraTransformation(float Delta);
+    void UpdateCamera(float Delta);
     void UpdateVelocity(float Delta, RT::Matrix3 MovementMatrix);
     void UpdateAngularVelocity(float Delta, RT::Matrix3 RotationMatrix);
     void UpdatePosition(float Delta, CameraWrapper TheCamera);
     void UpdateRotation(float Delta, CameraWrapper TheCamera);
+    void UpdateFOV(float Delta, CameraWrapper TheCamera);
 
     //Utility
     bool  IsValidMode();
@@ -84,5 +74,5 @@ private:
     float GetReducedPerc(float InputPerc, float SpeedPerc);
     float GetBrakeForce(float InputPerc, float SpeedPerc);
     Quat  AngleAxisRotation(float angle, Vector axis);
-    float RemapPercentage(float CurrentPerc, float CurrentMin, float CurrentMax, float NewMin, float NewMax); //#TODO: Remove this? Is it used anywhere?
+    float RemapPercentage(float CurrentPerc, float CurrentMin, float CurrentMax, float NewMin, float NewMax);
 };

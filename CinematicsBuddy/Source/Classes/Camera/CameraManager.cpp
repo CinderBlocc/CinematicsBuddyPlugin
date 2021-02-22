@@ -4,20 +4,14 @@
 #include "SupportFiles/MacrosStructsEnums.h"
 #include "bakkesmod/plugin/bakkesmodplugin.h"
 #include "RenderingTools/RenderingTools.h"
+#include "CameraConfigManager.h"
 #include "UI/UIManager.h"
-
-// TESTS - REMOVE WHEN DONE //
-#include "BMGraphs/BMGraphs/BMGraphs.h"
 
 /*
 
     #TODO:
-        - Why does rotation snap back to 0,0,0 sometimes?
-
         - When using non-local rotation and rolled, pitching will eventually reset roll back to 0
             - Maybe forward.Z shouldnt be set to 0, only right.Z should be?
-
-        - Add mouse input
 
         - Option to read configs and apply their values to the camera
             - Make a custom parser? Not sure if the exec config command can user relative pathing
@@ -29,22 +23,18 @@
         - Option to preserve momentum in world space?
             - I think it already does that. To do local you might need to store each velocity component individually
 
-        - FOV acceleration. Attach to left bumper?
-            - Instead, for both pitch and FOV, add a dropdown menu letting the user choose which input should be swapped
-                - Remove the pitch/roll checkbox once you add this
-                - This will be much easier to add with templatized cvar creation. You could feed the settings into the struct and have them auto generate in UI
+        - FOV acceleration
 
         - Take FOV into account for pitch and yaw rotation speed. The more zoomed in, the less speed
 
-        - The goal with this is to entirely replace Spectator Controls' smoothing feature
-            - Maybe even Camera Lock too? Might be better to keep that separate
+        - Add mouse input
 
 */
 
 CameraManager::CameraManager(std::shared_ptr<UIManager> TheUI)
 {
-    Inputs = std::make_shared<InputsManager>(TheUI);
     UI = TheUI;
+    Inputs = std::make_shared<InputsManager>(TheUI);
 
     //Register cvars
     UI->AddElement({m_bUseOverrides,        CVAR_ENABLE_CAM_OVERRIDE, "Enable Overrides",                   "Enables camera overriding features"                            });
@@ -60,101 +50,12 @@ CameraManager::CameraManager(std::shared_ptr<UIManager> TheUI)
     UI->AddElement({m_MouseSensitivity,     CVAR_MOUSE_SENSITIVITY,   "Mouse Sensitivity",                  "Camera rotation speed when using mouse",                0,  25 });
     UI->AddElement({m_GamepadSensitivity,   CVAR_GAMEPAD_SENSITIVITY, "Gamepad Sensitivity",                "Camera rotation speed when using gamepad",              0,  50 });
     UI->AddElement({m_FOVRotationScale,     CVAR_FOV_ROTATION_SCALE,  "FOV Rotation Scale",                 "Multiplier for slowing camera rotation when zoomed in", 0,  2  });
-    UI->AddElement({m_RollBinding,          CVAR_ROLL_BINDING,        "Toggle roll binding",                "Modifier to swap an input axis with roll"                      });
-  //UI->AddElement({m_FOVBinding,           CVAR_FOV_BINDING,         "Toggle FOV binding",                 "Modifier to swap an input axis with FOV"                       });
-    
-    //Add options to dropdown menus
-    SetBindingOptions();
-    SetInputSwapOptions();
-
-    //Bind addOnValueChanged functions to the input bindings
-    ON_CVAR_CHANGED(CVAR_ROLL_BINDING, CameraManager::CacheRollBinding);
-  //ON_CVAR_CHANGED(CVAR_FOV_BINDING, CameraManager::CacheFOVBinding);
-    CacheRollBinding();
-    CacheFOVBinding();
 
     //Register hooks
     GlobalGameWrapper->HookEvent("Function TAGame.PlayerInput_TA.PlayerInput", std::bind(&CameraManager::PlayerInputTick, this));
 
-    // TESTS - REMOVE WHEN DONE //
-    ON_CVAR_CHANGED(CVAR_ENABLE_CAM_OVERRIDE, CameraManager::OnUseOverridesChanged);
-    Graphs = std::make_shared<BMGraphs>(GlobalCvarManager, GlobalGameWrapper);
-}
-
-void CameraManager::SetBindingOptions()
-{
-    UIElement::DropdownOptionsType BindingsList;
-    BindingsList.emplace_back(NO_SELECTION, NO_SELECTION);
-    BindingsList.emplace_back("Left thumbstick press", "XboxTypeS_LeftThumbStick");
-    BindingsList.emplace_back("Right thumbstick press", "XboxTypeS_RightThumbStick");
-    BindingsList.emplace_back("DPad up", "XboxTypeS_DPad_Up");
-    BindingsList.emplace_back("DPad left", "XboxTypeS_DPad_Left");
-    BindingsList.emplace_back("DPad right", "XboxTypeS_DPad_Right");
-    BindingsList.emplace_back("DPad down", "XboxTypeS_DPad_Down");
-    BindingsList.emplace_back("Back button", "XboxTypeS_Back");
-    BindingsList.emplace_back("Start button", "XboxTypeS_Start");
-    BindingsList.emplace_back("Xbox Y - PS4 Triangle", "XboxTypeS_Y");
-    BindingsList.emplace_back("Xbox X - PS4 Square", "XboxTypeS_X");
-    BindingsList.emplace_back("Xbox B - PS4 Circle", "XboxTypeS_B");
-    BindingsList.emplace_back("Xbox A - PS4 X", "XboxTypeS_A");
-    BindingsList.emplace_back("Xbox LB - PS4 L1", "XboxTypeS_LeftShoulder");
-    BindingsList.emplace_back("Xbox RB - PS4 R1", "XboxTypeS_RightShoulder");
-    BindingsList.emplace_back("Xbox LT - PS4 L2", "XboxTypeS_LeftTrigger");
-    BindingsList.emplace_back("Xbox RT - PS4 R2", "XboxTypeS_RightTrigger");
-    BindingsList.emplace_back("Left thumbstick X axis", "XboxTypeS_LeftX");
-    BindingsList.emplace_back("Left thumbstick Y axis", "XboxTypeS_LeftY");
-    BindingsList.emplace_back("Right thumbstick X axis", "XboxTypeS_RightX");
-    BindingsList.emplace_back("Right thumbstick Y axis", "XboxTypeS_RightY");
-
-    UI->EditElement(CVAR_ROLL_BINDING).AddDropdownOptions(BindingsList);
-    //UI->EditElement(CVAR_FOV_BINDING).AddDropdownOptions(BindingsList); // #TODO: Uncomment this once FOV smoothing is implemented
-}
-
-void CameraManager::SetInputSwapOptions()
-{
-    UIElement::DropdownOptionsType OptionsList;
-
-    /*
-    
-        #TODO: FILL LIST HERE - things like forward, right, pitch, etc
-        This is the list of inputs people can choose to swap with Roll or FOV
-    
-    */
-
-    //UI->EditElement(RollSwapsWithWhatInput).AddDropdownOptions(OptionsList);
-    //UI->EditElement(FOVSwapsWithWhatInput).AddDropdownOptions(OptionsList);
-}
-
-void CameraManager::OnUseOverridesChanged()
-{
-    // TESTS - REMOVE WHEN DONE //
-    Graphs->EndRender();
-    if(*m_bUseOverrides)
-    {
-        GraphInitData InitData;
-        InitData.Type = EGraphType::GRAPH_Line;
-        InitData.Title = "Camera Relative Velocities";
-        InitData.Labels = 
-        {
-            LabelInfo{"Forward Velocity",  LinearColor{255, 0,   0,   255}},
-            LabelInfo{"Right Velocity",    LinearColor{0,   255, 0,   255}},
-            LabelInfo{"Up Velocity",       LinearColor{0,   0,   255, 255}},
-            LabelInfo{"Forward Input",     LinearColor{255, 180, 180, 255}},
-            LabelInfo{"Right Input",       LinearColor{180, 255, 180, 255}},
-            LabelInfo{"Up Input",          LinearColor{180, 180, 255, 255}}
-        };
-        Graphs->BeginRender(InitData);
-    }
-}
-
-void CameraManager::CacheRollBinding()
-{
-    RollBindingIndex = GlobalGameWrapper->GetFNameIndexByString(*m_RollBinding);
-}
-
-void CameraManager::CacheFOVBinding()
-{
-    //FOVBindingIndex = GlobalGameWrapper->GetFNameIndexByString(*m_FOVBinding); // #TODO: Uncomment this once FOV smoothing is implemented
+    //Create the config manager after all cvars have been created
+    Configs = std::make_shared<CameraConfigManager>(TheUI);
 }
 
 void CameraManager::PlayerInputTick()
@@ -168,14 +69,13 @@ void CameraManager::PlayerInputTick()
     }
 
     //Get the inputs and then nullify them before they reach the game
-    bRoll = GlobalGameWrapper->IsKeyPressed(RollBindingIndex);
-	Inputs->PlayerInputTick(Delta, bRoll);
+	Inputs->PlayerInputTick(Delta);
 
     //Apply inputs to camera
-    UpdateCameraTransformation(Delta);
+    UpdateCamera(Delta);
 }
 
-void CameraManager::UpdateCameraTransformation(float Delta)
+void CameraManager::UpdateCamera(float Delta)
 {
     CameraWrapper TheCamera = GlobalGameWrapper->GetCamera();
     if(!TheCamera.IsNull())
@@ -186,6 +86,7 @@ void CameraManager::UpdateCameraTransformation(float Delta)
         UpdateAngularVelocity(Delta, RotationMatrix);
         UpdatePosition(Delta, TheCamera);
         UpdateRotation(Delta, TheCamera);
+        UpdateFOV(Delta, TheCamera);
     }
 }
 
@@ -231,23 +132,6 @@ void CameraManager::UpdateVelocity(float Delta, RT::Matrix3 InMatrix)
 
     //Apply the impulses
     Velocity += Acceleration - Brake;
-
-
-    // TESTS - REMOVE WHEN DONE //
-    static int EveryXNumber = 0;
-    if(EveryXNumber == 3)
-    {
-        std::vector<LineGraphDataSingle> LineData;
-        LineData.push_back({ "Forward Velocity",  ForwardSpeedPerc });
-        LineData.push_back({ "Right Velocity",    RightSpeedPerc   });
-        LineData.push_back({ "Up Velocity",       UpSpeedPerc      });
-        LineData.push_back({ "Forward Input",     ForwardInputPerc });
-        LineData.push_back({ "Right Input",       RightInputPerc   });
-        LineData.push_back({ "Up Input",          UpInputPerc      });
-        Graphs->InputData(LineData);
-        EveryXNumber = 0;
-    }
-    ++EveryXNumber;
 }
 
 void CameraManager::UpdateAngularVelocity(float Delta, RT::Matrix3 InMatrix)
@@ -280,7 +164,7 @@ void CameraManager::UpdateAngularVelocity(float Delta, RT::Matrix3 InMatrix)
     }
     else
     {
-        
+        //#TODO: Add mouse input
     }
 
     //Convert those inputs into vector inputs
@@ -324,14 +208,23 @@ void CameraManager::UpdatePosition(float Delta, CameraWrapper TheCamera)
 
 void CameraManager::UpdateRotation(float Delta, CameraWrapper TheCamera)
 {
-    Vector RotationAxis = AngularVelocity.getNormalized();
-    float RotationAmount = AngularVelocity.magnitude() * Delta * (CONST_PI_F / 180.f);
-    Quat NewRotation = AngleAxisRotation(RotationAmount, RotationAxis);
-
     RT::Matrix3 CurrentMatrix(TheCamera.GetRotation());
-    CurrentMatrix.RotateWithQuat(NewRotation);
+
+    //Only apply new rotation if it is non-zero
+    float RotationAmount = AngularVelocity.magnitude() * Delta * (CONST_PI_F / 180.f);
+    if(abs(RotationAmount) >= 0.00001f)
+    {
+        Vector RotationAxis = AngularVelocity.getNormalized();
+        Quat NewRotation = AngleAxisRotation(RotationAmount, RotationAxis);
+        CurrentMatrix.RotateWithQuat(NewRotation);
+    }
     
     TheCamera.SetRotation(CurrentMatrix.ToRotator());
+}
+
+void CameraManager::UpdateFOV(float Delta, CameraWrapper TheCamera)
+{
+    //#TODO: Get FOV acceleration
 }
 
 
@@ -387,7 +280,7 @@ RT::Matrix3 CameraManager::GetCameraMatrix(bool bFullyLocal)
 
     //Approximate the game's camera matrix. Local pitch and roll, world yaw
     RT::Matrix3 Output(TheCamera.GetRotation());
-    Output.forward.Z = 0.f; Output.forward.normalize();
+    //Output.forward.Z = 0.f; Output.forward.normalize();
     Output.right.Z   = 0.f; Output.right.normalize();
     Output.up = Vector(0, 0, 1);
 
@@ -467,6 +360,7 @@ Quat CameraManager::AngleAxisRotation(float angle, Vector axis)
 	return result;
 }
 
+//#TODO: Remove RemapPercentage? Is it used anywhere?
 float CameraManager::RemapPercentage(float CurrentPerc, float CurrentMin, float CurrentMax, float NewMin, float NewMax)
 {
     return NewMin + (NewMax - NewMin) * ((CurrentPerc - CurrentMin) / (CurrentMax - CurrentMin));
@@ -474,23 +368,8 @@ float CameraManager::RemapPercentage(float CurrentPerc, float CurrentMin, float 
 
 
 // TESTS - REMOVE WHEN DONE //
-void CameraManager::StartInputsTest()
-{
-    Velocity = {0,0,0};
-    CameraWrapper GameCam = GlobalGameWrapper->GetCamera();
-    if(!GameCam.IsNull())
-    {
-        GameCam.SetLocation(Vector{0,0,100});
-        GameCam.SetRotation(Rotator{0,0,0});
-    }
-
-    Inputs->RunTest();
-}
-
 void CameraManager::DebugRender(CanvasWrapper Canvas)
 {
-    return;
-
     if(!IsValidMode())
     {
         return;
@@ -515,12 +394,14 @@ void CameraManager::DebugRender(CanvasWrapper Canvas)
     std::vector<std::string> RenderStrings;
     RenderStrings.push_back("bUsingGamepad: " + std::to_string(Inputs->GetbUsingGamepad()));
     RenderStrings.push_back("Forward: "       + std::to_string(Inputs->GetForward()));
-    RenderStrings.push_back("Strafe: "        + std::to_string(Inputs->GetRight()));
+    RenderStrings.push_back("Right: "         + std::to_string(Inputs->GetRight()));
     RenderStrings.push_back("Up: "            + std::to_string(Inputs->GetUp()));
     RenderStrings.push_back("Pitch: "         + std::to_string(Inputs->GetPitch()));
     RenderStrings.push_back("Yaw: "           + std::to_string(Inputs->GetYaw()));
     RenderStrings.push_back("Roll: "          + std::to_string(Inputs->GetRoll()));
-    RenderStrings.push_back("bRoll: "         + std::to_string(bRoll));
+    RenderStrings.push_back("FOV: "           + std::to_string(Inputs->GetFOV()));
+    RenderStrings.push_back("bRoll: "         + std::to_string(Inputs->GetbRoll()));
+    RenderStrings.push_back("bFOV: "          + std::to_string(Inputs->GetbFOV()));
     RenderStrings.emplace_back("");
     RenderStrings.push_back("Total Velocity: "   + CBUtils::PrintFloat(Velocity.magnitude(), 6));
     RenderStrings.push_back("Forward Velocity: " + CBUtils::PrintFloat(ForwardSpeedPerc, 4));
@@ -551,7 +432,4 @@ void CameraManager::DebugRender(CanvasWrapper Canvas)
         Canvas.DrawString(Str);
         base.Y += 20;
     }
-
-
-    //Graphs->Render(Canvas);
 }

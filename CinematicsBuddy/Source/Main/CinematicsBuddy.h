@@ -23,6 +23,5 @@ public:
 
     // TESTING - REMOVE WHEN DONE //
     void TestExportFormat();
-    void TestInputs();
     void DebugRender(CanvasWrapper Canvas);
 };

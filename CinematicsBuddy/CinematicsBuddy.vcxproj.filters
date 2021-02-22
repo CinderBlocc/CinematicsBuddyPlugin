@@ -147,6 +147,9 @@
     <ClCompile Include="Source\Classes\UI\UIElement.cpp">
       <Filter>Source\Classes\UI</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Classes\Camera\CameraConfigManager.cpp">
+      <Filter>Source\Classes\Camera</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Main\CinematicsBuddy.h">
@@ -256,6 +259,9 @@
     </ClInclude>
     <ClInclude Include="Source\Classes\UI\UIElement.h">
       <Filter>Source\Classes\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Classes\Camera\CameraConfigManager.h">
+      <Filter>Source\Classes\Camera</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

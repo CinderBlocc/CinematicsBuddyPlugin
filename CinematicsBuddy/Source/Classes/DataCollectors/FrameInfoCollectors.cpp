@@ -4,13 +4,6 @@
 
 using namespace std::chrono;
 
-/*
-
-    #TODO
-    - Instead of passing in a JSON object, return JSON objects to store in other areas
-
-*/
-
 // TIME INFO //
 TimeInfo TimeInfo::Get(ReplayServerWrapper Replay)
 {

@@ -20,16 +20,22 @@ extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 #define CVAR_CAMERA_NAME         "CB_CameraName"
 #define CVAR_IS_FILE_WRITING     "CB_bIsFileWriting"
 
-//Exporting cvars
+//Exporting cvars and notifiers
 #define CVAR_IS_RECORDING_ACTIVE "CB_Recording_bIsActive"
 #define CVAR_MAX_RECORD_LENGTH   "CB_Recording_MaxLength"
+#define NOTIFIER_RECORD_START    "CBRecordingStart"
+#define NOTIFIER_RECORD_STOP     "CBRecordingStop"
 
-//Buffer cvars
+//Buffer cvars and notifiers
 #define CVAR_BUFFER_ENABLED      "CB_Buffer_bEnabled"
 #define CVAR_MAX_BUFFER_LENGTH   "CB_Buffer_MaxLength"
+#define NOTIFIER_BUFFER_CAPTURE  "CBBufferCapture"
+#define NOTIFIER_BUFFER_CLEAR    "CBBufferClear"
 
-//Importing cvars
+//Importing cvars and notifiers
 #define CVAR_IMPORT_FILE_NAME    "CB_Import_FileName"
+#define NOTIFIER_IMPORT_FILE     "CBImportAnimation"
+#define NOTIFIER_IMPORT_CLEAR    "CBImportClear"
 
 //Camera override cvars
 #define CVAR_ENABLE_CAM_OVERRIDE "CB_Camera_bUseCamOverrides"
@@ -44,17 +50,18 @@ extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 #define CVAR_ROT_ACCEL_GAMEPAD   "CB_Camera_RotationAccelGamepad"
 #define CVAR_MOUSE_SENSITIVITY   "CB_Camera_MouseSensitivity"
 #define CVAR_GAMEPAD_SENSITIVITY "CB_Camera_GamepadSensitivity"
-#define CVAR_FOV_ROTATION_SCALE  "CB_Camera_FOVRotationScale" //#TODO: The more zoomed in, the less sensitive the rotation
+#define CVAR_FOV_ROTATION_SCALE  "CB_Camera_FOVRotationScale"
 #define CVAR_ROLL_BINDING        "CB_Camera_RollBinding"
-#define CVAR_ROLL_REPLACES_PITCH "CB_Camera_RollReplacesPitch"
+#define CVAR_ROLL_SWAP           "CB_Camera_RollSwap"
+#define CVAR_FOV_BINDING         "CB_Camera_FOVBinding"
+#define CVAR_FOV_SWAP            "CB_Camera_FOVSwap"
+#define CVAR_INVERT_PITCH        "CB_Camera_InvertControllerPitch"
 
-//Notifiers
-#define NOTIFIER_RECORD_START   "CBRecordStart"
-#define NOTIFIER_RECORD_STOP    "CBRecordStop"
-#define NOTIFIER_BUFFER_CAPTURE "CBBufferCapture"
-#define NOTIFIER_BUFFER_CLEAR   "CBBufferClear"
-#define NOTIFIER_IMPORT_FILE    "CBAnimationImport"
-#define NOTIFIER_IMPORT_CLEAR   "CBAnimationClear"
+//Camera config cvars and notifiers
+#define CVAR_CONFIG_CURRENT      "CB_Config_Current"
+#define CVAR_CONFIG_NEW_NAME     "CB_Config_NewName"
+#define NOTIFIER_CONFIG_SAVE     "CBConfigSave"
+#define NOTIFIER_CONFIG_UPDATE   "CBConfigUpdateList"
 
 //Macros for simplifying cvar and notifier creation
 #define MAKE_CVAR(...) GlobalCvarManager->registerCvar(##__VA_ARGS__)
