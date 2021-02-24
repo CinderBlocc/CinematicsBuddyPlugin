@@ -11,9 +11,6 @@
 /*
     #TODO
 
-    - Camera override rotation
-    - Camera override FOV
-
     - Write export file asynchronously. Large files will hang up the game for a long time, and even small files cause a hitch
         - Leave UI greyed out until file writing is completed
     - Write all class members with m_ prefix? Either that or remove the prefix from CameraManager's members
@@ -37,6 +34,9 @@
 			- This would just be an output of a list of frames not tied to any particular replay timestamp
 				- Maybe it should have an output of the timestamp it was saved at so it can go to that exact replay frame
 			- Still use the chrono delta for these frames
+
+    - Remove BMGraphs as a submodule
+    - Extract what you need from Matrix3 and then remove RenderingTools as a submodule?
 */
 
 /*

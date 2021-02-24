@@ -123,6 +123,8 @@ void UIManager::GenerateSettingsFile()
         nl2(EUI::Checkbox, CVAR_CAM_HARD_FLOORS);
         sameline;
         nl2(EUI::Checkbox, CVAR_INVERT_PITCH);
+        sameline;
+        nl2(EUI::Checkbox, CVAR_CAM_LOCAL_MOMENTUM);
         nl2(EUI::GrayedBegin, CVAR_CAM_HARD_FLOORS);
             nl2(EUI::Float, CVAR_CAM_FLOOR_HEIGHT);
         nl2(EUI::GrayedEnd, CVAR_CAM_HARD_FLOORS);
@@ -134,6 +136,11 @@ void UIManager::GenerateSettingsFile()
         nl2(EUI::Float, CVAR_MOUSE_SENSITIVITY);
         nl2(EUI::Float, CVAR_GAMEPAD_SENSITIVITY);
         nl2(EUI::Float, CVAR_FOV_ROTATION_SCALE);
+        nl2(EUI::Float, CVAR_FOV_MIN);
+        nl2(EUI::Float, CVAR_FOV_MAX);
+        nl2(EUI::Float, CVAR_FOV_SPEED);
+        nl2(EUI::Float, CVAR_FOV_ACCELERATION);
+        nl2(EUI::Float, CVAR_FOV_LIMIT_EASE);
         nl2(EUI::Dropdown, CVAR_ROLL_BINDING);
         nl2(EUI::Dropdown, CVAR_ROLL_SWAP);
         nl2(EUI::Dropdown, CVAR_FOV_BINDING);

@@ -10,17 +10,26 @@
 /*
 
     #TODO:
+        
+
+        - Take FOV into account for pitch and yaw rotation speed. The more zoomed in, the less speed
+            - Use BaseFOV to determine FOV percentage to calculate strength of effect
+
+
+
+
         - When using non-local rotation and rolled, pitching will eventually reset roll back to 0
             - Maybe forward.Z shouldnt be set to 0, only right.Z should be?
 
-        - Option to preserve momentum in world space?
-            - I think it already does that. To do local you might need to store each velocity component individually
-
-        - FOV acceleration
-
-        - Take FOV into account for pitch and yaw rotation speed. The more zoomed in, the less speed
+        - Option to preserve momentum in local space
+            - Store each velocity component individually
+            - Checkbox is already in place, just need to do the math now
 
         - Add mouse input
+
+        - Create a "Normal" preset that roughly matches the way the game normally does camera inputs
+
+        - Fine tune default values until they feel the most user friendly, then save those as a "Default" preset
 
 */
 
@@ -34,15 +43,21 @@ CameraManager::CameraManager(std::shared_ptr<UIManager> TheUI)
     UI->AddElement({m_bUseLocalMovement,    CVAR_CAM_LOCAL_MOVEMENT,  "Local movement",                     "Uses the local orientation of the camera for movement"         });
     UI->AddElement({m_bUseLocalRotation,    CVAR_CAM_LOCAL_ROTATION,  "Local rotation",                     "Uses the local orientation of the camera for rotation"         });
     UI->AddElement({m_bHardFloors,          CVAR_CAM_HARD_FLOORS,     "Hard floors",                        "Prevents the camera from going through the floor"              });
+    UI->AddElement({m_bLocalMomentum,       CVAR_CAM_LOCAL_MOMENTUM,  "Momentum is local",                  "Preserves momentum in local space instead of world space"      });
     UI->AddElement({m_FloorHeight,          CVAR_CAM_FLOOR_HEIGHT,    "Floor Height",                       "Lowest height the camera can go",                      -50, 50 });
     UI->AddElement({m_MovementSpeed,        CVAR_CAM_MOVEMENT_SPEED,  "Movement Speed",                     "Camera movement speed multiplier",                      0,  5  });
     UI->AddElement({m_MovementAccel,        CVAR_CAM_MOVEMENT_ACCEL,  "Movement Acceleration",              "Camera movement acceleration speed",                    0,  5  });
 	UI->AddElement({m_RotationSpeed,        CVAR_ROT_SPEED,           "Rotation Speed (non-mouse)",         "Camera rotation speed (non-mouse)",                     0,  3  });
-    UI->AddElement({m_RotationAccelMouse,   CVAR_ROT_ACCEL_MOUSE,     "Rotation Acceleration (Mouse)",      "Camera rotation acceleration speed (mouse)",            0,  5  });
-    UI->AddElement({m_RotationAccelGamepad, CVAR_ROT_ACCEL_GAMEPAD,   "Rotation Acceleration (Controller)", "Camera rotation acceleration speed (controller)",       0,  5  });
+    UI->AddElement({m_RotationAccelMouse,   CVAR_ROT_ACCEL_MOUSE,     "Rotation Acceleration (Mouse)",      "Camera rotation acceleration speed (mouse)",            0,  10 });
+    UI->AddElement({m_RotationAccelGamepad, CVAR_ROT_ACCEL_GAMEPAD,   "Rotation Acceleration (Controller)", "Camera rotation acceleration speed (controller)",       0,  10 });
     UI->AddElement({m_MouseSensitivity,     CVAR_MOUSE_SENSITIVITY,   "Mouse Sensitivity",                  "Camera rotation speed when using mouse",                0,  25 });
     UI->AddElement({m_GamepadSensitivity,   CVAR_GAMEPAD_SENSITIVITY, "Gamepad Sensitivity",                "Camera rotation speed when using gamepad",              0,  50 });
     UI->AddElement({m_FOVRotationScale,     CVAR_FOV_ROTATION_SCALE,  "FOV Rotation Scale",                 "Multiplier for slowing camera rotation when zoomed in", 0,  2  });
+    UI->AddElement({m_FOVMin,               CVAR_FOV_MIN,             "FOV Minimum",                        "The lowest the FOV will go",                            5,  170});
+    UI->AddElement({m_FOVMax,               CVAR_FOV_MAX,             "FOV Maximum",                        "The highest the FOV will go",                           5,  170});
+    UI->AddElement({m_FOVSpeed,             CVAR_FOV_SPEED,           "FOV Speed",                          "The speed at which FOV will change",                    0,  3  });
+    UI->AddElement({m_FOVAcceleration,      CVAR_FOV_ACCELERATION,    "FOV Acceleration",                   "The easing of FOV speed change",                        0,  10 });
+    UI->AddElement({m_FOVLimitEase,         CVAR_FOV_LIMIT_EASE,      "FOV Limit Ease",                     "Cutoff for easing effect into min/max FOV",             0,  .5f});
 
     //Register hooks
     GlobalGameWrapper->HookEvent("Function TAGame.PlayerInput_TA.PlayerInput", std::bind(&CameraManager::PlayerInputTick, this));
@@ -77,6 +92,7 @@ void CameraManager::UpdateCamera(float Delta)
         RT::Matrix3 RotationMatrix = GetCameraMatrix(*m_bUseLocalRotation);
         UpdateVelocity(Delta, MovementMatrix);
         UpdateAngularVelocity(Delta, RotationMatrix);
+        UpdateFOVSpeed(Delta);
         UpdatePosition(Delta, TheCamera);
         UpdateRotation(Delta, TheCamera);
         UpdateFOV(Delta, TheCamera);
@@ -187,6 +203,31 @@ void CameraManager::UpdateAngularVelocity(float Delta, RT::Matrix3 InMatrix)
     AngularVelocity += Acceleration - Brake;
 }
 
+void CameraManager::UpdateFOVSpeed(float Delta)
+{
+    //Calculate some variables used throughout the function
+    float MaxSpeed = BaseFOVSpeed * *m_FOVSpeed;
+    float AccelSpeed = BaseFOVAccel * *m_FOVAcceleration;
+    float ImpulseStrength = MaxSpeed * Delta * AccelSpeed;
+
+    //Get speed percentage
+    float SpeedPerc = FOVSpeed / MaxSpeed;
+
+    //Get input percentage
+    float InputPerc = Inputs->GetFOV() * -1.f;
+
+    //Calculate acceleration
+    float Acceleration = InputPerc * GetReducedPerc(InputPerc, SpeedPerc);
+    Acceleration *= ImpulseStrength;
+
+    //Calculate brake
+    float Brake = GetBrakeForce(InputPerc, SpeedPerc);
+    Brake *= ImpulseStrength;
+
+    //Apply the impulses
+    FOVSpeed += Acceleration - Brake;
+}
+
 void CameraManager::UpdatePosition(float Delta, CameraWrapper TheCamera)
 {
     Vector NewLocation = TheCamera.GetLocation() + Velocity * Delta;
@@ -217,7 +258,31 @@ void CameraManager::UpdateRotation(float Delta, CameraWrapper TheCamera)
 
 void CameraManager::UpdateFOV(float Delta, CameraWrapper TheCamera)
 {
-    //#TODO: Get FOV acceleration
+    float Min = *m_FOVMin < *m_FOVMax ? *m_FOVMin : *m_FOVMax;
+    float Max = *m_FOVMin < *m_FOVMax ? *m_FOVMax : *m_FOVMin;
+
+    float CurrentFOV = TheCamera.GetFOV();
+    float FOVPerc = RemapPercentage(CurrentFOV, Min, Max, 0.f, 1.f);
+    bool bInLowerLimitRange = FOVPerc <= *m_FOVLimitEase;
+    bool bInUpperLimitRange = FOVPerc >= 1.f - *m_FOVLimitEase;
+    float ReductionStrength = 1.f;
+    if(bInLowerLimitRange || bInUpperLimitRange)
+    {
+        //FOV is approaching limits. If FOVSpeed is continuing to head in that direction, reduce its strength
+        //Since this is used as a multiplier, 1 is no reduction, 0 is full reduction
+        if(bInLowerLimitRange && FOVSpeed < 0.f)
+        {
+            ReductionStrength = RemapPercentage(FOVPerc, 0.f, *m_FOVLimitEase, 0.f, 1.f);
+        }
+        else if(bInUpperLimitRange && FOVSpeed > 0.f)
+        {
+            ReductionStrength = 1.f - RemapPercentage(FOVPerc, 1.f - *m_FOVLimitEase, 1.f, 0.f, 1.f);
+        }
+    }
+
+    float NewFOV = TheCamera.GetFOV() + FOVSpeed * Delta * ReductionStrength;
+    NewFOV = GetClampedFOV(NewFOV, Min, Max);
+    TheCamera.SetFOV(NewFOV);
 }
 
 
@@ -273,7 +338,7 @@ RT::Matrix3 CameraManager::GetCameraMatrix(bool bFullyLocal)
 
     //Approximate the game's camera matrix. Local pitch and roll, world yaw
     RT::Matrix3 Output(TheCamera.GetRotation());
-    //Output.forward.Z = 0.f; Output.forward.normalize();
+    Output.forward.Z = 0.f; Output.forward.normalize();
     Output.right.Z   = 0.f; Output.right.normalize();
     Output.up = Vector(0, 0, 1);
 
@@ -353,7 +418,38 @@ Quat CameraManager::AngleAxisRotation(float angle, Vector axis)
 	return result;
 }
 
-//#TODO: Remove RemapPercentage? Is it used anywhere?
+float CameraManager::GetFOVScaleReduction()
+{
+    CameraWrapper TheCamera = GlobalGameWrapper->GetCamera();
+    if(TheCamera.IsNull()) { return 1.f; }
+
+    //Have the same effect (none) until FOV passes threshold
+    float FOVPerc = TheCamera.GetFOV() / BaseFOV;
+    if(FOVPerc < 1.f) { FOVPerc = 1.f; }
+
+    //The higher the FOVPerc, the less speed the rotation should have
+    //Why is my brain not computing this
+    //#TODO: Be less dumb
+
+    return 1.f;//Defaulting to 1 until I can figure this out
+}
+
+float CameraManager::GetClampedFOV(float InCurrentFOV, float Min, float Max)
+{
+    if(InCurrentFOV < Min)
+    {
+        FOVSpeed = 0.f;
+        InCurrentFOV = Min;
+    }
+    if(InCurrentFOV > Max)
+    {
+        FOVSpeed = 0.f;
+        InCurrentFOV = Max;
+    }
+
+    return InCurrentFOV;
+}
+
 float CameraManager::RemapPercentage(float CurrentPerc, float CurrentMin, float CurrentMax, float NewMin, float NewMax)
 {
     return NewMin + (NewMax - NewMin) * ((CurrentPerc - CurrentMin) / (CurrentMax - CurrentMin));
@@ -377,6 +473,13 @@ void CameraManager::DebugRender(CanvasWrapper Canvas)
     float PitchSpeedPerc   = GetAngularSpeedComponent(RotationMatrix.right);
     float YawSpeedPerc     = GetAngularSpeedComponent(RotationMatrix.up);
     float RollSpeedPerc    = GetAngularSpeedComponent(RotationMatrix.forward);
+    
+    //FOV junk
+    float FOVMaxSpeed      = BaseFOVSpeed * *m_FOVSpeed;
+    float FOVSpeedPerc     = FOVSpeed / FOVMaxSpeed;
+    float FOVAccelSpeed    = BaseFOVAccel * *m_FOVAcceleration;
+    float FOVImpulse       = FOVMaxSpeed * .0083f * FOVAccelSpeed;
+    float FOVAcceleration  = Inputs->GetFOV() * GetReducedPerc(Inputs->GetFOV(), FOVSpeedPerc) * FOVImpulse;
 
     //Angular junk
     Vector RotationAxis = AngularVelocity.getNormalized();
@@ -409,6 +512,13 @@ void CameraManager::DebugRender(CanvasWrapper Canvas)
     RenderStrings.push_back("Rotation Axis: "   + CBUtils::PrintVector(RotationAxis, 6));
     RenderStrings.push_back("Rotation Amount: " + CBUtils::PrintFloat(RotationAmount, 4));
     RenderStrings.push_back("New Rotation: "    + CBUtils::PrintQuat(NewRotation, 4));
+    RenderStrings.emplace_back("");
+    RenderStrings.push_back("FOV Speed: "        + CBUtils::PrintFloat(FOVSpeed, 6));
+    RenderStrings.push_back("FOV Acceleration: " + CBUtils::PrintFloat(FOVAcceleration, 6));
+    if(!GlobalGameWrapper->GetCamera().IsNull())
+    {
+        RenderStrings.push_back("FOV: " + CBUtils::PrintFloat(GlobalGameWrapper->GetCamera().GetFOV(), 4));
+    }
 
 
     //Draw black box behind text
