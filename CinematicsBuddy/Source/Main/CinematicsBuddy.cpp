@@ -13,10 +13,14 @@
 
     - Write export file asynchronously. Large files will hang up the game for a long time, and even small files cause a hitch
         - Leave UI greyed out until file writing is completed
-    - Write all class members with m_ prefix? Either that or remove the prefix from CameraManager's members
+    - Rename all class members with m_ prefix
+
+
+    REDO AE SCRIPT BEFORE 3DS MAX SCRIPT
 
 
     MAXSCRIPT NOTES:
+        - MetadataDummy should have the name of the imported txt file
         - When attempting to export FBX to other package, parenting might not export correctly.
             - In the script (button in UI), add an option to bake the animation.
             - Create a clone of the car mesh, then bake all of the position/rotation data onto the mesh.
@@ -37,6 +41,8 @@
 
     - Remove BMGraphs as a submodule
     - Extract what you need from Matrix3 and then remove RenderingTools as a submodule?
+
+    - Remove all Beta/Gamma stuff from UIManager.cpp and MacrosStructsEnums.h
 */
 
 /*

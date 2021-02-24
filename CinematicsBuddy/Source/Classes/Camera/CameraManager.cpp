@@ -10,16 +10,9 @@
 /*
 
     #TODO:
-        
-
-        - Take FOV into account for pitch and yaw rotation speed. The more zoomed in, the less speed
-            - Use BaseFOV to determine FOV percentage to calculate strength of effect
-
-
-
-
         - When using non-local rotation and rolled, pitching will eventually reset roll back to 0
             - Maybe forward.Z shouldnt be set to 0, only right.Z should be?
+            - GetAngularComponent might be calculated wrong
 
         - Option to preserve momentum in local space
             - Store each velocity component individually
@@ -52,7 +45,7 @@ CameraManager::CameraManager(std::shared_ptr<UIManager> TheUI)
     UI->AddElement({m_RotationAccelGamepad, CVAR_ROT_ACCEL_GAMEPAD,   "Rotation Acceleration (Controller)", "Camera rotation acceleration speed (controller)",       0,  10 });
     UI->AddElement({m_MouseSensitivity,     CVAR_MOUSE_SENSITIVITY,   "Mouse Sensitivity",                  "Camera rotation speed when using mouse",                0,  25 });
     UI->AddElement({m_GamepadSensitivity,   CVAR_GAMEPAD_SENSITIVITY, "Gamepad Sensitivity",                "Camera rotation speed when using gamepad",              0,  50 });
-    UI->AddElement({m_FOVRotationScale,     CVAR_FOV_ROTATION_SCALE,  "FOV Rotation Scale",                 "Multiplier for slowing camera rotation when zoomed in", 0,  2  });
+    UI->AddElement({m_FOVRotationScale,     CVAR_FOV_ROTATION_SCALE,  "FOV Rotation Scale",                 "Multiplier for slowing camera rotation when zoomed in", 0,  1  });
     UI->AddElement({m_FOVMin,               CVAR_FOV_MIN,             "FOV Minimum",                        "The lowest the FOV will go",                            5,  170});
     UI->AddElement({m_FOVMax,               CVAR_FOV_MAX,             "FOV Maximum",                        "The highest the FOV will go",                           5,  170});
     UI->AddElement({m_FOVSpeed,             CVAR_FOV_SPEED,           "FOV Speed",                          "The speed at which FOV will change",                    0,  3  });
@@ -145,8 +138,6 @@ void CameraManager::UpdateVelocity(float Delta, RT::Matrix3 InMatrix)
 
 void CameraManager::UpdateAngularVelocity(float Delta, RT::Matrix3 InMatrix)
 {
-    //#TODO: Take FOVRotationScale into account here, along with camera FOV
-
     //RotationSpeed should only be taken into account for Pitch and Yaw if bUsingGamepad is true
     //Roll is set by both keyboard and controller as a rate, along with Pitch and Yaw on controller
     //Pitch and Yaw are set by mouse via movement deltas which give large numbers, so speed should not be used
@@ -156,11 +147,13 @@ void CameraManager::UpdateAngularVelocity(float Delta, RT::Matrix3 InMatrix)
     float MouseAccelSpeed = BaseRotationAccel * *m_RotationAccelMouse;
     float GamepadAccelSpeed = BaseRotationAccel * *m_RotationAccelGamepad;
     float GamepadImpulseStrength = MaxSpeed * Delta * GamepadAccelSpeed;
+    float MouseImpulseStrength = MaxSpeed * Delta * MouseAccelSpeed;
 
     //Get the camera's angular speed as a percentage per axis
-    float PitchSpeedPerc = GetAngularSpeedComponent(InMatrix.right);
-    float YawSpeedPerc   = GetAngularSpeedComponent(InMatrix.up);
-    float RollSpeedPerc  = GetAngularSpeedComponent(InMatrix.forward);
+    float FOVScaleReduction = GetFOVScaleReduction();
+    float PitchSpeedPerc    = GetAngularSpeedComponent(InMatrix.right,   1.f);//FOVScaleReduction);
+    float YawSpeedPerc      = GetAngularSpeedComponent(InMatrix.up,      1.f);//FOVScaleReduction);
+    float RollSpeedPerc     = GetAngularSpeedComponent(InMatrix.forward, 1.f);
 
     //Get input percentages
     float PitchInputPerc = 0.f;
@@ -182,13 +175,16 @@ void CameraManager::UpdateAngularVelocity(float Delta, RT::Matrix3 InMatrix)
     Vector RollInputVec  = InMatrix.forward * RollInputPerc;
 
     //Calculate acceleration force per axis
-    Vector PitchAcceleration = PitchInputVec * GetReducedPerc(PitchInputPerc, PitchSpeedPerc);
-    Vector YawAcceleration   = YawInputVec   * GetReducedPerc(YawInputPerc,   YawSpeedPerc);
-    Vector RollAcceleration  = RollInputVec  * GetReducedPerc(RollInputPerc,  RollSpeedPerc);
+    //float FinalImpulseStrength = Inputs->GetbUsingGamepad() ? GamepadImpulseStrength : MouseImpulseStrength;
+    float FinalImpulseStrength = GamepadImpulseStrength;
+    float FOVScaleImpulseStrength = FinalImpulseStrength * FOVScaleReduction;
+    Vector PitchAcceleration = PitchInputVec * GetReducedPerc(PitchInputPerc, PitchSpeedPerc) * FOVScaleImpulseStrength;
+    Vector YawAcceleration   = YawInputVec   * GetReducedPerc(YawInputPerc,   YawSpeedPerc)   * FOVScaleImpulseStrength;
+    Vector RollAcceleration  = RollInputVec  * GetReducedPerc(RollInputPerc,  RollSpeedPerc)  * FinalImpulseStrength;
 
     //Calculate impulse created by inputs
     Vector AccelerationDirection = PitchAcceleration + YawAcceleration + RollAcceleration;
-    Vector Acceleration = AccelerationDirection * GamepadImpulseStrength;
+    Vector Acceleration = AccelerationDirection;// * GamepadImpulseStrength;
 
     //Calculate automatic braking force (only apply brakes if no input on that axis)
     Vector PitchBrake = InMatrix.right   * GetBrakeForce(PitchInputPerc, PitchSpeedPerc);
@@ -351,9 +347,9 @@ float CameraManager::GetSpeedComponent(Vector Direction)
     return Vector::dot(Velocity, Direction) / MaxSpeed;
 }
 
-float CameraManager::GetAngularSpeedComponent(Vector Direction)
+float CameraManager::GetAngularSpeedComponent(Vector Direction, float FOVScaleReduction)
 {
-    float MaxSpeed = BaseRotationSpeed * *m_RotationSpeed;
+    float MaxSpeed = BaseRotationSpeed * *m_RotationSpeed * FOVScaleReduction;
     return Vector::dot(AngularVelocity, Direction) / MaxSpeed;
 }
 
@@ -420,18 +416,24 @@ Quat CameraManager::AngleAxisRotation(float angle, Vector axis)
 
 float CameraManager::GetFOVScaleReduction()
 {
+    //Returns range between *m_FOVRotationScale and 1
+    //Full reduction effect at *m_FOVRotationScale
+    //No reduction effect at 1
+
     CameraWrapper TheCamera = GlobalGameWrapper->GetCamera();
     if(TheCamera.IsNull()) { return 1.f; }
 
-    //Have the same effect (none) until FOV passes threshold
-    float FOVPerc = TheCamera.GetFOV() / BaseFOV;
-    if(FOVPerc < 1.f) { FOVPerc = 1.f; }
+    //Determine how far below the BaseFOV threshold the camera is
+    //Everything above BaseFOV will be 1, everything below down to Min is less than 1
+    //Min is 0
+    float Min = *m_FOVMin < *m_FOVMax ? *m_FOVMin : *m_FOVMax;
+    float FOVPerc = RemapPercentage(TheCamera.GetFOV(), Min, BaseFOV, 0.f, 1.f);
+    if(FOVPerc > 1.f) { FOVPerc = 1.f; }
 
-    //The higher the FOVPerc, the less speed the rotation should have
-    //Why is my brain not computing this
-    //#TODO: Be less dumb
+    //Lerp using FOVPerc to get the rotation scale between *m_FOVRotationScale and 1.f
+    float Output = (1.f - FOVPerc) * *m_FOVRotationScale + FOVPerc;// * 1.f
 
-    return 1.f;//Defaulting to 1 until I can figure this out
+    return Output;
 }
 
 float CameraManager::GetClampedFOV(float InCurrentFOV, float Min, float Max)
@@ -467,12 +469,13 @@ void CameraManager::DebugRender(CanvasWrapper Canvas)
     //Get the camera's speed as a percentage per axis
     RT::Matrix3 MovementMatrix = GetCameraMatrix(*m_bUseLocalMovement);
     RT::Matrix3 RotationMatrix = GetCameraMatrix(*m_bUseLocalRotation);
-    float ForwardSpeedPerc = GetSpeedComponent(MovementMatrix.forward);
-    float RightSpeedPerc   = GetSpeedComponent(MovementMatrix.right);
-    float UpSpeedPerc      = GetSpeedComponent(MovementMatrix.up);
-    float PitchSpeedPerc   = GetAngularSpeedComponent(RotationMatrix.right);
-    float YawSpeedPerc     = GetAngularSpeedComponent(RotationMatrix.up);
-    float RollSpeedPerc    = GetAngularSpeedComponent(RotationMatrix.forward);
+    float ForwardSpeedPerc  = GetSpeedComponent(MovementMatrix.forward);
+    float RightSpeedPerc    = GetSpeedComponent(MovementMatrix.right);
+    float UpSpeedPerc       = GetSpeedComponent(MovementMatrix.up);
+    float FOVScaleReduction = GetFOVScaleReduction();
+    float PitchSpeedPerc    = GetAngularSpeedComponent(RotationMatrix.right, FOVScaleReduction);
+    float YawSpeedPerc      = GetAngularSpeedComponent(RotationMatrix.up, FOVScaleReduction);
+    float RollSpeedPerc     = GetAngularSpeedComponent(RotationMatrix.forward, 1.f);
     
     //FOV junk
     float FOVMaxSpeed      = BaseFOVSpeed * *m_FOVSpeed;
@@ -515,6 +518,7 @@ void CameraManager::DebugRender(CanvasWrapper Canvas)
     RenderStrings.emplace_back("");
     RenderStrings.push_back("FOV Speed: "        + CBUtils::PrintFloat(FOVSpeed, 6));
     RenderStrings.push_back("FOV Acceleration: " + CBUtils::PrintFloat(FOVAcceleration, 6));
+    RenderStrings.push_back("FOV Scale Reduction: " + CBUtils::PrintFloat(FOVScaleReduction, 6));
     if(!GlobalGameWrapper->GetCamera().IsNull())
     {
         RenderStrings.push_back("FOV: " + CBUtils::PrintFloat(GlobalGameWrapper->GetCamera().GetFOV(), 4));

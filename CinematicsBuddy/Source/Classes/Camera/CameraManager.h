@@ -31,7 +31,7 @@ private:
     //State variables set by plugin
     std::shared_ptr<bool>  m_bUseOverrides        = std::make_shared<bool>(false);
     std::shared_ptr<bool>  m_bUseLocalMovement    = std::make_shared<bool>(true);
-    std::shared_ptr<bool>  m_bUseLocalRotation    = std::make_shared<bool>(true);
+    std::shared_ptr<bool>  m_bUseLocalRotation    = std::make_shared<bool>(false);
     std::shared_ptr<bool>  m_bHardFloors          = std::make_shared<bool>(true);
     std::shared_ptr<bool>  m_bLocalMomentum       = std::make_shared<bool>(true);
     std::shared_ptr<float> m_FloorHeight          = std::make_shared<float>(10.f);
@@ -42,7 +42,7 @@ private:
     std::shared_ptr<float> m_RotationAccelGamepad = std::make_shared<float>(1.f);
     std::shared_ptr<float> m_MouseSensitivity     = std::make_shared<float>(10.f);
     std::shared_ptr<float> m_GamepadSensitivity   = std::make_shared<float>(20.f);
-    std::shared_ptr<float> m_FOVRotationScale     = std::make_shared<float>(.9f);
+    std::shared_ptr<float> m_FOVRotationScale     = std::make_shared<float>(.3f);
     std::shared_ptr<float> m_FOVMin               = std::make_shared<float>(20.f);
     std::shared_ptr<float> m_FOVMax               = std::make_shared<float>(120.f);
     std::shared_ptr<float> m_FOVSpeed             = std::make_shared<float>(1.f);
@@ -54,7 +54,7 @@ private:
     float BaseMovementAccel = 2.f;
     float BaseRotationSpeed = 100.f;
     float BaseRotationAccel = 2.f;
-    float BaseFOV      = 90.f;
+    float BaseFOV      = 75.f;
     float BaseFOVSpeed = 35.f;
     float BaseFOVAccel = 2.f;
     
@@ -77,7 +77,7 @@ private:
     float GetDelta();
     RT::Matrix3 GetCameraMatrix(bool bFullyLocal);
     float GetSpeedComponent(Vector Direction);
-    float GetAngularSpeedComponent(Vector Direction);
+    float GetAngularSpeedComponent(Vector Direction, float FOVScaleReduction);
     float GetInvertedPerc(float InPerc);
     float GetWeightedPerc(float InPerc);
     float GetReducedPerc(float InputPerc, float SpeedPerc);

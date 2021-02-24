@@ -52,6 +52,7 @@ void UIManager::GenerateSettingsFile()
     separator;
     blank;
 
+#ifndef IS_GAMMA_BUILD
     nl3(EUI::GrayedBegin, CVAR_IS_FILE_WRITING, true);
 
         //Normal recording
@@ -105,6 +106,10 @@ void UIManager::GenerateSettingsFile()
         button("Clear Animation", NOTIFIER_IMPORT_CLEAR);
 
     nl2(EUI::GrayedEnd, CVAR_IS_FILE_WRITING);
+#endif
+#ifdef IS_GAMMA_BUILD
+    label("Recording, Buffer, and Importing are unavailable in Beta/Gamma builds");
+#endif
     
     blank;
     separator;
