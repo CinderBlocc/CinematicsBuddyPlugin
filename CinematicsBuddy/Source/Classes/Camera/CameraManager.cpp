@@ -151,9 +151,9 @@ void CameraManager::UpdateAngularVelocity(float Delta, RT::Matrix3 InMatrix)
 
     //Get the camera's angular speed as a percentage per axis
     float FOVScaleReduction = GetFOVScaleReduction();
-    float PitchSpeedPerc    = GetAngularSpeedComponent(InMatrix.right,   1.f);//FOVScaleReduction);
-    float YawSpeedPerc      = GetAngularSpeedComponent(InMatrix.up,      1.f);//FOVScaleReduction);
-    float RollSpeedPerc     = GetAngularSpeedComponent(InMatrix.forward, 1.f);
+    float PitchSpeedPerc    = GetAngularSpeedComponent(InMatrix.right);
+    float YawSpeedPerc      = GetAngularSpeedComponent(InMatrix.up);
+    float RollSpeedPerc     = GetAngularSpeedComponent(InMatrix.forward);
 
     //Get input percentages
     float PitchInputPerc = 0.f;
@@ -347,9 +347,9 @@ float CameraManager::GetSpeedComponent(Vector Direction)
     return Vector::dot(Velocity, Direction) / MaxSpeed;
 }
 
-float CameraManager::GetAngularSpeedComponent(Vector Direction, float FOVScaleReduction)
+float CameraManager::GetAngularSpeedComponent(Vector Direction)
 {
-    float MaxSpeed = BaseRotationSpeed * *m_RotationSpeed * FOVScaleReduction;
+    float MaxSpeed = BaseRotationSpeed * *m_RotationSpeed;
     return Vector::dot(AngularVelocity, Direction) / MaxSpeed;
 }
 
@@ -473,9 +473,9 @@ void CameraManager::DebugRender(CanvasWrapper Canvas)
     float RightSpeedPerc    = GetSpeedComponent(MovementMatrix.right);
     float UpSpeedPerc       = GetSpeedComponent(MovementMatrix.up);
     float FOVScaleReduction = GetFOVScaleReduction();
-    float PitchSpeedPerc    = GetAngularSpeedComponent(RotationMatrix.right, FOVScaleReduction);
-    float YawSpeedPerc      = GetAngularSpeedComponent(RotationMatrix.up, FOVScaleReduction);
-    float RollSpeedPerc     = GetAngularSpeedComponent(RotationMatrix.forward, 1.f);
+    float PitchSpeedPerc    = GetAngularSpeedComponent(RotationMatrix.right);
+    float YawSpeedPerc      = GetAngularSpeedComponent(RotationMatrix.up);
+    float RollSpeedPerc     = GetAngularSpeedComponent(RotationMatrix.forward);
     
     //FOV junk
     float FOVMaxSpeed      = BaseFOVSpeed * *m_FOVSpeed;

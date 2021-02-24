@@ -77,7 +77,7 @@ private:
     float GetDelta();
     RT::Matrix3 GetCameraMatrix(bool bFullyLocal);
     float GetSpeedComponent(Vector Direction);
-    float GetAngularSpeedComponent(Vector Direction, float FOVScaleReduction);
+    float GetAngularSpeedComponent(Vector Direction);
     float GetInvertedPerc(float InPerc);
     float GetWeightedPerc(float InPerc);
     float GetReducedPerc(float InputPerc, float SpeedPerc);
