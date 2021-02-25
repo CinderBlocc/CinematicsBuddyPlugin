@@ -10,16 +10,7 @@
 /*
 
     #TODO:
-        - When using non-local rotation and rolled, pitching will eventually reset roll back to 0
-            - Maybe forward.Z shouldnt be set to 0, only right.Z should be?
-            - GetAngularComponent might be calculated wrong
-            - Simplest solution (should also be applied to local linear momentum preservation):
-                Store the Pitch, Yaw, and Roll speeds as separate floats, then just apply those to the direction the axis is currently pointing
-                    - In the UpdateVelocity and UpdateAngularVelocity functions, only apply the acceleration to those floats
-
         - Add mouse input
-
-        - Instead of a cvar for inverting pitch, use the game's settings?
 
         - Create a "Normal" preset that roughly matches the way the game normally does camera inputs
 
@@ -89,7 +80,7 @@ void CameraManager::UpdateCamera(float Delta)
         UpdateAngularVelocity(Delta, RotationMatrix);
         UpdateFOVSpeed(Delta);
         UpdatePosition(Delta, TheCamera, MovementMatrix);
-        UpdateRotation(Delta, TheCamera);
+        UpdateRotation(Delta, TheCamera, RotationMatrix);
         UpdateFOV(Delta, TheCamera);
     }
 }
@@ -184,12 +175,14 @@ void CameraManager::UpdateAngularVelocity(float Delta, RT::Matrix3 InMatrix)
     float GamepadAccelSpeed = BaseRotationAccel * *m_RotationAccelGamepad;
     float GamepadImpulseStrength = MaxSpeed * Delta * GamepadAccelSpeed;
     float MouseImpulseStrength   = MaxSpeed * Delta * MouseAccelSpeed;
+    //float FinalImpulseStrength = Inputs->GetbUsingGamepad() ? GamepadImpulseStrength : MouseImpulseStrength; //#TODO: Do something with this?
+    float FinalImpulseStrength = GamepadImpulseStrength;
+    float FOVScaleImpulseStrength = FinalImpulseStrength * GetFOVScaleReduction();
 
     //Get the camera's angular speed as a percentage per axis
-    float FOVScaleReduction = GetFOVScaleReduction();
-    float PitchSpeedPerc    = GetAngularSpeedComponent(InMatrix.right);
-    float YawSpeedPerc      = GetAngularSpeedComponent(InMatrix.up);
-    float RollSpeedPerc     = GetAngularSpeedComponent(InMatrix.forward);
+    float PitchSpeedPerc    = AngularVelocity.X / MaxSpeed;//GetAngularSpeedComponent(InMatrix.right);
+    float YawSpeedPerc      = AngularVelocity.Y / MaxSpeed;//GetAngularSpeedComponent(InMatrix.up);
+    float RollSpeedPerc     = AngularVelocity.Z / MaxSpeed;//GetAngularSpeedComponent(InMatrix.forward);
 
     //Get input percentages
     float PitchInputPerc = 0.f;
@@ -205,34 +198,20 @@ void CameraManager::UpdateAngularVelocity(float Delta, RT::Matrix3 InMatrix)
         //#TODO: Add mouse input
     }
 
-    //Convert those inputs into vector inputs
-    Vector PitchInputVec = InMatrix.right   * PitchInputPerc;
-    Vector YawInputVec   = InMatrix.up      * YawInputPerc;
-    Vector RollInputVec  = InMatrix.forward * RollInputPerc;
-
     //Calculate acceleration force per axis
-    //float FinalImpulseStrength = Inputs->GetbUsingGamepad() ? GamepadImpulseStrength : MouseImpulseStrength;
-    float FinalImpulseStrength = GamepadImpulseStrength;
-    float FOVScaleImpulseStrength = FinalImpulseStrength * FOVScaleReduction;
-    Vector PitchAcceleration = PitchInputVec * GetReducedPerc(PitchInputPerc, PitchSpeedPerc) * FOVScaleImpulseStrength;
-    Vector YawAcceleration   = YawInputVec   * GetReducedPerc(YawInputPerc,   YawSpeedPerc)   * FOVScaleImpulseStrength;
-    Vector RollAcceleration  = RollInputVec  * GetReducedPerc(RollInputPerc,  RollSpeedPerc)  * FinalImpulseStrength;
-
-    //Calculate impulse created by inputs
-    Vector AccelerationDirection = PitchAcceleration + YawAcceleration + RollAcceleration;
-    Vector Acceleration = AccelerationDirection;// * GamepadImpulseStrength;
+    float PitchAcceleration = PitchInputPerc * GetReducedPerc(PitchInputPerc, PitchSpeedPerc) * FOVScaleImpulseStrength;
+    float YawAcceleration   = YawInputPerc   * GetReducedPerc(YawInputPerc,   YawSpeedPerc)   * FOVScaleImpulseStrength;
+    float RollAcceleration  = RollInputPerc  * GetReducedPerc(RollInputPerc,  RollSpeedPerc)  * FinalImpulseStrength;
 
     //Calculate automatic braking force (only apply brakes if no input on that axis)
-    Vector PitchBrake = InMatrix.right   * GetBrakeForce(PitchInputPerc, PitchSpeedPerc);
-    Vector YawBrake   = InMatrix.up      * GetBrakeForce(YawInputPerc,   YawSpeedPerc);
-    Vector RollBrake  = InMatrix.forward * GetBrakeForce(RollInputPerc,  RollSpeedPerc);
-    
-    //Calculate impulse created by braking
-    Vector BrakeDirection = PitchBrake + YawBrake + RollBrake;
-    Vector Brake = BrakeDirection * GamepadImpulseStrength;
+    float PitchBrake = GetBrakeForce(PitchInputPerc, PitchSpeedPerc) * FOVScaleImpulseStrength;
+    float YawBrake   = GetBrakeForce(YawInputPerc,   YawSpeedPerc)   * FOVScaleImpulseStrength;
+    float RollBrake  = GetBrakeForce(RollInputPerc,  RollSpeedPerc)  * FinalImpulseStrength;
 
     //Apply the impulses
-    AngularVelocity += Acceleration - Brake;
+    AngularVelocity.X += PitchAcceleration - PitchBrake;
+    AngularVelocity.Y += YawAcceleration   - YawBrake;
+    AngularVelocity.Z += RollAcceleration  - RollBrake;
 }
 
 void CameraManager::UpdateFOVSpeed(float Delta)
@@ -263,8 +242,15 @@ void CameraManager::UpdateFOVSpeed(float Delta)
 // SPEED RESULT CALCULATIONS //
 void CameraManager::UpdatePosition(float Delta, CameraWrapper TheCamera, RT::Matrix3 MovementMatrix)
 {
+    if(( *m_bLocalMomentum && VelocityLocal.magnitude() < .00001f) ||
+       (!*m_bLocalMomentum && VelocityWorld.magnitude() < .00001f))
+    {
+        return;
+    }
+
     Vector NewLocation = TheCamera.GetLocation();
     
+    //Add either local or world velocity
     if(*m_bLocalMomentum)
     {
         NewLocation += MovementMatrix.forward * VelocityLocal.X * Delta;
@@ -276,32 +262,55 @@ void CameraManager::UpdatePosition(float Delta, CameraWrapper TheCamera, RT::Mat
         NewLocation += VelocityWorld * Delta;
     }
 
-    if(*m_bHardFloors)
+    //Clamp to above floor height
+    if(*m_bHardFloors && NewLocation.Z < *m_FloorHeight)
     {
-        NewLocation.Z = max(NewLocation.Z, *m_FloorHeight);
+        NewLocation.Z = *m_FloorHeight;
     }
 
     TheCamera.SetLocation(NewLocation);
 }
 
-void CameraManager::UpdateRotation(float Delta, CameraWrapper TheCamera)
+void CameraManager::UpdateRotation(float Delta, CameraWrapper TheCamera, RT::Matrix3 RotationMatrix)
 {
-    RT::Matrix3 CurrentMatrix(TheCamera.GetRotation());
+    if(AngularVelocity.magnitude() < .00001f)
+    {
+        return;
+    }
 
     //Only apply new rotation if it is non-zero
-    float RotationAmount = AngularVelocity.magnitude() * Delta * (CONST_PI_F / 180.f);
-    if(abs(RotationAmount) >= 0.00001f)
-    {
-        Vector RotationAxis = AngularVelocity.getNormalized();
-        Quat NewRotation = AngleAxisRotation(RotationAmount, RotationAxis);
-        CurrentMatrix.RotateWithQuat(NewRotation);
-    }
+    //float RotationAmount = AngularVelocity.magnitude() * Delta * (CONST_PI_F / 180.f);
+    //if(abs(RotationAmount) >= .00001f)
+    //{
+    //    Vector RotationAxis = AngularVelocity.getNormalized();
+    //    Quat NewRotation = AngleAxisRotation(RotationAmount, RotationAxis);
+    //    CurrentMatrix.RotateWithQuat(NewRotation);
+    //}
+
+    constexpr float DegToRad = CONST_PI_F / 180.f;
+    float PitchAmount = AngularVelocity.X * Delta * DegToRad;
+    float YawAmount   = AngularVelocity.Y * Delta * DegToRad;
+    float RollAmount  = AngularVelocity.Z * Delta * DegToRad;
+
+    Quat PitchRot = AngleAxisRotation(PitchAmount, RotationMatrix.right);
+    Quat YawRot   = AngleAxisRotation(YawAmount,   RotationMatrix.up);
+    Quat RollRot  = AngleAxisRotation(RollAmount,  RotationMatrix.forward);
+
+    RT::Matrix3 CurrentMatrix(TheCamera.GetRotation());
+    CurrentMatrix.RotateWithQuat(PitchRot);
+    CurrentMatrix.RotateWithQuat(YawRot);
+    CurrentMatrix.RotateWithQuat(RollRot);
     
     TheCamera.SetRotation(CurrentMatrix.ToRotator());
 }
 
 void CameraManager::UpdateFOV(float Delta, CameraWrapper TheCamera)
 {
+    if(abs(FOVSpeed) < .00001f)
+    {
+        return;
+    }
+
     float Min = *m_FOVMin < *m_FOVMax ? *m_FOVMin : *m_FOVMax;
     float Max = *m_FOVMin < *m_FOVMax ? *m_FOVMax : *m_FOVMin;
 
@@ -380,14 +389,43 @@ RT::Matrix3 CameraManager::GetCameraMatrix(bool bFullyLocal, bool bLocationMatri
         return RT::Matrix3(TheCamera.GetRotation());
     }
 
-    //Approximate the game's camera matrix. Local pitch and roll, world yaw
+    //Approximate the game's camera matrices. Local and rotation act differently
     RT::Matrix3 Output(TheCamera.GetRotation());
+    Output.up = Vector(0, 0, 1);
     if(bLocationMatrix)
     {
         Output.forward.Z = 0.f; Output.forward.normalize();
+        Output.right.Z   = 0.f; Output.right.normalize();
     }
-    Output.right.Z   = 0.f; Output.right.normalize();
-    Output.up = Vector(0, 0, 1);
+    else
+    {
+        Vector NewRight = Vector::cross(Output.up, Output.forward).getNormalized();
+        if(Vector::dot(NewRight, Output.right) < 0.f)
+        {
+            NewRight *= -1.f;
+        }
+        Output.right = NewRight;
+    }
+    //else
+    //{
+    //    //Calculate new right axis unless forward and up are almost identical. Then just use regular right axis
+    //    float TheDot = Vector::dot(Output.forward, Output.up);
+    //    Vector NewRight = Output.right;
+    //    if(TheDot > -.98f && TheDot < 0.98f)
+    //    {
+    //        NewRight = Vector::cross(Output.up, Output.forward).getNormalized();
+    //        if(Vector::dot(NewRight, Output.right) < 0.f)
+    //        {
+    //            NewRight *= -1.f;
+    //        }
+    //    }
+    //    else
+    //    {
+    //        NewRight.Z = 0.f;
+    //        NewRight.normalize();
+    //    }
+    //    Output.right = NewRight;
+    //}
 
     return Output;
 }

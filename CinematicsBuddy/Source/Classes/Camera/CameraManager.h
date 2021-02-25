@@ -71,13 +71,13 @@ private:
     void UpdateAngularVelocity(float Delta, RT::Matrix3 RotationMatrix);
     void UpdateFOVSpeed(float Delta);
     void UpdatePosition(float Delta, CameraWrapper TheCamera, RT::Matrix3 MovementMatrix);
-    void UpdateRotation(float Delta, CameraWrapper TheCamera);
+    void UpdateRotation(float Delta, CameraWrapper TheCamera, RT::Matrix3 RotationMatrix);
     void UpdateFOV(float Delta, CameraWrapper TheCamera);
 
     //Utility
     bool  IsValidMode();
     float GetDelta();
-    RT::Matrix3 GetCameraMatrix(bool bFullyLocal);
+    RT::Matrix3 GetCameraMatrix(bool bFullyLocal, bool bLocationMatrix);
     float GetSpeedComponent(Vector Direction);
     float GetAngularSpeedComponent(Vector Direction);
     float GetInvertedPerc(float InPerc);
