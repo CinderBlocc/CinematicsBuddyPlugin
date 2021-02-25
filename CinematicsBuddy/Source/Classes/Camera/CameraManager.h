@@ -37,11 +37,10 @@ private:
     std::shared_ptr<float> m_FloorHeight          = std::make_shared<float>(10.f);
     std::shared_ptr<float> m_MovementSpeed        = std::make_shared<float>(1.f);
     std::shared_ptr<float> m_MovementAccel        = std::make_shared<float>(1.f);
-    std::shared_ptr<float> m_RotationSpeed        = std::make_shared<float>(1.f);
+    std::shared_ptr<float> m_RotationSpeedMouse   = std::make_shared<float>(1.f);
+    std::shared_ptr<float> m_RotationSpeedGamepad = std::make_shared<float>(1.f);
     std::shared_ptr<float> m_RotationAccelMouse   = std::make_shared<float>(1.f);
-    std::shared_ptr<float> m_RotationAccelGamepad = std::make_shared<float>(10.f);//1.f); #TODO: Reset this as default 1 when done testing
-    std::shared_ptr<float> m_MouseSensitivity     = std::make_shared<float>(10.f);
-    std::shared_ptr<float> m_GamepadSensitivity   = std::make_shared<float>(20.f);
+    std::shared_ptr<float> m_RotationAccelGamepad = std::make_shared<float>(1.f);
     std::shared_ptr<float> m_FOVRotationScale     = std::make_shared<float>(.3f);
     std::shared_ptr<float> m_FOVMin               = std::make_shared<float>(20.f);
     std::shared_ptr<float> m_FOVMax               = std::make_shared<float>(120.f);
@@ -52,8 +51,10 @@ private:
     //Internal state variables
     float BaseMovementSpeed = 1500.f;
     float BaseMovementAccel = 2.f;
-    float BaseRotationSpeed = 100.f;
-    float BaseRotationAccel = 2.f;
+    float BaseRotationSpeedMouse   = 200.f;
+    float BaseRotationSpeedGamepad = 100.f;
+    float BaseRotationAccelMouse   = 3.f;
+    float BaseRotationAccelGamepad = 2.f;
     float BaseFOV      = 75.f;
     float BaseFOVSpeed = 35.f;
     float BaseFOVAccel = 2.f;
@@ -66,9 +67,12 @@ private:
 
     //Functions to update camera transformation
     void UpdateCamera(float Delta);
-    void UpdateVelocityLocal(float Delta, RT::Matrix3 MovementMatrix);
+    void UpdateVelocityLocal(float Delta);
     void UpdateVelocityWorld(float Delta, RT::Matrix3 MovementMatrix);
-    void UpdateAngularVelocity(float Delta, RT::Matrix3 RotationMatrix);
+    void UpdateAngularVelocity(float Delta);
+    Vector2F GetMousePitchYaw(float Delta);
+    Vector2F GetGamepadPitchYaw(float Delta);
+    float GetRoll(float Delta);
     void UpdateFOVSpeed(float Delta);
     void UpdatePosition(float Delta, CameraWrapper TheCamera, RT::Matrix3 MovementMatrix);
     void UpdateRotation(float Delta, CameraWrapper TheCamera, RT::Matrix3 RotationMatrix);
@@ -78,8 +82,7 @@ private:
     bool  IsValidMode();
     float GetDelta();
     RT::Matrix3 GetCameraMatrix(bool bFullyLocal, bool bLocationMatrix);
-    float GetSpeedComponent(Vector Direction);
-    float GetAngularSpeedComponent(Vector Direction);
+    float GetWorldSpeedComponent(Vector Direction);
     float GetInvertedPerc(float InPerc);
     float GetWeightedPerc(float InPerc);
     float GetReducedPerc(float InputPerc, float SpeedPerc);

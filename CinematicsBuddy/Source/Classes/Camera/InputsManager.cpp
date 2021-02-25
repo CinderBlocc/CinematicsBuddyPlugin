@@ -51,8 +51,8 @@ void InputsManager::GetInputs(PlayerControllerWrapper Controller)
     m_Forward = Controller.GetAForward();
     m_Right   = Controller.GetAStrafe();
     m_Up      = Controller.GetAUp();
-    m_Pitch   = Controller.GetALookUp();
-    m_Yaw     = Controller.GetATurn();
+    m_Pitch   = m_bUsingGamepad ? Controller.GetALookUp() : Controller.GetALookUp() * .0025f;
+    m_Yaw     = m_bUsingGamepad ? Controller.GetATurn()   : Controller.GetATurn()   * .0025f;
     m_Roll    = 0.f;
     m_FOV     = 0.f;
     if(m_bUsingGamepad)

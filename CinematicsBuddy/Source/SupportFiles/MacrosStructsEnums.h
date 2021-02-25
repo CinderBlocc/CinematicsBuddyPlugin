@@ -53,11 +53,10 @@ extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 #define CVAR_CAM_FLOOR_HEIGHT    "CB_Camera_FloorHeight"
 #define CVAR_CAM_MOVEMENT_SPEED  "CB_Camera_MovementSpeed"
 #define CVAR_CAM_MOVEMENT_ACCEL  "CB_Camera_MovementAccel"
-#define CVAR_ROT_SPEED           "CB_Camera_RotationSpeed"
+#define CVAR_ROT_SPEED_MOUSE     "CB_Camera_RotationSpeedMouse"
+#define CVAR_ROT_SPEED_GAMEPAD   "CB_Camera_RotationSpeedGamepad"
 #define CVAR_ROT_ACCEL_MOUSE     "CB_Camera_RotationAccelMouse"
 #define CVAR_ROT_ACCEL_GAMEPAD   "CB_Camera_RotationAccelGamepad"
-#define CVAR_MOUSE_SENSITIVITY   "CB_Camera_MouseSensitivity"   //#TODO: Remove?
-#define CVAR_GAMEPAD_SENSITIVITY "CB_Camera_GamepadSensitivity" //#TODO: Remove?
 #define CVAR_FOV_ROTATION_SCALE  "CB_Camera_FOVRotationScale"
 #define CVAR_FOV_MIN             "CB_Camera_FOVMin"
 #define CVAR_FOV_MAX             "CB_Camera_FOVMax"

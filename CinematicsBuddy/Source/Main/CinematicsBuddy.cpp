@@ -17,6 +17,15 @@
 
 
     REDO AE SCRIPT BEFORE 3DS MAX SCRIPT
+        - Add a README with instructions in these folders:
+            - /data/CinematicsBuddy/ for overall instructions about the plugin
+            - /"/"/Plugins/3dsMax/ for instructions about maxscript
+            - /"/"/Plugins/AfterEffects/ for instructions about AE script
+
+
+    Move all 3D assets into a submodule that sits in /data/CinematicsBuddy/Plugins/3DAssets/ so all scripts can access them relatively
+        - i.e. the maxscript repo would include it as a submodule, and if you ever add blender, it would also include it as a submodule
+            - The two versions would combine into one during the copying process of the update batch script in the main repo
 
 
     MAXSCRIPT NOTES:

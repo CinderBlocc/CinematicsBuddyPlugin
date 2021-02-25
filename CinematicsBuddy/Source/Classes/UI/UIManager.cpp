@@ -135,11 +135,10 @@ void UIManager::GenerateSettingsFile()
         nl2(EUI::GrayedEnd, CVAR_CAM_HARD_FLOORS);
         nl2(EUI::Float, CVAR_CAM_MOVEMENT_SPEED);
         nl2(EUI::Float, CVAR_CAM_MOVEMENT_ACCEL);
-        nl2(EUI::Float, CVAR_ROT_SPEED);
+        nl2(EUI::Float, CVAR_ROT_SPEED_MOUSE);
+        nl2(EUI::Float, CVAR_ROT_SPEED_GAMEPAD);
         nl2(EUI::Float, CVAR_ROT_ACCEL_MOUSE);
         nl2(EUI::Float, CVAR_ROT_ACCEL_GAMEPAD);
-        nl2(EUI::Float, CVAR_MOUSE_SENSITIVITY);
-        nl2(EUI::Float, CVAR_GAMEPAD_SENSITIVITY);
         nl2(EUI::Float, CVAR_FOV_ROTATION_SCALE);
         nl2(EUI::Float, CVAR_FOV_MIN);
         nl2(EUI::Float, CVAR_FOV_MAX);
