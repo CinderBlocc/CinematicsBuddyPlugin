@@ -13,12 +13,13 @@
         - When using non-local rotation and rolled, pitching will eventually reset roll back to 0
             - Maybe forward.Z shouldnt be set to 0, only right.Z should be?
             - GetAngularComponent might be calculated wrong
-
-        - Option to preserve momentum in local space
-            - Store each velocity component individually
-            - Checkbox is already in place, just need to do the math now
+            - Simplest solution (should also be applied to local linear momentum preservation):
+                Store the Pitch, Yaw, and Roll speeds as separate floats, then just apply those to the direction the axis is currently pointing
+                    - In the UpdateVelocity and UpdateAngularVelocity functions, only apply the acceleration to those floats
 
         - Add mouse input
+
+        - Instead of a cvar for inverting pitch, use the game's settings?
 
         - Create a "Normal" preset that roughly matches the way the game normally does camera inputs
 
@@ -81,18 +82,53 @@ void CameraManager::UpdateCamera(float Delta)
     CameraWrapper TheCamera = GlobalGameWrapper->GetCamera();
     if(!TheCamera.IsNull())
     {
-        RT::Matrix3 MovementMatrix = GetCameraMatrix(*m_bUseLocalMovement);
-        RT::Matrix3 RotationMatrix = GetCameraMatrix(*m_bUseLocalRotation);
-        UpdateVelocity(Delta, MovementMatrix);
+        RT::Matrix3 MovementMatrix = GetCameraMatrix(*m_bUseLocalMovement, true);
+        RT::Matrix3 RotationMatrix = GetCameraMatrix(*m_bUseLocalRotation, false);
+        UpdateVelocityLocal(Delta, MovementMatrix);
+        UpdateVelocityWorld(Delta, MovementMatrix);
         UpdateAngularVelocity(Delta, RotationMatrix);
         UpdateFOVSpeed(Delta);
-        UpdatePosition(Delta, TheCamera);
+        UpdatePosition(Delta, TheCamera, MovementMatrix);
         UpdateRotation(Delta, TheCamera);
         UpdateFOV(Delta, TheCamera);
     }
 }
 
-void CameraManager::UpdateVelocity(float Delta, RT::Matrix3 InMatrix)
+// SPEED CALCULATIONS //
+void CameraManager::UpdateVelocityLocal(float Delta, RT::Matrix3 MovementMatrix)
+{
+    //Calculate some variables used throughout the function
+    float MaxSpeed = BaseMovementSpeed * *m_MovementSpeed;
+    float AccelSpeed = BaseMovementAccel * *m_MovementAccel;
+    float ImpulseStrength = MaxSpeed * Delta * AccelSpeed;
+
+    //Get the camera's speed as a percentage per axis
+    float ForwardSpeedPerc = VelocityLocal.X / MaxSpeed;
+    float RightSpeedPerc   = VelocityLocal.Y / MaxSpeed;
+    float UpSpeedPerc      = VelocityLocal.Z / MaxSpeed;
+
+    //Get input percentages
+    float ForwardInputPerc = Inputs->GetForward();
+    float RightInputPerc   = Inputs->GetRight();
+    float UpInputPerc      = Inputs->GetUp();
+
+    //Calculate acceleration force per axis
+    float ForwardAcceleration = ForwardInputPerc * GetReducedPerc(ForwardInputPerc, ForwardSpeedPerc) * ImpulseStrength;
+    float RightAcceleration   = RightInputPerc   * GetReducedPerc(RightInputPerc,   RightSpeedPerc)   * ImpulseStrength;
+    float UpAcceleration      = UpInputPerc      * GetReducedPerc(UpInputPerc,      UpSpeedPerc)      * ImpulseStrength;
+
+    //Calculate automatic braking force (only apply brakes if no input on that axis)
+    float ForwardBrake = GetBrakeForce(ForwardInputPerc, ForwardSpeedPerc) * ImpulseStrength;
+    float RightBrake   = GetBrakeForce(RightInputPerc,   RightSpeedPerc)   * ImpulseStrength;
+    float UpBrake      = GetBrakeForce(UpInputPerc,      UpSpeedPerc)      * ImpulseStrength;
+
+    //Store the individual speeds in each axis of the VelocityLocal variable
+    VelocityLocal.X += ForwardAcceleration - ForwardBrake;
+    VelocityLocal.Y += RightAcceleration   - RightBrake;
+    VelocityLocal.Z += UpAcceleration      - UpBrake;
+}
+
+void CameraManager::UpdateVelocityWorld(float Delta, RT::Matrix3 InMatrix)
 {
     //Calculate some variables used throughout the function
     float MaxSpeed = BaseMovementSpeed * *m_MovementSpeed;
@@ -116,8 +152,8 @@ void CameraManager::UpdateVelocity(float Delta, RT::Matrix3 InMatrix)
 
     //Calculate acceleration force per axis
     Vector ForwardAcceleration = ForwardInputVec * GetReducedPerc(ForwardInputPerc, ForwardSpeedPerc);
-    Vector RightAcceleration   = RightInputVec   * GetReducedPerc(RightInputPerc, RightSpeedPerc);
-    Vector UpAcceleration      = UpInputVec      * GetReducedPerc(UpInputPerc, UpSpeedPerc);
+    Vector RightAcceleration   = RightInputVec   * GetReducedPerc(RightInputPerc,   RightSpeedPerc);
+    Vector UpAcceleration      = UpInputVec      * GetReducedPerc(UpInputPerc,      UpSpeedPerc);
     
     //Calculate impulse created by inputs
     Vector AccelerationDirection = ForwardAcceleration + RightAcceleration + UpAcceleration;
@@ -125,15 +161,15 @@ void CameraManager::UpdateVelocity(float Delta, RT::Matrix3 InMatrix)
 
     //Calculate automatic braking force (only apply brakes if no input on that axis)
     Vector ForwardBrake = InMatrix.forward * GetBrakeForce(ForwardInputPerc, ForwardSpeedPerc);
-    Vector RightBrake   = InMatrix.right   * GetBrakeForce(RightInputPerc, RightSpeedPerc);
-    Vector UpBrake      = InMatrix.up      * GetBrakeForce(UpInputPerc, UpSpeedPerc);
+    Vector RightBrake   = InMatrix.right   * GetBrakeForce(RightInputPerc,   RightSpeedPerc);
+    Vector UpBrake      = InMatrix.up      * GetBrakeForce(UpInputPerc,      UpSpeedPerc);
     
     //Calculate impulse created by braking
     Vector BrakeDirection = ForwardBrake + RightBrake + UpBrake;
     Vector Brake = BrakeDirection * ImpulseStrength;
 
     //Apply the impulses
-    Velocity += Acceleration - Brake;
+    VelocityWorld += Acceleration - Brake;
 }
 
 void CameraManager::UpdateAngularVelocity(float Delta, RT::Matrix3 InMatrix)
@@ -144,10 +180,10 @@ void CameraManager::UpdateAngularVelocity(float Delta, RT::Matrix3 InMatrix)
 
     //Calculate some variables used throughout the function
     float MaxSpeed = BaseRotationSpeed * *m_RotationSpeed;
-    float MouseAccelSpeed = BaseRotationAccel * *m_RotationAccelMouse;
+    float MouseAccelSpeed   = BaseRotationAccel * *m_RotationAccelMouse;
     float GamepadAccelSpeed = BaseRotationAccel * *m_RotationAccelGamepad;
     float GamepadImpulseStrength = MaxSpeed * Delta * GamepadAccelSpeed;
-    float MouseImpulseStrength = MaxSpeed * Delta * MouseAccelSpeed;
+    float MouseImpulseStrength   = MaxSpeed * Delta * MouseAccelSpeed;
 
     //Get the camera's angular speed as a percentage per axis
     float FOVScaleReduction = GetFOVScaleReduction();
@@ -224,9 +260,21 @@ void CameraManager::UpdateFOVSpeed(float Delta)
     FOVSpeed += Acceleration - Brake;
 }
 
-void CameraManager::UpdatePosition(float Delta, CameraWrapper TheCamera)
+// SPEED RESULT CALCULATIONS //
+void CameraManager::UpdatePosition(float Delta, CameraWrapper TheCamera, RT::Matrix3 MovementMatrix)
 {
-    Vector NewLocation = TheCamera.GetLocation() + Velocity * Delta;
+    Vector NewLocation = TheCamera.GetLocation();
+    
+    if(*m_bLocalMomentum)
+    {
+        NewLocation += MovementMatrix.forward * VelocityLocal.X * Delta;
+        NewLocation += MovementMatrix.right   * VelocityLocal.Y * Delta;
+        NewLocation += MovementMatrix.up      * VelocityLocal.Z * Delta;
+    }
+    else
+    {
+        NewLocation += VelocityWorld * Delta;
+    }
 
     if(*m_bHardFloors)
     {
@@ -318,7 +366,7 @@ float CameraManager::GetDelta()
     return InputDelta;
 }
 
-RT::Matrix3 CameraManager::GetCameraMatrix(bool bFullyLocal)
+RT::Matrix3 CameraManager::GetCameraMatrix(bool bFullyLocal, bool bLocationMatrix)
 {
     CameraWrapper TheCamera = GlobalGameWrapper->GetCamera();
     if(TheCamera.IsNull())
@@ -334,7 +382,10 @@ RT::Matrix3 CameraManager::GetCameraMatrix(bool bFullyLocal)
 
     //Approximate the game's camera matrix. Local pitch and roll, world yaw
     RT::Matrix3 Output(TheCamera.GetRotation());
-    Output.forward.Z = 0.f; Output.forward.normalize();
+    if(bLocationMatrix)
+    {
+        Output.forward.Z = 0.f; Output.forward.normalize();
+    }
     Output.right.Z   = 0.f; Output.right.normalize();
     Output.up = Vector(0, 0, 1);
 
@@ -344,7 +395,7 @@ RT::Matrix3 CameraManager::GetCameraMatrix(bool bFullyLocal)
 float CameraManager::GetSpeedComponent(Vector Direction)
 {
     float MaxSpeed = BaseMovementSpeed * *m_MovementSpeed;
-    return Vector::dot(Velocity, Direction) / MaxSpeed;
+    return Vector::dot(VelocityWorld, Direction) / MaxSpeed;
 }
 
 float CameraManager::GetAngularSpeedComponent(Vector Direction)
@@ -467,8 +518,8 @@ void CameraManager::DebugRender(CanvasWrapper Canvas)
     }
 
     //Get the camera's speed as a percentage per axis
-    RT::Matrix3 MovementMatrix = GetCameraMatrix(*m_bUseLocalMovement);
-    RT::Matrix3 RotationMatrix = GetCameraMatrix(*m_bUseLocalRotation);
+    RT::Matrix3 MovementMatrix = GetCameraMatrix(*m_bUseLocalMovement, true);
+    RT::Matrix3 RotationMatrix = GetCameraMatrix(*m_bUseLocalRotation, false);
     float ForwardSpeedPerc  = GetSpeedComponent(MovementMatrix.forward);
     float RightSpeedPerc    = GetSpeedComponent(MovementMatrix.right);
     float UpSpeedPerc       = GetSpeedComponent(MovementMatrix.up);
@@ -502,7 +553,7 @@ void CameraManager::DebugRender(CanvasWrapper Canvas)
     RenderStrings.push_back("bRoll: "         + std::to_string(Inputs->GetbRoll()));
     RenderStrings.push_back("bFOV: "          + std::to_string(Inputs->GetbFOV()));
     RenderStrings.emplace_back("");
-    RenderStrings.push_back("Total Velocity: "   + CBUtils::PrintFloat(Velocity.magnitude(), 6));
+    RenderStrings.push_back("Total Velocity: "   + CBUtils::PrintFloat(VelocityWorld.magnitude(), 6));
     RenderStrings.push_back("Forward Velocity: " + CBUtils::PrintFloat(ForwardSpeedPerc, 4));
     RenderStrings.push_back("Right Velocity: "   + CBUtils::PrintFloat(RightSpeedPerc, 4));
     RenderStrings.push_back("Up Velocity: "      + CBUtils::PrintFloat(UpSpeedPerc, 4));
