@@ -14,17 +14,17 @@ CameraManager::CameraManager(std::shared_ptr<UIManager> TheUI)
 
     //Register cvars
     UI->AddElement({m_bUseOverrides,        CVAR_ENABLE_CAM_OVERRIDE, "Enable Overrides",                   "Enables camera overriding features"                            });
-    UI->AddElement({m_bUseLocalMovement,    CVAR_CAM_LOCAL_MOVEMENT,  "Local movement",                     "Uses the local orientation of the camera for movement"         });
-    UI->AddElement({m_bUseLocalRotation,    CVAR_CAM_LOCAL_ROTATION,  "Local rotation",                     "Uses the local orientation of the camera for rotation"         });
-    UI->AddElement({m_bHardFloors,          CVAR_CAM_HARD_FLOORS,     "Hard floors",                        "Prevents the camera from going through the floor"              });
-    UI->AddElement({m_bLocalMomentum,       CVAR_CAM_LOCAL_MOMENTUM,  "Momentum is local",                  "Preserves momentum in local space instead of world space"      });
+    UI->AddElement({m_bLocalMomentum,       CVAR_CAM_LOCAL_MOMENTUM,  "Local Momentum Preservation",        "Preserves momentum in local space instead of world space"      });
+    UI->AddElement({m_bUseLocalMovement,    CVAR_CAM_LOCAL_MOVEMENT,  "Local Movement",                     "Uses the local orientation of the camera for movement"         });
+    UI->AddElement({m_bUseLocalRotation,    CVAR_CAM_LOCAL_ROTATION,  "Local Rotation",                     "Uses the local orientation of the camera for rotation"         });
+    UI->AddElement({m_bHardFloors,          CVAR_CAM_HARD_FLOORS,     "Hard Floors",                        "Prevents the camera from going through the floor"              });
     UI->AddElement({m_FloorHeight,          CVAR_CAM_FLOOR_HEIGHT,    "Floor Height",                       "Lowest height the camera can go",                      -50, 50 });
     UI->AddElement({m_MovementSpeed,        CVAR_CAM_MOVEMENT_SPEED,  "Movement Speed",                     "Camera movement speed multiplier",                      0,  5  });
     UI->AddElement({m_MovementAccel,        CVAR_CAM_MOVEMENT_ACCEL,  "Movement Acceleration",              "Camera movement acceleration speed",                    0,  5  });
-	UI->AddElement({m_RotationSpeedMouse,   CVAR_ROT_SPEED_MOUSE,     "Rotation Speed (mouse)",             "Camera rotation speed (mouse)",                         0,  3  });
-	UI->AddElement({m_RotationSpeedGamepad, CVAR_ROT_SPEED_GAMEPAD,   "Rotation Speed (non-mouse)",         "Camera rotation speed (non-mouse)",                     0,  3  });
+	UI->AddElement({m_RotationSpeedMouse,   CVAR_ROT_SPEED_MOUSE,     "Rotation Speed (Mouse)",             "Camera rotation speed (mouse)",                         0,  3  });
+	UI->AddElement({m_RotationSpeedGamepad, CVAR_ROT_SPEED_GAMEPAD,   "Rotation Speed (Non-Mouse)",         "Camera rotation speed (non-mouse)",                     0,  3  });
     UI->AddElement({m_RotationAccelMouse,   CVAR_ROT_ACCEL_MOUSE,     "Rotation Acceleration (Mouse)",      "Camera rotation acceleration speed (mouse)",            0,  10 });
-    UI->AddElement({m_RotationAccelGamepad, CVAR_ROT_ACCEL_GAMEPAD,   "Rotation Acceleration (Controller)", "Camera rotation acceleration speed (controller)",       0,  10 });
+    UI->AddElement({m_RotationAccelGamepad, CVAR_ROT_ACCEL_GAMEPAD,   "Rotation Acceleration (Non-Mouse)",  "Camera rotation acceleration speed (controller)",       0,  10 });
     UI->AddElement({m_FOVRotationScale,     CVAR_FOV_ROTATION_SCALE,  "FOV Rotation Scale",                 "Multiplier for slowing camera rotation when zoomed in", 0,  1  });
     UI->AddElement({m_FOVMin,               CVAR_FOV_MIN,             "FOV Minimum",                        "The lowest the FOV will go",                            5,  170});
     UI->AddElement({m_FOVMax,               CVAR_FOV_MAX,             "FOV Maximum",                        "The highest the FOV will go",                           5,  170});

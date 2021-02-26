@@ -8,11 +8,11 @@ InputsManager::InputsManager(std::shared_ptr<UIManager> TheUI)
     UI = TheUI;
 
     //Register cvars
-    UI->AddElement({m_RollBinding,    CVAR_ROLL_BINDING, "Toggle roll binding",       "Modifier to swap an input axis with roll" });
-    UI->AddElement({m_FOVBinding,     CVAR_FOV_BINDING,  "Toggle FOV binding",        "Modifier to swap an input axis with FOV"  });
-    UI->AddElement({m_RollSwapChoice, CVAR_ROLL_SWAP,    "Roll Input Swap",           "Which axis to swap with Roll"  });
-    UI->AddElement({m_FOVSwapChoice,  CVAR_FOV_SWAP,     "FOV Input Swap",            "Which axis to swap with FOV"  });
-    UI->AddElement({m_bInvertPitch,   CVAR_INVERT_PITCH, "Invert pitch (controller)", "Inverts pitch values for the controller"  });
+    UI->AddElement({m_bInvertPitch,   CVAR_INVERT_PITCH, "Invert Pitch (Controller)", "Inverts pitch values for the controller"  });
+    UI->AddElement({m_RollBinding,    CVAR_ROLL_BINDING, "Toggle Roll Binding",       "Modifier to swap an input axis with roll" });
+    UI->AddElement({m_FOVBinding,     CVAR_FOV_BINDING,  "Toggle FOV Binding",        "Modifier to swap an input axis with FOV"  });
+    UI->AddElement({m_RollSwapChoice, CVAR_ROLL_SWAP,    "Roll Input Swap",           "Which axis to swap with Roll"             });
+    UI->AddElement({m_FOVSwapChoice,  CVAR_FOV_SWAP,     "FOV Input Swap",            "Which axis to swap with FOV"              });
 
     //Add options to dropdown menus
     SetBindingOptions();

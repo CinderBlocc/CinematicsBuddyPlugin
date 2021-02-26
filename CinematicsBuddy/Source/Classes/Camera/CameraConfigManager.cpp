@@ -8,8 +8,8 @@ CameraConfigManager::CameraConfigManager(std::shared_ptr<UIManager> TheUI)
     UI = TheUI;
 
     //Register cvars
-    UI->AddElement({m_CurrentConfig, CVAR_CONFIG_CURRENT,  "Current config",  "Current set of camera settings"                          });
-    UI->AddElement({m_NewName,       CVAR_CONFIG_NEW_NAME, "New config name", "Name of new config file", -1000001, -1000001, true, false});
+    UI->AddElement({m_CurrentConfig, CVAR_CONFIG_CURRENT,  "Current Config",  "Current set of camera settings"                          });
+    UI->AddElement({m_NewName,       CVAR_CONFIG_NEW_NAME, "New Config Name", "Name of new config file", -1000001, -1000001, true, false});
 
     //Bind addOnValueChanged functions to all cvars from CameraManager and InputsManager
     for(const auto& Cvar : GetCvarList())

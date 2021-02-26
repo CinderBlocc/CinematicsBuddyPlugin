@@ -70,12 +70,12 @@ void UIManager::GenerateSettingsFile()
                 label("NOTE: Unchecking \"Special Path\", or leaving the path textbox blank will use the default /data/CinematicsBuddy/AnimationExports/ folder.");
                 label("Recommended setting: leave it disabled and let the plugin handle the paths automatically");
             nl2(EUI::GrayedEnd, CVAR_SET_SPECIAL_PATH);
-            button("Start recording", NOTIFIER_RECORD_START);
+            button("Start Recording", NOTIFIER_RECORD_START);
             sameline;
         nl2(EUI::GrayedEnd, CVAR_IS_RECORDING_ACTIVE);
         nl2(EUI::GrayedBegin, CVAR_IS_RECORDING_ACTIVE);
             nl3(EUI::GrayedBegin, CVAR_IS_FILE_WRITING, true);
-                button("Stop recording", NOTIFIER_RECORD_STOP);
+                button("Stop Recording", NOTIFIER_RECORD_STOP);
             nl2(EUI::GrayedEnd, CVAR_IS_FILE_WRITING);
         nl2(EUI::GrayedEnd, CVAR_IS_RECORDING_ACTIVE);
         nl2(EUI::Float, CVAR_MAX_RECORD_LENGTH);
@@ -121,15 +121,15 @@ void UIManager::GenerateSettingsFile()
     nl2(EUI::Checkbox, CVAR_ENABLE_CAM_OVERRIDE);
     nl2(EUI::GrayedBegin, CVAR_ENABLE_CAM_OVERRIDE);
         sameline;
+        nl2(EUI::Checkbox, CVAR_CAM_LOCAL_MOMENTUM);
+        sameline;
         nl2(EUI::Checkbox, CVAR_CAM_LOCAL_MOVEMENT);
         sameline;
         nl2(EUI::Checkbox, CVAR_CAM_LOCAL_ROTATION);
         sameline;
-        nl2(EUI::Checkbox, CVAR_CAM_HARD_FLOORS);
-        sameline;
         nl2(EUI::Checkbox, CVAR_INVERT_PITCH);
         sameline;
-        nl2(EUI::Checkbox, CVAR_CAM_LOCAL_MOMENTUM);
+        nl2(EUI::Checkbox, CVAR_CAM_HARD_FLOORS);
         nl2(EUI::GrayedBegin, CVAR_CAM_HARD_FLOORS);
             nl2(EUI::Float, CVAR_CAM_FLOOR_HEIGHT);
         nl2(EUI::GrayedEnd, CVAR_CAM_HARD_FLOORS);
@@ -152,10 +152,10 @@ void UIManager::GenerateSettingsFile()
         label("CONFIGS");
         nl2(EUI::Dropdown, CVAR_CONFIG_CURRENT);
         sameline;
-        button("Update config list", NOTIFIER_CONFIG_UPDATE);
+        button("Update Config List", NOTIFIER_CONFIG_UPDATE);
         nl2(EUI::Textbox, CVAR_CONFIG_NEW_NAME);
         sameline;
-        button("Save config", NOTIFIER_CONFIG_SAVE);
+        button("Save Config", NOTIFIER_CONFIG_SAVE);
     nl2(EUI::GrayedEnd, CVAR_ENABLE_CAM_OVERRIDE);
     
 
