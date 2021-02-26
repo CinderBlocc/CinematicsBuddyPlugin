@@ -10,20 +10,16 @@ CinematicsBuddy is a tool designed to make life easier for editors and spectator
 
 ## INSTRUCTIONS
 
-#### EXPORTING
+### EXPORTING
 
 ###### NORMAL RECORDING
-
 Pending.
 
 ###### BUFFER RECORDING
-
 Pending.
 
-#### IMPORTING
-
+### IMPORTING
 Pending.
 
-#### CAMERA OVERRIDES
-
+### CAMERA OVERRIDES
 **Setting name:** *(default, min, max)* What setting does.
