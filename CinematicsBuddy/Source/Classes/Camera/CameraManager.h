@@ -14,13 +14,17 @@ namespace RT
     class Matrix3;
 }
 
+enum class ECameraAxis
+{
+    AForward = 0,
+    ARight,
+    AUp
+};
+
 class CameraManager
 {
 public:
     CameraManager(std::shared_ptr<UIManager> TheUI);
-
-    // TESTS - REMOVE WHEN DONE //
-    void DebugRender(CanvasWrapper Canvas);
 
 private:
     void PlayerInputTick();
@@ -56,7 +60,7 @@ private:
     float BaseRotationAccelMouse   = 3.f;
     float BaseRotationAccelGamepad = 2.f;
     float BaseFOV      = 75.f;
-    float BaseFOVSpeed = 35.f;
+    float BaseFOVSpeed = 40.f;
     float BaseFOVAccel = 2.f;
     
     //Speed of movement and rotation
@@ -67,22 +71,25 @@ private:
 
     //Functions to update camera transformation
     void UpdateCamera(float Delta);
-    void UpdateVelocityLocal(float Delta);
-    void UpdateVelocityWorld(float Delta, RT::Matrix3 MovementMatrix);
-    void UpdateAngularVelocity(float Delta);
-    Vector2F GetMousePitchYaw(float Delta);
-    Vector2F GetGamepadPitchYaw(float Delta);
-    float GetRoll(float Delta);
-    void UpdateFOVSpeed(float Delta);
-    void UpdatePosition(float Delta, CameraWrapper TheCamera, RT::Matrix3 MovementMatrix);
-    void UpdateRotation(float Delta, CameraWrapper TheCamera, RT::Matrix3 RotationMatrix);
+    void UpdatePosition(float Delta, CameraWrapper TheCamera);
+    void UpdateRotation(float Delta, CameraWrapper TheCamera);
     void UpdateFOV(float Delta, CameraWrapper TheCamera);
+
+    //Speed calculations
+    void UpdateVelocityLocal(float Delta, Vector MovementInputs);
+    void UpdateVelocityWorld(float Delta, Vector MovementInputs);
+    void UpdateAngularVelocity(float Delta, Vector RotationInputs);
+    void UpdateFOVSpeed(float Delta);
+    float UpdateFloatSpeed(float Delta, float CurrentSpeed, float Input, float MaxSpeed, float AccelSpeed);
+
+    //Inputs
+    Vector GetMovementInputs();
+    Vector GetRotationInputs();
 
     //Utility
     bool  IsValidMode();
     float GetDelta();
     RT::Matrix3 GetCameraMatrix(bool bFullyLocal, bool bLocationMatrix);
-    float GetWorldSpeedComponent(Vector Direction);
     float GetInvertedPerc(float InPerc);
     float GetWeightedPerc(float InPerc);
     float GetReducedPerc(float InputPerc, float SpeedPerc);

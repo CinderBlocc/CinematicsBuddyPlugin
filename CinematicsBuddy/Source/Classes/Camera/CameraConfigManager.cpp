@@ -3,14 +3,6 @@
 #include "UI/UIManager.h"
 #include <fstream>
 
-/*
-
-    #TODO:
-
-        - Make sure you have all the relevant cvars included here before release
-
-*/
-
 CameraConfigManager::CameraConfigManager(std::shared_ptr<UIManager> TheUI)
 {
     UI = TheUI;
@@ -45,17 +37,24 @@ std::vector<std::string> CameraConfigManager::GetCvarList()
     if(!bHaveFilledList)
     {
         //CameraManager cvars
+        Output.emplace_back(CVAR_ENABLE_CAM_OVERRIDE);
         Output.emplace_back(CVAR_CAM_LOCAL_MOVEMENT);
         Output.emplace_back(CVAR_CAM_LOCAL_ROTATION);
         Output.emplace_back(CVAR_CAM_HARD_FLOORS);
+        Output.emplace_back(CVAR_CAM_LOCAL_MOMENTUM);
         Output.emplace_back(CVAR_CAM_FLOOR_HEIGHT);
         Output.emplace_back(CVAR_CAM_MOVEMENT_SPEED);
         Output.emplace_back(CVAR_CAM_MOVEMENT_ACCEL);
         Output.emplace_back(CVAR_ROT_SPEED_MOUSE);
-        Output.emplace_back(CVAR_ROT_SPEED_GAMEPAD);
+        Output.emplace_back(CVAR_ROT_SPEED_GAMEPAD); 
         Output.emplace_back(CVAR_ROT_ACCEL_MOUSE);
         Output.emplace_back(CVAR_ROT_ACCEL_GAMEPAD);
         Output.emplace_back(CVAR_FOV_ROTATION_SCALE);
+        Output.emplace_back(CVAR_FOV_MIN);
+        Output.emplace_back(CVAR_FOV_MAX);
+        Output.emplace_back(CVAR_FOV_SPEED);
+        Output.emplace_back(CVAR_FOV_ACCELERATION);
+        Output.emplace_back(CVAR_FOV_LIMIT_EASE);
 
         //InputsManager cvars
         Output.emplace_back(CVAR_ROLL_BINDING);

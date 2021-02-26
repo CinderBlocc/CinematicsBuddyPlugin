@@ -90,7 +90,6 @@ void CinematicsBuddy::onLoad()
 
     // TESTS - REMOVE WHEN DONE //
     GlobalCvarManager->registerNotifier("CBTestExportFormat", [this](std::vector<std::string> params){TestExportFormat();}, "Prints data from current frame", PERMISSION_ALL);
-    GlobalGameWrapper->RegisterDrawable(std::bind(&CinematicsBuddy::DebugRender, this, std::placeholders::_1));
 }
 void CinematicsBuddy::onUnload(){}
 
@@ -143,8 +142,4 @@ void CinematicsBuddy::TestExportFormat()
     Output += "\n\nTHIS FRAME\n" + ThisFrame.Print(ThisFrameTime, 0, CarsSeenThisFrame);
 
     GlobalCvarManager->log(Output);
-}
-void CinematicsBuddy::DebugRender(CanvasWrapper Canvas)
-{
-    Camera->DebugRender(Canvas);
 }
