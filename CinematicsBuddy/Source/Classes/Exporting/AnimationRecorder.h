@@ -32,12 +32,12 @@ public:
 protected:
     std::shared_ptr<UIManager> UI;
 
-    std::shared_ptr<bool> m_bIsFileWriting      = std::make_shared<bool>(false);
-    std::shared_ptr<bool> m_bIncrementFileNames = std::make_shared<bool>(true);
-    std::shared_ptr<bool> m_bSetSpecialPath     = std::make_shared<bool>(false);
-    std::shared_ptr<std::string> m_SpecialPath  = std::make_shared<std::string>("");
-    std::shared_ptr<std::string> m_FileName     = std::make_shared<std::string>("");
-    std::shared_ptr<std::string> m_CameraName   = std::make_shared<std::string>("");
+    std::shared_ptr<bool> bIsFileWriting      = std::make_shared<bool>(false);
+    std::shared_ptr<bool> bIncrementFileNames = std::make_shared<bool>(true);
+    std::shared_ptr<bool> bSetSpecialPath     = std::make_shared<bool>(false);
+    std::shared_ptr<std::string> SpecialPath  = std::make_shared<std::string>("");
+    std::shared_ptr<std::string> FileName     = std::make_shared<std::string>("");
+    std::shared_ptr<std::string> CameraName   = std::make_shared<std::string>("");
 
     bool bIsRecording        = false;
     float MaxRecordingTime   = 0.f;
@@ -49,7 +49,7 @@ protected:
     virtual void StopRecording();
 
     bool WriteFile(StringParam InPathName, StringParam InFileName, StringParam InCameraName);
-    void WriteFileThread(std::ofstream& FileStream, StringParam InCameraName, RecordingParam TheRecording);
+    void WriteFileThread(std::filesystem::path OutputFilePath, StringParam InCameraName, RecordingParam TheRecording);
     void WriteHeader(std::ofstream& FileStream, const ReplayMetadata& ReplayInfo, StringParam InCameraName, RecordingParam TheRecording, CarsSeenParam CarsSeenInRecording);
     void WriteRecordedDataToFile(std::ofstream& FileStream, RecordingParam TheRecording, CarsSeenParam CarsSeenInRecording);
     ReplayMetadata GetReplayMetadata();

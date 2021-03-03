@@ -194,7 +194,7 @@ CarInfo CarInfo::Get(CarWrapper Car)
         Output.bIsNull = false;
         if(!Car.GetPRI().IsNull())
         {
-            Output.ID = Car.GetPRI().GetUniqueIdWrapper();
+            Output.ID = Car.GetPRI().GetUniqueIdWrapper().GetIdString();
         }
         Output.bIsBoosting = Car.IsBoostCheap();
         Output.Location = Car.GetLocation();
@@ -220,7 +220,7 @@ std::string CarInfo::GetCarSeenIndex(const std::vector<struct CarSeen>& AllCarsS
         int Index = 0;
         for(const auto& ThisCarSeen : AllCarsSeen)
         {
-            if(ID.GetIdString() == ThisCarSeen.ID.GetIdString())
+            if(ID == ThisCarSeen.ID)
             {
                 return std::to_string(Index);
             }
@@ -229,7 +229,7 @@ std::string CarInfo::GetCarSeenIndex(const std::vector<struct CarSeen>& AllCarsS
         }
     }
 
-    return ID.GetIdString();
+    return ID;
 }
 
 json::JSON CarInfo::ConvertToJSON() const
@@ -277,7 +277,7 @@ CarSeen CarSeen::Get(CarWrapper Car)
         Output.bIsNull = false;
         if(!Car.GetPRI().IsNull())
         {
-            Output.ID = Car.GetPRI().GetUniqueIdWrapper();
+            Output.ID = Car.GetPRI().GetUniqueIdWrapper().GetIdString();
         }
         Output.Body = Car.GetLoadoutBody();
         if(Car.GetVehicleSim().memory_address != NULL)
@@ -298,7 +298,7 @@ json::JSON CarSeen::ConvertToJSON() const
 {
     json::JSON Output = json::Object();
 
-    Output["ID"] = ID.GetIdString();
+    Output["ID"] = ID;
     Output["Body"] = std::to_string(Body);
     Output["Front Wheel Radius"] = CBUtils::PrintFloat(FrontWheelRadius);
     Output["Back Wheel Radius"] = CBUtils::PrintFloat(BackWheelRadius);

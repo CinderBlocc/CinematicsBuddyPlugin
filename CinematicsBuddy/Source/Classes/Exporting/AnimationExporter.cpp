@@ -31,6 +31,11 @@ void AnimationExporter::OnMaxRecordingTimeChanged()
 
 void AnimationExporter::StartRecording()
 {
+    if(*bIsFileWriting)
+    {
+        return;
+    }
+
     AnimationRecorder::StartRecording();
 
     //Don't restart the recording if it's already running
@@ -41,8 +46,8 @@ void AnimationExporter::StartRecording()
 
     //Get useful parameters from cvars
     std::string InPathName   = CBUtils::GetSpecialFilePath();
-    std::string InFileName   = *m_FileName;//GlobalCvarManager->getCvar(CVAR_FILE_NAME).getStringValue();
-    std::string InCameraName = *m_CameraName;//GlobalCvarManager->getCvar(CVAR_CAMERA_NAME).getStringValue();
+    std::string InFileName   = *FileName;
+    std::string InCameraName = *CameraName;
 
     //Let all the warnings get collected before returning
     bool bCanStartRecording = true;
@@ -88,6 +93,11 @@ void AnimationExporter::StartRecording()
 
 void AnimationExporter::StopRecording()
 {
+    if(*bIsFileWriting)
+    {
+        return;
+    }
+
     AnimationRecorder::StopRecording();
     
     if(!bIsRecording)

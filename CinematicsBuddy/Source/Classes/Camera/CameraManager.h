@@ -33,24 +33,24 @@ private:
     std::shared_ptr<CameraConfigManager> Configs;
 
     //State variables set by plugin
-    std::shared_ptr<bool>  m_bUseOverrides        = std::make_shared<bool>(false);
-    std::shared_ptr<bool>  m_bUseLocalMovement    = std::make_shared<bool>(true);
-    std::shared_ptr<bool>  m_bUseLocalRotation    = std::make_shared<bool>(false);
-    std::shared_ptr<bool>  m_bHardFloors          = std::make_shared<bool>(true);
-    std::shared_ptr<bool>  m_bLocalMomentum       = std::make_shared<bool>(false);
-    std::shared_ptr<float> m_FloorHeight          = std::make_shared<float>(10.f);
-    std::shared_ptr<float> m_MovementSpeed        = std::make_shared<float>(1.f);
-    std::shared_ptr<float> m_MovementAccel        = std::make_shared<float>(1.f);
-    std::shared_ptr<float> m_RotationSpeedMouse   = std::make_shared<float>(1.f);
-    std::shared_ptr<float> m_RotationSpeedGamepad = std::make_shared<float>(1.f);
-    std::shared_ptr<float> m_RotationAccelMouse   = std::make_shared<float>(1.f);
-    std::shared_ptr<float> m_RotationAccelGamepad = std::make_shared<float>(1.f);
-    std::shared_ptr<float> m_FOVRotationScale     = std::make_shared<float>(.3f);
-    std::shared_ptr<float> m_FOVMin               = std::make_shared<float>(20.f);
-    std::shared_ptr<float> m_FOVMax               = std::make_shared<float>(120.f);
-    std::shared_ptr<float> m_FOVSpeed             = std::make_shared<float>(1.f);
-    std::shared_ptr<float> m_FOVAcceleration      = std::make_shared<float>(1.f);
-    std::shared_ptr<float> m_FOVLimitEase         = std::make_shared<float>(.1f);
+    std::shared_ptr<bool>  bUseOverrides        = std::make_shared<bool>(false);
+    std::shared_ptr<bool>  bUseLocalMovement    = std::make_shared<bool>(true);
+    std::shared_ptr<bool>  bUseLocalRotation    = std::make_shared<bool>(false);
+    std::shared_ptr<bool>  bHardFloors          = std::make_shared<bool>(true);
+    std::shared_ptr<bool>  bLocalMomentum       = std::make_shared<bool>(false);
+    std::shared_ptr<float> FloorHeight          = std::make_shared<float>(10.f);
+    std::shared_ptr<float> MovementSpeed        = std::make_shared<float>(1.f);
+    std::shared_ptr<float> MovementAccel        = std::make_shared<float>(1.f);
+    std::shared_ptr<float> RotationSpeedMouse   = std::make_shared<float>(1.f);
+    std::shared_ptr<float> RotationSpeedGamepad = std::make_shared<float>(1.f);
+    std::shared_ptr<float> RotationAccelMouse   = std::make_shared<float>(1.f);
+    std::shared_ptr<float> RotationAccelGamepad = std::make_shared<float>(1.f);
+    std::shared_ptr<float> FOVRotationScale     = std::make_shared<float>(.3f);
+    std::shared_ptr<float> FOVMin               = std::make_shared<float>(20.f);
+    std::shared_ptr<float> FOVMax               = std::make_shared<float>(120.f);
+    std::shared_ptr<float> FOVSpeed             = std::make_shared<float>(1.f);
+    std::shared_ptr<float> FOVAcceleration      = std::make_shared<float>(1.f);
+    std::shared_ptr<float> FOVLimitEase         = std::make_shared<float>(.1f);
 
     //Internal state variables
     float BaseMovementSpeed = 1500.f;
@@ -67,7 +67,7 @@ private:
     Vector VelocityWorld   = {0, 0, 0};
     Vector VelocityLocal   = {0, 0, 0};
     Vector AngularVelocity = {0, 0, 0};
-    float  FOVSpeed        = 0.f;
+    float  FOVCurrentSpeed = 0.f;
 
     //Functions to update camera transformation
     void UpdateCamera(float Delta);

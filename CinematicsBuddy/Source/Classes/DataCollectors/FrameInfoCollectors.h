@@ -56,7 +56,7 @@ struct WheelInfo
 struct CarInfo
 {
     bool bIsNull;
-	UniqueIDWrapper ID;
+	std::string ID;
 	bool bIsBoosting;
 	Vector Location;
 	Quat Rotation;
@@ -71,7 +71,7 @@ struct CarInfo
 struct CarSeen
 {
     bool bIsNull;
-	UniqueIDWrapper ID;
+	std::string ID;
 	int Body;
 	float FrontWheelRadius;
 	float BackWheelRadius;
@@ -81,5 +81,5 @@ struct CarSeen
 };
 inline bool operator==(const CarSeen c1, const CarSeen c2)
 {
-    return c1.ID.GetIdString() == c2.ID.GetIdString();
+    return c1.ID == c2.ID;
 }

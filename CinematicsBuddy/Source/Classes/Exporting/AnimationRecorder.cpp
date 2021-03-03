@@ -5,6 +5,7 @@
 #include "SimpleJSON/json.hpp"
 #include "Misc/CBTimer.h"
 #include <chrono>
+#include <thread>
 
 AnimationRecorder::AnimationRecorder(std::shared_ptr<UIManager> TheUI)
 {
@@ -14,22 +15,22 @@ AnimationRecorder::AnimationRecorder(std::shared_ptr<UIManager> TheUI)
     if(!HaveCvarsBeenInitialzed())
     {
         //Register and bind cvars
-        UI->AddElement({m_bIsFileWriting,      CVAR_IS_FILE_WRITING,  "##IsFileWriting",   "Handle UI state if file is writing", -1000001, -1000001, false, false});
-        UI->AddElement({m_bIncrementFileNames, CVAR_INCREMENT_FILES,  "Automatically increment file names", "Automatically append a unique number to file names" });
-        UI->AddElement({m_bSetSpecialPath,     CVAR_SET_SPECIAL_PATH, "##UseSpecialPath",  "Enable if you want to use a non-default path"                        });
-        UI->AddElement({m_SpecialPath,         CVAR_SPECIAL_PATH,     "##SpecialPath",     "Set the special export file path. Leave blank for default"           });
-        UI->AddElement({m_FileName,            CVAR_FILE_NAME,        "File Name##Export", "Set the export file name"                                            });
-        UI->AddElement({m_CameraName,          CVAR_CAMERA_NAME,      "Camera Name",       "Set the camera name"                                                 });
+        UI->AddElement({bIsFileWriting,      CVAR_IS_FILE_WRITING,  "##IsFileWriting",   "Handle UI state if file is writing", -1000001, -1000001, false, false});
+        UI->AddElement({bIncrementFileNames, CVAR_INCREMENT_FILES,  "Automatically increment file names", "Automatically append a unique number to file names" });
+        UI->AddElement({bSetSpecialPath,     CVAR_SET_SPECIAL_PATH, "##UseSpecialPath",  "Enable if you want to use a non-default path"                        });
+        UI->AddElement({SpecialPath,         CVAR_SPECIAL_PATH,     "##SpecialPath",     "Set the special export file path. Leave blank for default"           });
+        UI->AddElement({FileName,            CVAR_FILE_NAME,        "File Name##Export", "Set the export file name"                                            });
+        UI->AddElement({CameraName,          CVAR_CAMERA_NAME,      "Camera Name",       "Set the camera name"                                                 });
     }
     else
     {
         //Bind existing cvars
-        GlobalCvarManager->getCvar(CVAR_IS_FILE_WRITING).bindTo(m_bIsFileWriting);
-        GlobalCvarManager->getCvar(CVAR_INCREMENT_FILES).bindTo(m_bIncrementFileNames);
-        GlobalCvarManager->getCvar(CVAR_SET_SPECIAL_PATH).bindTo(m_bSetSpecialPath);
-        GlobalCvarManager->getCvar(CVAR_SPECIAL_PATH).bindTo(m_SpecialPath);
-        GlobalCvarManager->getCvar(CVAR_FILE_NAME).bindTo(m_FileName);
-        GlobalCvarManager->getCvar(CVAR_CAMERA_NAME).bindTo(m_CameraName);
+        GlobalCvarManager->getCvar(CVAR_IS_FILE_WRITING).bindTo(bIsFileWriting);
+        GlobalCvarManager->getCvar(CVAR_INCREMENT_FILES).bindTo(bIncrementFileNames);
+        GlobalCvarManager->getCvar(CVAR_SET_SPECIAL_PATH).bindTo(bSetSpecialPath);
+        GlobalCvarManager->getCvar(CVAR_SPECIAL_PATH).bindTo(SpecialPath);
+        GlobalCvarManager->getCvar(CVAR_FILE_NAME).bindTo(FileName);
+        GlobalCvarManager->getCvar(CVAR_CAMERA_NAME).bindTo(CameraName);
     }
 }
 
@@ -82,40 +83,41 @@ bool AnimationRecorder::WriteFile(StringParam InPathName, StringParam InFileName
         GlobalCvarManager->log("ERROR: Cannot save file. File path (" + OutputFilePath.string() + ") is invalid.");
         return false;
     }
-    OutputFilePath = CBUtils::GetFinalFileName(OutputFilePath, InFileName, (*m_bIncrementFileNames ? 0 : -1));
-    std::ofstream OutputFile(OutputFilePath);
+    OutputFilePath = CBUtils::GetFinalFileName(OutputFilePath, InFileName, (*bIncrementFileNames ? 0 : -1));
 
-    //Write to the file
+    //Create a copy of the data to work from in the async task
+    std::deque<FrameInfo> RecordedDataCopy = RecordedData;
+
+    //Write to the file. Done in a separate thread so game doesn't freeze during writing
+    std::thread WritingFile(&AnimationRecorder::WriteFileThread, this, OutputFilePath, InCameraName, RecordedDataCopy);
+    WritingFile.detach();
+
+    return true;
+}
+
+void AnimationRecorder::WriteFileThread(std::filesystem::path OutputFilePath, StringParam InCameraName, RecordingParam TheRecording)
+{
+    std::ofstream OutputFile(OutputFilePath);
     if(OutputFile.is_open())
     {
-        //Create a copy of the data to work from in the async task
-        std::deque<FrameInfo> RecordedDataCopy = RecordedData;
+        //Lock the UI and certain functions while writing
+        GlobalCvarManager->executeCommand(std::string(CVAR_IS_FILE_WRITING) + " 1", false);
 
-        // #TODO: Launch this in a thread.
-        // #TODO: Maybe run the cvar setting commands as `executeCommand(sleep 1; thecvar 0/1)` to avoid thread issues and put the command into the queue?
-        GlobalCvarManager->getCvar(CVAR_IS_FILE_WRITING).setValue(true);
-        WriteFileThread(OutputFile, InCameraName, RecordedDataCopy);
-        GlobalCvarManager->getCvar(CVAR_IS_FILE_WRITING).setValue(false);
+        //Write the data to the file
+        std::vector<CarSeen> CarsSeenInRecording = GetCarsSeenInRecording(TheRecording);
+        WriteHeader(OutputFile, GetReplayMetadata(), InCameraName, TheRecording, CarsSeenInRecording);
+        WriteRecordedDataToFile(OutputFile, TheRecording, CarsSeenInRecording);
+
+        //Unlock the UI
+        GlobalCvarManager->executeCommand(std::string(CVAR_IS_FILE_WRITING) + " 0", false);
+        GlobalCvarManager->log("Successfully wrote file " + OutputFilePath.string());
     }
     else
     {
         GlobalCvarManager->log("ERROR: Could not open output file");
-        OutputFile.close();
-        return false;
     }
 
-    // #TODO: Log this and return true after waiting for WriteFileThread to finish?
-    GlobalCvarManager->log("Successfully wrote file " + OutputFilePath.string());
-    return true;
-}
-
-void AnimationRecorder::WriteFileThread(std::ofstream& FileStream, StringParam InCameraName, RecordingParam TheRecording)
-{
-    std::vector<CarSeen> CarsSeenInRecording = GetCarsSeenInRecording(TheRecording);
-    WriteHeader(FileStream, GetReplayMetadata(), InCameraName, TheRecording, CarsSeenInRecording);
-    WriteRecordedDataToFile(FileStream, TheRecording, CarsSeenInRecording);
-
-    FileStream.close();
+    OutputFile.close();
 }
 
 void AnimationRecorder::WriteHeader(std::ofstream& FileStream, const ReplayMetadata& ReplayInfo, StringParam InCameraName, RecordingParam TheRecording, CarsSeenParam CarsSeenInRecording)

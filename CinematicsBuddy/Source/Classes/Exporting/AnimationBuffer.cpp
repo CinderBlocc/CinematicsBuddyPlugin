@@ -62,15 +62,15 @@ void AnimationBuffer::StopRecording()
 
 void AnimationBuffer::CaptureBuffer()
 {
-    if(!bIsRecording)
+    if(!bIsRecording || *bIsFileWriting)
     {
         return;
     }
 
     //Get useful parameters from cvars
     std::string InPathName   = CBUtils::GetSpecialFilePath();
-    std::string InFileName   = *m_FileName;//GlobalCvarManager->getCvar(CVAR_FILE_NAME).getStringValue();
-    std::string InCameraName = *m_CameraName;//GlobalCvarManager->getCvar(CVAR_CAMERA_NAME).getStringValue();
+    std::string InFileName   = *FileName;
+    std::string InCameraName = *CameraName;
 
     std::string BufferFileName = InFileName + "_Buffer_" + CBUtils::GetCurrentTimeAsString();
     WriteFile(InPathName, BufferFileName, InCameraName);

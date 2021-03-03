@@ -8,10 +8,10 @@ extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 
 
 // MACROS //
-#define PLUGIN_VERSION      "0.9.8"
+#define PLUGIN_VERSION      "0.9.9"
 
 //#TODO: Remove this in final release
-#define IS_GAMMA_BUILD
+//#define IS_GAMMA_BUILD
 
 //Generic defines
 #define EXTENSION_RECORDING ".txt"

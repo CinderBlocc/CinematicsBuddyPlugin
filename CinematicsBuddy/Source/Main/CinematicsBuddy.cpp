@@ -11,9 +11,11 @@
 /*
     #TODO
 
-    - Write export file asynchronously. Large files will hang up the game for a long time, and even small files cause a hitch
-        - Leave UI greyed out until file writing is completed
-    - Rename all class members with m_ prefix
+    PARSING SECTIONS OF SCRIPTS SHOULD BE SEPARATED FROM MAIN SCRIPT FILES
+        - Easier to edit and maintain
+        - Less clutter in main script
+        - DO THIS FOR BOTH AFTER EFFECTS AND 3DS MAX
+
 
 
     REDO AE SCRIPT BEFORE 3DS MAX SCRIPT
@@ -59,7 +61,6 @@
                  Also look for all "TESTS" and remove them
 */
 
-//0.9.8 - input smoothing and camera speed control
 //0.9.9 - import rewrite
 //1.0.0 - REMOVE VERSION DEPENDENCIES!!! Completely lock in the formatting of the text in this version so all future updates don't rely on a broken version
 //				- Still include version numbers in the file though in case those need to be referenced in troubleshooting

@@ -8,11 +8,11 @@ InputsManager::InputsManager(std::shared_ptr<UIManager> TheUI)
     UI = TheUI;
 
     //Register cvars
-    UI->AddElement({m_bInvertPitch,   CVAR_INVERT_PITCH, "Invert Pitch (Controller)", "Inverts pitch values for the controller"  });
-    UI->AddElement({m_RollBinding,    CVAR_ROLL_BINDING, "Toggle Roll Binding",       "Modifier to swap an input axis with roll" });
-    UI->AddElement({m_FOVBinding,     CVAR_FOV_BINDING,  "Toggle FOV Binding",        "Modifier to swap an input axis with FOV"  });
-    UI->AddElement({m_RollSwapChoice, CVAR_ROLL_SWAP,    "Roll Input Swap",           "Which axis to swap with Roll"             });
-    UI->AddElement({m_FOVSwapChoice,  CVAR_FOV_SWAP,     "FOV Input Swap",            "Which axis to swap with FOV"              });
+    UI->AddElement({bInvertPitch,   CVAR_INVERT_PITCH, "Invert Pitch (Controller)", "Inverts pitch values for the controller"  });
+    UI->AddElement({RollBinding,    CVAR_ROLL_BINDING, "Toggle Roll Binding",       "Modifier to swap an input axis with roll" });
+    UI->AddElement({FOVBinding,     CVAR_FOV_BINDING,  "Toggle FOV Binding",        "Modifier to swap an input axis with FOV"  });
+    UI->AddElement({RollSwapChoice, CVAR_ROLL_SWAP,    "Roll Input Swap",           "Which axis to swap with Roll"             });
+    UI->AddElement({FOVSwapChoice,  CVAR_FOV_SWAP,     "FOV Input Swap",            "Which axis to swap with FOV"              });
 
     //Add options to dropdown menus
     SetBindingOptions();
@@ -41,33 +41,33 @@ void InputsManager::PlayerInputTick(float Delta)
 
 void InputsManager::GetInputs(PlayerControllerWrapper Controller)
 {
-    m_bRoll = GlobalGameWrapper->IsKeyPressed(m_RollBindingIndex);
-    m_bFOV  = GlobalGameWrapper->IsKeyPressed(m_FOVBindingIndex);
+    bRoll = GlobalGameWrapper->IsKeyPressed(RollBindingIndex);
+    bFOV  = GlobalGameWrapper->IsKeyPressed(FOVBindingIndex);
 
     //Retrieve all the state values
-    m_bUsingGamepad = Controller.GetbUsingGamepad();
+    bUsingGamepad = Controller.GetbUsingGamepad();
 
     //Retrieve the inputs
-    m_Forward = Controller.GetAForward();
-    m_Right   = Controller.GetAStrafe();
-    m_Up      = Controller.GetAUp();
-    m_Pitch   = m_bUsingGamepad ? Controller.GetALookUp() : Controller.GetALookUp() * .0025f;
-    m_Yaw     = m_bUsingGamepad ? Controller.GetATurn()   : Controller.GetATurn()   * .0025f;
-    m_Roll    = 0.f;
-    m_FOV     = 0.f;
-    if(m_bUsingGamepad)
+    Forward = Controller.GetAForward();
+    Right   = Controller.GetAStrafe();
+    Up      = Controller.GetAUp();
+    Pitch   = bUsingGamepad ? Controller.GetALookUp() : Controller.GetALookUp() * .0025f;
+    Yaw     = bUsingGamepad ? Controller.GetATurn()   : Controller.GetATurn()   * .0025f;
+    Roll    = 0.f;
+    FOV     = 0.f;
+    if(bUsingGamepad)
     {
-        if(m_bRoll)
+        if(bRoll)
         {
-            DoSwap(m_RollSwap, m_Roll);
+            DoSwap(RollSwap, Roll);
         }
-        if(m_bFOV)
+        if(bFOV)
         {
-            DoSwap(m_FOVSwap, m_FOV);
+            DoSwap(FOVSwap, FOV);
         }
-        if(*m_bInvertPitch)
+        if(*bInvertPitch)
         {
-            m_Pitch *= -1.f;
+            Pitch *= -1.f;
         }
     }
     else
@@ -75,13 +75,13 @@ void InputsManager::GetInputs(PlayerControllerWrapper Controller)
         //When pressing keyboard roll buttons, roll is +- 83.3333 which is the same as 250 / 3
         //Compress it to -1 to 1 range to match controller inputs
         constexpr float LookRollRate = 250.f / 3.f;
-        m_Roll = Controller.GetALookRoll() / LookRollRate;
+        Roll = Controller.GetALookRoll() / LookRollRate;
 
         //Sometimes with keyboard the roll input will go slightly above or below 1 and -1
         //Clamp it to -1 to 1 range
-        if(abs(m_Roll) > 1.f)
+        if(abs(Roll) > 1.f)
         {
-            m_Roll /= abs(m_Roll);
+            Roll /= abs(Roll);
         }
     }
 }
@@ -145,22 +145,22 @@ void InputsManager::SetInputSwapOptions()
 
 void InputsManager::CacheRollBinding()
 {
-    m_RollBindingIndex = GlobalGameWrapper->GetFNameIndexByString(*m_RollBinding);
+    RollBindingIndex = GlobalGameWrapper->GetFNameIndexByString(*RollBinding);
 }
 
 void InputsManager::CacheFOVBinding()
 {
-    m_FOVBindingIndex = GlobalGameWrapper->GetFNameIndexByString(*m_FOVBinding);
+    FOVBindingIndex = GlobalGameWrapper->GetFNameIndexByString(*FOVBinding);
 }
 
 void InputsManager::CacheRollSwap()
 {
-    m_RollSwap = GetSwapType(*m_RollSwapChoice);
+    RollSwap = GetSwapType(*RollSwapChoice);
 }
 
 void InputsManager::CacheFOVSwap()
 {
-    m_FOVSwap = GetSwapType(*m_FOVSwapChoice);
+    FOVSwap = GetSwapType(*FOVSwapChoice);
 }
 
 void InputsManager::DoSwap(EInputSwapType SwapType, float& ValueToSwap)
@@ -169,32 +169,32 @@ void InputsManager::DoSwap(EInputSwapType SwapType, float& ValueToSwap)
     {
         case EInputSwapType::S_Forward:
         {
-            ValueToSwap = m_Forward;
-            m_Forward = 0.f;
+            ValueToSwap = Forward;
+            Forward = 0.f;
             break;
         }
         case EInputSwapType::S_Right:
         {
-            ValueToSwap = m_Right;
-            m_Right = 0.f;
+            ValueToSwap = Right;
+            Right = 0.f;
             break;
         }
         case EInputSwapType::S_Up:
         {
-            ValueToSwap = m_Up;
-            m_Up = 0.f;
+            ValueToSwap = Up;
+            Up = 0.f;
             break;
         }
         case EInputSwapType::S_Pitch:
         {
-            ValueToSwap = m_Pitch;
-            m_Pitch = 0.f;
+            ValueToSwap = Pitch;
+            Pitch = 0.f;
             break;
         }
         case EInputSwapType::S_Yaw:
         {
-            ValueToSwap = m_Yaw;
-            m_Yaw = 0.f;
+            ValueToSwap = Yaw;
+            Yaw = 0.f;
             break;
         }
     }
