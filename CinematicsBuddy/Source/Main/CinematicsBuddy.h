@@ -10,7 +10,6 @@ private:
     std::shared_ptr<class AnimationExporter> Exporter;
     std::shared_ptr<class AnimationBuffer>   Buffer;
     std::shared_ptr<class CameraManager>     Camera;
-    std::shared_ptr<class UIManager>         UI;
 
 public:
 	void onLoad() override;

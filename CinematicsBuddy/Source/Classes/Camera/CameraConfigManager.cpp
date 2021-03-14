@@ -3,9 +3,9 @@
 #include "UI/UIManager.h"
 #include <fstream>
 
-CameraConfigManager::CameraConfigManager(std::shared_ptr<UIManager> TheUI)
+CameraConfigManager::CameraConfigManager()
 {
-    UI = TheUI;
+    auto UI = UIManager::GetInstance();
 
     //Register cvars
     UI->AddElement({m_CurrentConfig, CVAR_CONFIG_CURRENT,  "Current Config",  "Current set of camera settings"                          });
@@ -153,6 +153,7 @@ void CameraConfigManager::UpdateConfigList(bool bRefresh)
         }
     }
 
+    auto UI = UIManager::GetInstance();
     UI->EditElement(CVAR_CONFIG_CURRENT).AddDropdownOptions(ConfigsList);
 
     //Don't refresh during construction, only when manually calling by notifier

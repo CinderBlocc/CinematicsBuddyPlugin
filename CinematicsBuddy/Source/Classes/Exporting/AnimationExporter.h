@@ -3,12 +3,10 @@
 #include <filesystem>
 #include <chrono>
 
-class UIManager;
-
 class AnimationExporter : public AnimationRecorder
 {
 public:
-    AnimationExporter(std::shared_ptr<UIManager> TheUI);
+    AnimationExporter();
 
     void AddData(const FrameInfo& FrameData) override;
 

@@ -5,7 +5,6 @@
 
 class PlayerControllerWrapper;
 class CameraConfigManager;
-class UIManager;
 
 enum class EInputSwapType
 {
@@ -20,7 +19,7 @@ enum class EInputSwapType
 class InputsManager
 {
 public:
-    InputsManager(std::shared_ptr<UIManager> TheUI);
+    InputsManager();
 
     //Get input values from game
     void PlayerInputTick(float Delta);
@@ -38,8 +37,6 @@ public:
     bool  GetbUsingGamepad() { return bUsingGamepad; }
 
 private:
-    std::shared_ptr<UIManager> UI;
-
     //Get and manipulate input values from game
     void GetInputs(PlayerControllerWrapper Controller);
     void NullifyInputs(PlayerControllerWrapper Controller);

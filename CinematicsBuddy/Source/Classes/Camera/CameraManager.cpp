@@ -7,10 +7,10 @@
 #include "CameraConfigManager.h"
 #include "UI/UIManager.h"
 
-CameraManager::CameraManager(std::shared_ptr<UIManager> TheUI)
+CameraManager::CameraManager()
 {
-    UI = TheUI;
-    Inputs = std::make_shared<InputsManager>(TheUI);
+    auto UI = UIManager::GetInstance();
+    Inputs = std::make_shared<InputsManager>();
 
     //Register cvars
     UI->AddElement({bUseOverrides,        CVAR_ENABLE_CAM_OVERRIDE, "Enable Overrides",                   "Enables camera overriding features"                            });
@@ -36,7 +36,7 @@ CameraManager::CameraManager(std::shared_ptr<UIManager> TheUI)
     GlobalGameWrapper->HookEvent("Function TAGame.PlayerInput_TA.PlayerInput", std::bind(&CameraManager::PlayerInputTick, this));
 
     //Create the config manager after all cvars have been created
-    Configs = std::make_shared<CameraConfigManager>(TheUI);
+    Configs = std::make_shared<CameraConfigManager>();
 }
 
 void CameraManager::PlayerInputTick()

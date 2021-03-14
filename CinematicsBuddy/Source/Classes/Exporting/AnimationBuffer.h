@@ -1,12 +1,10 @@
 #pragma once
 #include "AnimationRecorder.h"
 
-class UIManager;
-
 class AnimationBuffer : public AnimationRecorder
 {
 public:
-    AnimationBuffer(std::shared_ptr<UIManager> TheUI);
+    AnimationBuffer();
 
     void StartRecording() override;
     void StopRecording() override;

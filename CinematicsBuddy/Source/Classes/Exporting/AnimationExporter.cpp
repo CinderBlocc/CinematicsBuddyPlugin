@@ -5,9 +5,10 @@
 #include "UI/UIManager.h"
 #include <vector>
 
-AnimationExporter::AnimationExporter(std::shared_ptr<UIManager> TheUI)
-    : AnimationRecorder(TheUI)
+AnimationExporter::AnimationExporter()
 {
+    auto UI = UIManager::GetInstance();
+
     //Register cvars
     UI->AddElement({RecordSize,         CVAR_MAX_RECORD_LENGTH,   "Max recording length (seconds)", "Number of seconds to record",        0,        1000                 });
     UI->AddElement({bIsRecordingActive, CVAR_IS_RECORDING_ACTIVE, "##RecordingActive", "Internal info about the state of the recording", -1000001, -1000001, false, false});
