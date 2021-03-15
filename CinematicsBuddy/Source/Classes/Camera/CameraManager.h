@@ -74,6 +74,7 @@ private:
     void UpdateFOV(float Delta, CameraWrapper TheCamera);
 
     //Speed calculations
+    void ResetSpeeds();
     void UpdateVelocityLocal(float Delta, Vector MovementInputs);
     void UpdateVelocityWorld(float Delta, Vector MovementInputs);
     void UpdateAngularVelocity(float Delta, Vector RotationInputs);

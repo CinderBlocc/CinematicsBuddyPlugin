@@ -32,6 +32,12 @@ CameraManager::CameraManager()
     UI->AddElement({FOVAcceleration,      CVAR_FOV_ACCELERATION,    "FOV Acceleration",                   "The easing of FOV speed change",                        0,  10 });
     UI->AddElement({FOVLimitEase,         CVAR_FOV_LIMIT_EASE,      "FOV Limit Ease",                     "Cutoff for easing effect into min/max FOV",             0,  .5f});
 
+    //Reset the speeds to 0 when CameraManager has been enabled or disabled
+    ON_CVAR_CHANGED(CVAR_ENABLE_CAM_OVERRIDE, CameraManager::ResetSpeeds);
+
+    //Register notifiers
+    MAKE_NOTIFIER(NOTIFIER_CAM_RESET, ResetSpeeds, "Resets camera acceleration and speed");
+
     //Register hooks
     GlobalGameWrapper->HookEvent("Function TAGame.PlayerInput_TA.PlayerInput", std::bind(&CameraManager::PlayerInputTick, this));
 
@@ -44,10 +50,19 @@ void CameraManager::PlayerInputTick()
     //Get delta regardless of validity so there isn't suddenly a massive jump when it becomes valid again
     float Delta = GetDelta();
 
+    //Determine if function should run. If it was previously running but now shouldn't, reset the speeds
+    static bool bWasValid = true;
     if(!IsValidMode())
     {
+        if(bWasValid)
+        {
+            bWasValid = false;
+            ResetSpeeds();
+        }
+
         return;
     }
+    bWasValid = true;
 
     //Get the inputs and then nullify them before they reach the game
 	Inputs->PlayerInputTick(Delta);
@@ -168,6 +183,14 @@ void CameraManager::UpdateFOV(float Delta, CameraWrapper TheCamera)
 
 
 // SPEED CALCULATIONS //
+void CameraManager::ResetSpeeds()
+{
+    VelocityWorld   = {0, 0, 0};
+    VelocityLocal   = {0, 0, 0};
+    AngularVelocity = {0, 0, 0};
+    FOVCurrentSpeed = 0.f;
+}
+
 void CameraManager::UpdateVelocityLocal(float Delta, Vector MovementInputs)
 {
     float MaxSpeed   = BaseMovementSpeed * *MovementSpeed;

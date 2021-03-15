@@ -24,6 +24,9 @@ Pending.
 ## CAMERA OVERRIDES
 Each of the settings follows this format: `Setting name` *(default value, minimum, maximum)* Setting description.
 
+###### HIDDEN
+- There is a notifier that isn't in the UI - `CBCameraReset` - that you can use to set all the acceleration and velocity values to zero. A good example for when to use this would be when setting the camera to a specific location using the [SpectatorControls plugin](https://bakkesplugins.com/plugins/view/107).
+
 ###### CHECKBOXES
 - `Enable Overrides` *(false, -, -)* Globally enables or disables the camera overrides feature
 - `Local Momentum Preservation` *(false, -, -)* Camera either maintains linear momentum, or follows the direction the camera is facing.
