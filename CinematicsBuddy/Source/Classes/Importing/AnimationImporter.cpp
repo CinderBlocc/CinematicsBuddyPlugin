@@ -3,9 +3,9 @@
 #include "SupportFiles/MacrosStructsEnums.h"
 #include "UI/UIManager.h"
 
-AnimationImporter::AnimationImporter()
+AnimationImporter::AnimationImporter(std::shared_ptr<UIManager> TheUI)
 {
-    auto UI = UIManager::GetInstance();
+    UI = TheUI;
 
     //Register cvars
     UI->AddElement({ImportFileName, CVAR_IMPORT_FILE_NAME, "File Name##Import", "Set the import file name"});

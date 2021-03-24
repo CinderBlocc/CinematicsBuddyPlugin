@@ -4,12 +4,16 @@
 #include <vector>
 #include <filesystem>
 
+class UIManager;
+
 class CameraConfigManager
 {
 public:
-    CameraConfigManager();
+    CameraConfigManager(std::shared_ptr<UIManager> TheUI);
 
 private:
+    std::shared_ptr<UIManager> UI;
+
     std::shared_ptr<std::string> m_CurrentConfig = std::make_shared<std::string>("");
     std::shared_ptr<std::string> m_NewName       = std::make_shared<std::string>("");
 

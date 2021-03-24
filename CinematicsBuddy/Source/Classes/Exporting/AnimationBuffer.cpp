@@ -5,10 +5,9 @@
 #include "UI/UIManager.h"
 #include <chrono>
 
-AnimationBuffer::AnimationBuffer()
+AnimationBuffer::AnimationBuffer(std::shared_ptr<UIManager> TheUI)
+    : AnimationRecorder(TheUI)
 {
-    auto UI = UIManager::GetInstance();
-
     //Register cvars
     UI->AddElement({bIsBufferActive, CVAR_BUFFER_ENABLED,    "Enable Buffer",               "Enable constant recording buffer"    });
     UI->AddElement({BufferSize,      CVAR_MAX_BUFFER_LENGTH, "Max buffer length (seconds)", "Number of seconds to buffer", 0, 1000});

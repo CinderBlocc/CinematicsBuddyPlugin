@@ -5,31 +5,9 @@
 #include <filesystem>
 #include <fstream>
 
-UIManager* UIManager::Instance_;
-
-UIManager* UIManager::GetInstance()
-{
-    if(!Instance_)
-    {
-        Instance_ = new UIManager();
-    }
-
-    return Instance_;
-}
-
-void UIManager::DestroyInstance()
-{
-    //Refer to CinematicsBuddy::onUnload for explanation
-    if(Instance_)
-    {
-        delete Instance_;
-        Instance_ = nullptr;
-    }
-}
-
 #define nl(x) SettingsFile << std::string(x) << '\n'
-#define nl2(x, y) nl(m_Elements[y].Print(x))
-#define nl3(x, y, z) nl(m_Elements[y].Print(x, z))
+#define nl2(x, y) nl(Elements[y].Print(x))
+#define nl3(x, y, z) nl(Elements[y].Print(x, z))
 #define cv(x) std::string(x)
 #define blank SettingsFile << '\n'
 #define sameline nl("7|")

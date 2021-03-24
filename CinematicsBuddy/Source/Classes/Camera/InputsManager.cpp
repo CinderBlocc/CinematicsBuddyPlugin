@@ -3,9 +3,9 @@
 #include "bakkesmod/plugin/bakkesmodplugin.h"
 #include "UI/UIManager.h"
 
-InputsManager::InputsManager()
+InputsManager::InputsManager(std::shared_ptr<UIManager> TheUI)
 {
-    auto UI = UIManager::GetInstance();
+    UI = TheUI;
 
     //Register cvars
     UI->AddElement({bInvertPitch,   CVAR_INVERT_PITCH, "Invert Pitch (Controller)", "Inverts pitch values for the controller"  });
@@ -124,7 +124,6 @@ void InputsManager::SetBindingOptions()
     BindingsList.emplace_back("Right thumbstick X axis", "XboxTypeS_RightX");
     BindingsList.emplace_back("Right thumbstick Y axis", "XboxTypeS_RightY");
 
-    auto UI = UIManager::GetInstance();
     UI->EditElement(CVAR_ROLL_BINDING).AddDropdownOptions(BindingsList);
     UI->EditElement(CVAR_FOV_BINDING).AddDropdownOptions(BindingsList);
 }
@@ -140,7 +139,6 @@ void InputsManager::SetInputSwapOptions()
     OptionsList.emplace_back("Pitch",   "Pitch");
     OptionsList.emplace_back("Yaw",     "Yaw");
 
-    auto UI = UIManager::GetInstance();
     UI->EditElement(CVAR_ROLL_SWAP).AddDropdownOptions(OptionsList);
     UI->EditElement(CVAR_FOV_SWAP).AddDropdownOptions(OptionsList);
 }

@@ -8,6 +8,7 @@ class CameraConfigManager;
 class CameraWrapper;
 class CanvasWrapper;
 class InputsManager;
+class UIManager;
 namespace RT
 {
     class Matrix3;
@@ -23,10 +24,11 @@ enum class ECameraAxis
 class CameraManager
 {
 public:
-    CameraManager();
+    CameraManager(std::shared_ptr<UIManager> TheUI);
 
 private:
     void PlayerInputTick();
+    std::shared_ptr<UIManager> UI;
     std::shared_ptr<InputsManager> Inputs;
     std::shared_ptr<CameraConfigManager> Configs;
 

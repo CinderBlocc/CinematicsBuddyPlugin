@@ -5,6 +5,8 @@
 #include <vector>
 #include <fstream>
 
+class UIManager;
+
 struct ReplayMetadata
 {
     std::string ReplayName;
@@ -22,12 +24,14 @@ public:
     using CarsSeenParam = const std::vector<CarSeen>&;
     using StringParam = const std::string&;
 
-    AnimationRecorder();
+    AnimationRecorder(std::shared_ptr<UIManager> TheUI);
     
     bool GetbIsRecording() { return bIsRecording; }
     virtual void AddData(const FrameInfo& FrameData);
 
 protected:
+    std::shared_ptr<UIManager> UI;
+
     std::shared_ptr<bool> bIsFileWriting      = std::make_shared<bool>(false);
     std::shared_ptr<bool> bIncrementFileNames = std::make_shared<bool>(true);
     std::shared_ptr<bool> bSetSpecialPath     = std::make_shared<bool>(false);

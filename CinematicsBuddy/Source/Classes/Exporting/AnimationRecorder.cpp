@@ -7,9 +7,9 @@
 #include <chrono>
 #include <thread>
 
-AnimationRecorder::AnimationRecorder()
+AnimationRecorder::AnimationRecorder(std::shared_ptr<UIManager> TheUI)
 {
-    auto UI = UIManager::GetInstance();
+    UI = TheUI;
 
     //Register cvars only once
     if(!HaveCvarsBeenInitialzed())
