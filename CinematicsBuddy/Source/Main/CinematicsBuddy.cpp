@@ -11,23 +11,10 @@
 /*
     #TODO
 
-    PARSING SECTIONS OF SCRIPTS SHOULD BE SEPARATED FROM MAIN SCRIPT FILES
-        - Easier to edit and maintain
-        - Less clutter in main script
-        - DO THIS FOR BOTH AFTER EFFECTS AND 3DS MAX
-
-
-
-    REDO AE SCRIPT BEFORE 3DS MAX SCRIPT
-        - Add a README with instructions in these folders:
-            - /data/CinematicsBuddy/ for overall instructions about the plugin
-            - /"/"/Plugins/3dsMax/ for instructions about maxscript
-            - /"/"/Plugins/AfterEffects/ for instructions about AE script
-
-
-    Move all 3D assets into a submodule that sits in /data/CinematicsBuddy/Plugins/3DAssets/ so all scripts can access them relatively
-        - i.e. the maxscript repo would include it as a submodule, and if you ever add blender, it would also include it as a submodule
-            - The two versions would combine into one during the copying process of the update batch script in the main repo
+    - Add a README with instructions in these folders:
+        - /data/CinematicsBuddy/ for overall instructions about the plugin
+        - /"/"/Plugins/3dsMax/ for instructions about maxscript
+        - /"/"/Plugins/AfterEffects/ for instructions about AE script
 
 
     MAXSCRIPT NOTES:
@@ -52,6 +39,10 @@
 
     - Remove BMGraphs as a submodule
     - Extract what you need from Matrix3 and then remove RenderingTools as a submodule?
+
+
+    - Add a checkbox to save dollycam path with the same name as the CinematicsBuddy file
+
 
     - Remove all Beta/Gamma stuff from UIManager.cpp and MacrosStructsEnums.h
 */

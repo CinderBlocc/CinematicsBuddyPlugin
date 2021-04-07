@@ -142,6 +142,12 @@ std::filesystem::path CBUtils::GetFinalFileName(std::filesystem::path IntendedPa
     }
     else
     {
+        //It could be confusing to have "FILENAME" and "FILENAME_01", so skip straight to "FILENAME_02"
+        if(IncrementLevel == 1)
+        {
+            IncrementLevel = 2;
+        }
+
         //Append _01 - _99. If increment is more than 99 somehow, it'll just overwrite 99
         CheckIfExists += InFileName + "_" + PrintDoubleDigit(IncrementLevel);
     }
