@@ -26,6 +26,11 @@
                 - Let the user choose the FBX settings, so make sure that dialog pops up
 
 
+    BETA FILES TO DELETE:                                       << Compare against "_Beta_cleanup" folder in /_EXTRA/Media/CinematicsBuddy/Extra/ one you've updated everything in _MAIN_REPO
+        - /plugins/settings/cinematicsbuddy0.9.4c.set
+        - /data/CinematicsBuddy/Plugins/3dsMax/CinematicsBuddyMaxscript0.9.4c.ms
+        - /data/CinematicsBuddy/Plugins/3dsMax/Assets/      <<< DELETE THE ENTIRE FOLDER
+
     - Camera animation importing
 		- IMPORT INTERPOLATION
 			- https://discordapp.com/channels/@me/602523400518369280/676118235631845398
