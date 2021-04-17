@@ -160,7 +160,10 @@ json::JSON WheelInfo::ConvertToJSON(int WheelIndex) const
 {
     json::JSON Output = json::Object();
 
-    Output[std::to_string(WheelIndex)] = CBUtils::PrintFloat(SteerAmount) + "," + CBUtils::PrintFloat(SuspensionDistance) + "," + CBUtils::PrintFloat(SpinSpeed);
+    std::string WheelIndexString = std::to_string(WheelIndex);
+    Output[WheelIndexString]["SA"] = CBUtils::PrintFloat(SteerAmount);
+    Output[WheelIndexString]["SD"] = CBUtils::PrintFloat(SuspensionDistance);
+    Output[WheelIndexString]["SS"] = CBUtils::PrintFloat(SpinSpeed);
     
     return Output;
 }
@@ -169,7 +172,9 @@ json::JSON WheelInfo::CreateExampleJSON()
 {
     json::JSON Output = json::Object();
 
-    Output["(0-3) Wheel index"] = "(float - radians) SteerAmount, (float - degrees of axle rotation?) SuspensionDistance, (float - radians per second) SpinSpeed";
+    Output["(0-3) WheelIndex"]["(SA) SteerAmount"] = "(float - radians)";
+    Output["(0-3) WheelIndex"]["(SD) SuspensionDistance"] = "(float - degrees of axle rotation?)";
+    Output["(0-3) WheelIndex"]["(SS) SpinSpeed"] = "(float - radians per second)";
     
     return Output;
 }
@@ -251,10 +256,10 @@ json::JSON CarInfo::CreateExampleJSON()
 {
     json::JSON Output = json::Object();
 
-    Output["(B) IsBoosting"] = "(bool) If boost effects are playing";
+    Output["(B) IsBoosting"] = "(bool) If player is boosting";
     Output["(L) Location"] = "(Vector) X, Y, Z";
     Output["(R) Rotation"] = "(Quat) W, X, Y, Z";
-    Output["(W) Wheels Array"][0] = WheelInfo::CreateExampleJSON();
+    Output["(W) Wheels"][0] = WheelInfo::CreateExampleJSON();
 
     return Output;
 }

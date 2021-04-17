@@ -17,19 +17,11 @@
         - /"/"/Plugins/AfterEffects/ for instructions about AE script
 
 
-    MAXSCRIPT NOTES:
-        - MetadataDummy should have the name of the imported txt file
-        - When attempting to export FBX to other package, parenting might not export correctly.
-            - In the script (button in UI), add an option to bake the animation.
-            - Create a clone of the car mesh, then bake all of the position/rotation data onto the mesh.
-            - Add all the cloned cars to the selection, along with the field, ball, and camera. Export selected to FBX.
-                - Let the user choose the FBX settings, so make sure that dialog pops up
-
-
     BETA FILES TO DELETE:                                       << Compare against "_Beta_cleanup" folder in /_EXTRA/Media/CinematicsBuddy/Extra/ one you've updated everything in _MAIN_REPO
         - /plugins/settings/cinematicsbuddy0.9.4c.set
         - /data/CinematicsBuddy/Plugins/3dsMax/CinematicsBuddyMaxscript0.9.4c.ms
         - /data/CinematicsBuddy/Plugins/3dsMax/Assets/      <<< DELETE THE ENTIRE FOLDER
+
 
     - Camera animation importing
 		- IMPORT INTERPOLATION
@@ -42,24 +34,19 @@
 				- Maybe it should have an output of the timestamp it was saved at so it can go to that exact replay frame
 			- Still use the chrono delta for these frames
 
-    - Remove BMGraphs as a submodule
-    - Extract what you need from Matrix3 and then remove RenderingTools as a submodule?
-
+    - SUBMODULES TO REMOVE
+        - BMGraphs
+        - RenderingTools?
+            - Try extracting only what you need from Matrix3
 
     - Add a checkbox to save dollycam path with the same name as the CinematicsBuddy file
-
 
     - Remove all Beta/Gamma stuff from UIManager.cpp and MacrosStructsEnums.h
 */
 
 /*
-    FINAL #TODO: Look for all TODO tags in VA Hashtags and finish them
-                 Also look for all "TESTS" and remove them
+    FINAL #TODO: Look for all TODO tags in VA Hashtags and finish them. Also look for all "TESTS - REMOVE WHEN DONE" and remove them.
 */
-
-//0.9.9 - import rewrite
-//1.0.0 - REMOVE VERSION DEPENDENCIES!!! Completely lock in the formatting of the text in this version so all future updates don't rely on a broken version
-//				- Still include version numbers in the file though in case those need to be referenced in troubleshooting
 
 BAKKESMOD_PLUGIN(CinematicsBuddy, "Capture camera, ball, and car animation", PLUGIN_VERSION, PLUGINTYPE_REPLAY)
 

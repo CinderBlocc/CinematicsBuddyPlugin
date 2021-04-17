@@ -6,8 +6,6 @@
 
 std::string CBUtils::PrintFloat(float InFloat, int MaxDecimals)
 {
-    //#TODO: Check to make sure abs() fixed the printing issue for negative numbers
-
     std::ostringstream Output;
     float MinThreshold = powf(.1f, static_cast<float>(MaxDecimals));
 
