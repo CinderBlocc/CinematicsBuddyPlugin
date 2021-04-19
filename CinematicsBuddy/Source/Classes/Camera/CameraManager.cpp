@@ -1,9 +1,9 @@
 #include "CameraManager.h"
 #include "InputsManager.h"
 #include "SupportFiles/CBUtils.h"
+#include "SupportFiles/CBMatrix3.h"
 #include "SupportFiles/MacrosStructsEnums.h"
 #include "bakkesmod/plugin/bakkesmodplugin.h"
-#include "RenderingTools/RenderingTools.h"
 #include "CameraConfigManager.h"
 #include "UI/UIManager.h"
 
@@ -97,10 +97,10 @@ void CameraManager::UpdatePosition(float Delta, CameraWrapper TheCamera)
     Vector NewLocation = TheCamera.GetLocation();
     if(*bLocalMomentum)
     {
-        RT::Matrix3 MovementMatrix = GetCameraMatrix(*bUseLocalMovement, true);
-        NewLocation += MovementMatrix.forward * VelocityLocal.X * Delta;
-        NewLocation += MovementMatrix.right   * VelocityLocal.Y * Delta;
-        NewLocation += MovementMatrix.up      * VelocityLocal.Z * Delta;
+        CBUtils::Matrix3 MovementMatrix = GetCameraMatrix(*bUseLocalMovement, true);
+        NewLocation += MovementMatrix.Forward * VelocityLocal.X * Delta;
+        NewLocation += MovementMatrix.Right   * VelocityLocal.Y * Delta;
+        NewLocation += MovementMatrix.Up      * VelocityLocal.Z * Delta;
     }
     else
     {
@@ -132,13 +132,13 @@ void CameraManager::UpdateRotation(float Delta, CameraWrapper TheCamera)
     float YawAmount   = AngularVelocity.Y * Delta * DegToRad;
     float RollAmount  = AngularVelocity.Z * Delta * DegToRad;
 
-    RT::Matrix3 RotationMatrix = GetCameraMatrix(*bUseLocalRotation, false);
-    Quat PitchRot = AngleAxisRotation(PitchAmount, RotationMatrix.right);
-    Quat YawRot   = AngleAxisRotation(YawAmount,   RotationMatrix.up);
-    Quat RollRot  = AngleAxisRotation(RollAmount,  RotationMatrix.forward);
+    CBUtils::Matrix3 RotationMatrix = GetCameraMatrix(*bUseLocalRotation, false);
+    Quat PitchRot = AngleAxisRotation(PitchAmount, RotationMatrix.Right);
+    Quat YawRot   = AngleAxisRotation(YawAmount,   RotationMatrix.Up);
+    Quat RollRot  = AngleAxisRotation(RollAmount,  RotationMatrix.Forward);
 
     //Apply the new rotations to the current rotation, then apply to the camera
-    RT::Matrix3 CurrentMatrix(TheCamera.GetRotation());
+    CBUtils::Matrix3 CurrentMatrix(TheCamera.GetRotation());
     CurrentMatrix.RotateWithQuat(PitchRot);
     CurrentMatrix.RotateWithQuat(YawRot);
     CurrentMatrix.RotateWithQuat(RollRot);
@@ -206,14 +206,14 @@ void CameraManager::UpdateVelocityWorld(float Delta, Vector MovementInputs)
     float AccelSpeed = BaseMovementAccel * *MovementAccel;
 
     Vector CurrentSpeed;
-    RT::Matrix3 MovementMatrix = GetCameraMatrix(*bUseLocalMovement, true);
-    CurrentSpeed.X = Vector::dot(VelocityWorld, MovementMatrix.forward);
-    CurrentSpeed.Y = Vector::dot(VelocityWorld, MovementMatrix.right);
-    CurrentSpeed.Z = Vector::dot(VelocityWorld, MovementMatrix.up);
+    CBUtils::Matrix3 MovementMatrix = GetCameraMatrix(*bUseLocalMovement, true);
+    CurrentSpeed.X = Vector::dot(VelocityWorld, MovementMatrix.Forward);
+    CurrentSpeed.Y = Vector::dot(VelocityWorld, MovementMatrix.Right);
+    CurrentSpeed.Z = Vector::dot(VelocityWorld, MovementMatrix.Up);
 
-    Vector ForwardForce = UpdateFloatSpeed(Delta, CurrentSpeed.X, MovementInputs.X, MaxSpeed, AccelSpeed) * MovementMatrix.forward;
-    Vector RightForce   = UpdateFloatSpeed(Delta, CurrentSpeed.Y, MovementInputs.Y, MaxSpeed, AccelSpeed) * MovementMatrix.right;
-    Vector UpForce      = UpdateFloatSpeed(Delta, CurrentSpeed.Z, MovementInputs.Z, MaxSpeed, AccelSpeed) * MovementMatrix.up;
+    Vector ForwardForce = UpdateFloatSpeed(Delta, CurrentSpeed.X, MovementInputs.X, MaxSpeed, AccelSpeed) * MovementMatrix.Forward;
+    Vector RightForce   = UpdateFloatSpeed(Delta, CurrentSpeed.Y, MovementInputs.Y, MaxSpeed, AccelSpeed) * MovementMatrix.Right;
+    Vector UpForce      = UpdateFloatSpeed(Delta, CurrentSpeed.Z, MovementInputs.Z, MaxSpeed, AccelSpeed) * MovementMatrix.Up;
 
     VelocityWorld += ForwardForce;
     VelocityWorld += RightForce;
@@ -342,36 +342,36 @@ float CameraManager::GetDelta()
     return InputDelta;
 }
 
-RT::Matrix3 CameraManager::GetCameraMatrix(bool bFullyLocal, bool bLocationMatrix)
+CBUtils::Matrix3 CameraManager::GetCameraMatrix(bool bFullyLocal, bool bLocationMatrix)
 {
     CameraWrapper TheCamera = GlobalGameWrapper->GetCamera();
     if(TheCamera.IsNull())
     {
-        return RT::Matrix3();
+        return CBUtils::Matrix3();
     }
 
     //Return the matrix constructed from the camera's current orientation
     if(bFullyLocal)
     {
-        return RT::Matrix3(TheCamera.GetRotation());
+        return CBUtils::Matrix3(TheCamera.GetRotation());
     }
 
     //Approximate the game's camera matrices. Local and rotation act differently
-    RT::Matrix3 Output(TheCamera.GetRotation());
-    Output.up = Vector(0, 0, 1);
+    CBUtils::Matrix3 Output(TheCamera.GetRotation());
+    Output.Up = Vector(0, 0, 1);
     if(bLocationMatrix)
     {
-        Output.forward.Z = 0.f; Output.forward.normalize();
-        Output.right.Z   = 0.f; Output.right.normalize();
+        Output.Forward.Z = 0.f; Output.Forward.normalize();
+        Output.Right.Z   = 0.f; Output.Right.normalize();
     }
     else
     {
-        Vector NewRight = Vector::cross(Output.up, Output.forward).getNormalized();
-        if(Vector::dot(NewRight, Output.right) < 0.f)
+        Vector NewRight = Vector::cross(Output.Up, Output.Forward).getNormalized();
+        if(Vector::dot(NewRight, Output.Right) < 0.f)
         {
             NewRight *= -1.f;
         }
-        Output.right = NewRight;
+        Output.Right = NewRight;
     }
 
     return Output;

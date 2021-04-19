@@ -37,15 +37,6 @@
     <Filter Include="Source\Classes\UI">
       <UniqueIdentifier>{4741e19a-de5f-41b2-b638-ce4c1b808f13}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Vendor\RenderingTools">
-      <UniqueIdentifier>{1b0a5282-5e12-41f7-97dd-c085f411bb9e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Vendor\RenderingTools\Extra">
-      <UniqueIdentifier>{1bf13987-cd86-4e84-a07e-92aef8539ff3}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Vendor\RenderingTools\Objects">
-      <UniqueIdentifier>{2c9f368c-38a3-4e20-b2cd-017dd467dc53}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Main\CinematicsBuddy.cpp">
@@ -84,65 +75,14 @@
     <ClCompile Include="Source\Classes\UI\UIManager.cpp">
       <Filter>Source\Classes\UI</Filter>
     </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Objects\Chevron.cpp">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Objects\Circle.cpp">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Objects\Circle2D.cpp">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Objects\Cone.cpp">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Objects\Cube.cpp">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Objects\Cylinder.cpp">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Objects\Frustum.cpp">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Objects\Grid.cpp">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Objects\Line.cpp">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Objects\Matrix3.cpp">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Objects\Plane.cpp">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Objects\Sphere.cpp">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Objects\Triangle.cpp">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Objects\VisualCamera.cpp">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Extra\CanvasExtensions.cpp">
-      <Filter>Vendor\RenderingTools\Extra</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Extra\RenderingAssistant.cpp">
-      <Filter>Vendor\RenderingTools\Extra</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Extra\RenderingMath.cpp">
-      <Filter>Vendor\RenderingTools\Extra</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\RenderingTools\Extra\WrapperStructsExtensions.cpp">
-      <Filter>Vendor\RenderingTools\Extra</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Classes\UI\UIElement.cpp">
       <Filter>Source\Classes\UI</Filter>
     </ClCompile>
     <ClCompile Include="Source\Classes\Camera\CameraConfigManager.cpp">
       <Filter>Source\Classes\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\SupportFiles\CBMatrix3.cpp">
+      <Filter>Source\Support Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -188,68 +128,14 @@
     <ClInclude Include="Source\Classes\UI\UIManager.h">
       <Filter>Source\Classes\UI</Filter>
     </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\RenderingTools.h">
-      <Filter>Vendor\RenderingTools</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Objects\Chevron.h">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Objects\Circle.h">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Objects\Circle2D.h">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Objects\Cone.h">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Objects\Cube.h">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Objects\Cylinder.h">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Objects\Frustum.h">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Objects\Grid.h">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Objects\Line.h">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Objects\Matrix3.h">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Objects\Plane.h">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Objects\Sphere.h">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Objects\Triangle.h">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Objects\VisualCamera.h">
-      <Filter>Vendor\RenderingTools\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Extra\CanvasExtensions.h">
-      <Filter>Vendor\RenderingTools\Extra</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Extra\RenderingAssistant.h">
-      <Filter>Vendor\RenderingTools\Extra</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Extra\RenderingMath.h">
-      <Filter>Vendor\RenderingTools\Extra</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\RenderingTools\Extra\WrapperStructsExtensions.h">
-      <Filter>Vendor\RenderingTools\Extra</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Classes\UI\UIElement.h">
       <Filter>Source\Classes\UI</Filter>
     </ClInclude>
     <ClInclude Include="Source\Classes\Camera\CameraConfigManager.h">
       <Filter>Source\Classes\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SupportFiles\CBMatrix3.h">
+      <Filter>Source\Support Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

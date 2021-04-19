@@ -23,7 +23,6 @@
         - /data/CinematicsBuddy/Plugins/3dsMax/Assets/      <<< DELETE THE ENTIRE FOLDER
 
     - SUBMODULES TO REMOVE
-        - BMGraphs
         - RenderingTools?
             - Try extracting only what you need from Matrix3
 

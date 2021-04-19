@@ -9,7 +9,7 @@ class CameraWrapper;
 class CanvasWrapper;
 class InputsManager;
 class UIManager;
-namespace RT
+namespace CBUtils
 {
     class Matrix3;
 }
@@ -90,7 +90,7 @@ private:
     //Utility
     bool  IsValidMode();
     float GetDelta();
-    RT::Matrix3 GetCameraMatrix(bool bFullyLocal, bool bLocationMatrix);
+    CBUtils::Matrix3 GetCameraMatrix(bool bFullyLocal, bool bLocationMatrix);
     float GetInvertedPerc(float InPerc);
     float GetWeightedPerc(float InPerc);
     float GetReducedPerc(float InputPerc, float SpeedPerc);
