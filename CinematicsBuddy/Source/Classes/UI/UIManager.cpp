@@ -118,6 +118,8 @@ void UIManager::GenerateSettingsFile()
     nl2(EUI::Checkbox, CVAR_ENABLE_CAM_OVERRIDE);
     nl2(EUI::GrayedBegin, CVAR_ENABLE_CAM_OVERRIDE);
         sameline;
+        nl2(EUI::Checkbox, CVAR_CAM_FREEZE);
+        sameline;
         nl2(EUI::Checkbox, CVAR_CAM_LOCAL_MOMENTUM);
         sameline;
         nl2(EUI::Checkbox, CVAR_CAM_LOCAL_MOVEMENT);

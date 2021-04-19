@@ -23,8 +23,7 @@
         - /data/CinematicsBuddy/Plugins/3dsMax/Assets/      <<< DELETE THE ENTIRE FOLDER
 
     - SUBMODULES TO REMOVE
-        - RenderingTools?
-            - Try extracting only what you need from Matrix3
+        - RenderingTools
 
     - Add a checkbox to save dollycam path with the same name as the CinematicsBuddy file
 

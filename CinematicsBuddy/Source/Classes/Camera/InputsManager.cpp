@@ -13,6 +13,7 @@ InputsManager::InputsManager(std::shared_ptr<UIManager> TheUI)
     UI->AddElement({FOVBinding,     CVAR_FOV_BINDING,  "Toggle FOV Binding",        "Modifier to swap an input axis with FOV"  });
     UI->AddElement({RollSwapChoice, CVAR_ROLL_SWAP,    "Roll Input Swap",           "Which axis to swap with Roll"             });
     UI->AddElement({FOVSwapChoice,  CVAR_FOV_SWAP,     "FOV Input Swap",            "Which axis to swap with FOV"              });
+    UI->AddElement({bFreeze,        CVAR_CAM_FREEZE,   "Freeze",                    "Block inputs to camera"                   });
 
     //Add options to dropdown menus
     SetBindingOptions();
@@ -35,7 +36,11 @@ void InputsManager::PlayerInputTick(float Delta)
     PlayerControllerWrapper Controller = GlobalGameWrapper->GetPlayerController();
 	if(Controller.IsNull()) return;
 
-    GetInputs(Controller);
+    if(!*bFreeze)
+    {
+        GetInputs(Controller);
+    }
+
     NullifyInputs(Controller);
 }
 

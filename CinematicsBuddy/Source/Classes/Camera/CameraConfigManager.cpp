@@ -62,6 +62,7 @@ std::vector<std::string> CameraConfigManager::GetCvarList()
         Output.emplace_back(CVAR_ROLL_SWAP);
         Output.emplace_back(CVAR_FOV_SWAP);
         Output.emplace_back(CVAR_INVERT_PITCH);
+        Output.emplace_back(CVAR_CAM_FREEZE);
 
         bHaveFilledList = true;
     }

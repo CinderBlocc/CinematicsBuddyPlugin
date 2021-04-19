@@ -62,6 +62,7 @@ extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 #define CVAR_ROLL_SWAP           "CB_Camera_RollSwap"
 #define CVAR_FOV_BINDING         "CB_Camera_FOVBinding"
 #define CVAR_FOV_SWAP            "CB_Camera_FOVSwap"
+#define CVAR_CAM_FREEZE          "CB_Camera_Freeze"
 #define NOTIFIER_CAM_RESET       "CBCameraReset"
 
 //Camera config cvars and notifiers

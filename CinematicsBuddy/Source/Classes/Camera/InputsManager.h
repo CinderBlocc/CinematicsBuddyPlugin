@@ -56,6 +56,7 @@ private:
 
     //Variables for input swapping and manipulation
     std::shared_ptr<bool> bInvertPitch = std::make_shared<bool>(false);
+    std::shared_ptr<bool> bFreeze      = std::make_shared<bool>(false);
     std::shared_ptr<std::string> RollBinding    = std::make_shared<std::string>("XboxTypeS_RightShoulder");
     std::shared_ptr<std::string> FOVBinding     = std::make_shared<std::string>("XboxTypeS_LeftShoulder");
     std::shared_ptr<std::string> RollSwapChoice = std::make_shared<std::string>("Yaw");
