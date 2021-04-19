@@ -67,7 +67,6 @@
     <ClCompile Include="Source\Classes\UI\UIManager.cpp" />
     <ClCompile Include="Source\Main\CinematicsBuddy.cpp" />
     <ClCompile Include="Source\SupportFiles\CBUtils.cpp" />
-    <ClCompile Include="Vendor\BMGraphs\BMGraphs\BMGraphs.cpp" />
     <ClCompile Include="Vendor\RenderingTools\Extra\CanvasExtensions.cpp" />
     <ClCompile Include="Vendor\RenderingTools\Extra\RenderingAssistant.cpp" />
     <ClCompile Include="Vendor\RenderingTools\Extra\RenderingMath.cpp" />
@@ -103,8 +102,6 @@
     <ClInclude Include="Source\Main\CinematicsBuddy.h" />
     <ClInclude Include="Source\SupportFiles\CBUtils.h" />
     <ClInclude Include="Source\SupportFiles\MacrosStructsEnums.h" />
-    <ClInclude Include="Vendor\BMGraphs\BMGraphs\BMGraphs.h" />
-    <ClInclude Include="Vendor\BMGraphs\BMGraphs\BMGraphsMacrosStructsEnums.h" />
     <ClInclude Include="Vendor\RenderingTools\Extra\CanvasExtensions.h" />
     <ClInclude Include="Vendor\RenderingTools\Extra\RenderingAssistant.h" />
     <ClInclude Include="Vendor\RenderingTools\Extra\RenderingMath.h" />

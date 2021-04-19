@@ -34,9 +34,6 @@
     <Filter Include="Source\Classes\Misc">
       <UniqueIdentifier>{5d3dd5f9-9728-4920-9cf9-e3f42b8be87f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Vendor\BMGraphs">
-      <UniqueIdentifier>{5236e75b-e5fd-4d09-9100-6526066a053f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source\Classes\UI">
       <UniqueIdentifier>{4741e19a-de5f-41b2-b638-ce4c1b808f13}</UniqueIdentifier>
     </Filter>
@@ -83,9 +80,6 @@
     </ClCompile>
     <ClCompile Include="Source\Classes\Camera\InputsManager.cpp">
       <Filter>Source\Classes\Camera</Filter>
-    </ClCompile>
-    <ClCompile Include="Vendor\BMGraphs\BMGraphs\BMGraphs.cpp">
-      <Filter>Vendor\BMGraphs</Filter>
     </ClCompile>
     <ClCompile Include="Source\Classes\UI\UIManager.cpp">
       <Filter>Source\Classes\UI</Filter>
@@ -190,12 +184,6 @@
     </ClInclude>
     <ClInclude Include="Source\Classes\Camera\InputsManager.h">
       <Filter>Source\Classes\Camera</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\BMGraphs\BMGraphs\BMGraphs.h">
-      <Filter>Vendor\BMGraphs</Filter>
-    </ClInclude>
-    <ClInclude Include="Vendor\BMGraphs\BMGraphs\BMGraphsMacrosStructsEnums.h">
-      <Filter>Vendor\BMGraphs</Filter>
     </ClInclude>
     <ClInclude Include="Source\Classes\UI\UIManager.h">
       <Filter>Source\Classes\UI</Filter>

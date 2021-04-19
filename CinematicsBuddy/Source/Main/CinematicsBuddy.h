@@ -20,7 +20,4 @@ public:
     void OnViewportTick();
     bool IsValidRecordingMode();
 	void RecordingFunction();
-
-    // TESTING - REMOVE WHEN DONE //
-    void TestExportFormat();
 };

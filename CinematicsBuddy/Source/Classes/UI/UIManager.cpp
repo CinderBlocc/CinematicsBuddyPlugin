@@ -52,7 +52,6 @@ void UIManager::GenerateSettingsFile()
     separator;
     blank;
 
-#ifndef IS_GAMMA_BUILD
     nl3(EUI::GrayedBegin, CVAR_IS_FILE_WRITING, true);
 
         //Normal recording
@@ -94,22 +93,20 @@ void UIManager::GenerateSettingsFile()
         nl2(EUI::Float, CVAR_MAX_BUFFER_LENGTH);
         label("NOTE: File is saved to location specified by \"Special Path\" in the NORMAL RECORDING section. Read the note there for instructions.");
     
+#ifdef INCLUDE_ANIMATION_IMPORTING
         blank;
         separator;
         blank;
-    
+        
         //Importing camera animations
         label("IMPORTING");
         nl2(EUI::Textbox, CVAR_IMPORT_FILE_NAME);
         button("Import Selected Animation", NOTIFIER_IMPORT_FILE);
         sameline;
         button("Clear Animation", NOTIFIER_IMPORT_CLEAR);
+#endif
 
     nl2(EUI::GrayedEnd, CVAR_IS_FILE_WRITING);
-#endif
-#ifdef IS_GAMMA_BUILD
-    label("Recording, Buffer, and Importing are unavailable in Beta/Gamma builds");
-#endif
     
     blank;
     separator;

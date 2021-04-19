@@ -1,17 +1,12 @@
 #pragma once
 
-
 //Allow usage of cvarManager and gameWrapper in any file that includes this file
 //These pointers are declared and assigned at the top of CinematicsBuddy.cpp
 extern std::shared_ptr<class CVarManagerWrapper> GlobalCvarManager;
 extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 
-
 // MACROS //
-#define PLUGIN_VERSION      "0.9.9"
-
-//#TODO: Remove this in final release
-//#define IS_GAMMA_BUILD
+#define PLUGIN_VERSION "0.9.9"
 
 //Generic defines
 #define EXTENSION_RECORDING ".txt"

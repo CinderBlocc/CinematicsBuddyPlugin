@@ -22,6 +22,12 @@
         - /data/CinematicsBuddy/Plugins/3dsMax/CinematicsBuddyMaxscript0.9.4c.ms
         - /data/CinematicsBuddy/Plugins/3dsMax/Assets/      <<< DELETE THE ENTIRE FOLDER
 
+    - SUBMODULES TO REMOVE
+        - BMGraphs
+        - RenderingTools?
+            - Try extracting only what you need from Matrix3
+
+    - Add a checkbox to save dollycam path with the same name as the CinematicsBuddy file
 
     - Camera animation importing
 		- IMPORT INTERPOLATION
@@ -33,15 +39,6 @@
 			- This would just be an output of a list of frames not tied to any particular replay timestamp
 				- Maybe it should have an output of the timestamp it was saved at so it can go to that exact replay frame
 			- Still use the chrono delta for these frames
-
-    - SUBMODULES TO REMOVE
-        - BMGraphs
-        - RenderingTools?
-            - Try extracting only what you need from Matrix3
-
-    - Add a checkbox to save dollycam path with the same name as the CinematicsBuddy file
-
-    - Remove all Beta/Gamma stuff from UIManager.cpp and MacrosStructsEnums.h
 */
 
 /*
@@ -71,9 +68,6 @@ void CinematicsBuddy::onLoad()
 
     //Dynamically generate the UI
     UI->GenerateSettingsFile();
-
-    // TESTS - REMOVE WHEN DONE //
-    GlobalCvarManager->registerNotifier("CBTestExportFormat", [this](std::vector<std::string> params){TestExportFormat();}, "Prints data from current frame", PERMISSION_ALL);
 }
 void CinematicsBuddy::onUnload(){}
 
@@ -88,6 +82,7 @@ void CinematicsBuddy::OnViewportTick()
     //Should come after Importer's animation so that recordings aren't a tick late
     RecordingFunction();
 }
+
 bool CinematicsBuddy::IsValidRecordingMode()
 {
     if(GlobalGameWrapper->GetCurrentGameState().IsNull())
@@ -102,6 +97,7 @@ bool CinematicsBuddy::IsValidRecordingMode()
 
     return true;
 }
+
 void CinematicsBuddy::RecordingFunction()
 {
     if(IsValidRecordingMode())
@@ -110,20 +106,4 @@ void CinematicsBuddy::RecordingFunction()
         Exporter->AddData(ThisFrame);
         Buffer->AddData(ThisFrame);
     }
-}
-
-
-// TESTS - REMOVE WHEN DONE //
-void CinematicsBuddy::TestExportFormat()
-{
-    //Gets the info of the current frame, and prints it in its final format to the console
-    FrameInfo ThisFrame = FrameInfo::Get();
-    const auto& ThisFrameTime = ThisFrame.GetTimeInfo();
-    const auto& CarsSeenThisFrame = ThisFrame.GetCarsSeen();
-    
-    std::string Output;
-    Output += "\n\nEXAMPLE FORMAT\n" + FrameInfo::PrintExampleFormat();
-    Output += "\n\nTHIS FRAME\n" + ThisFrame.Print(ThisFrameTime, 0, CarsSeenThisFrame);
-
-    GlobalCvarManager->log(Output);
 }
