@@ -14,34 +14,15 @@
     - Make notifier to kill camera momentum
         - Name that "Freeze" and rename the current Freeze to "Block Inputs"
 
-    - Make "BetaCleanup" class
+    - Re-save default camera configs to make sure Block Inputs is added
 
-    BETA FILES TO DELETE:                                       << Compare against "_Beta_cleanup" folder in /_EXTRA/Media/CinematicsBuddy/Extra/ one you've updated everything in _MAIN_REPO
-        - /plugins/settings/cinematicsbuddy0.9.4c.set
-        - /data/CinematicsBuddy/Plugins/3dsMax/CinematicsBuddyMaxscript0.9.4c.ms
-        - /data/CinematicsBuddy/Plugins/3dsMax/Assets/      <<< DELETE THE ENTIRE FOLDER
+    - Make "BetaCleanup" class
+        - FILES TO DELETE:
+            - /plugins/settings/cinematicsbuddy0.9.4c.set
+            - /data/CinematicsBuddy/Plugins/3dsMax/CinematicsBuddyMaxscript0.9.4c.ms
+            - /data/CinematicsBuddy/Plugins/3dsMax/Assets/      <<<    DELETE THE ENTIRE FOLDER
 
     - Add a checkbox to save dollycam path with the same name as the CinematicsBuddy file
-
-    - Add a README with instructions in these folders:
-        - /data/CinematicsBuddy/ for overall instructions about the plugin
-        - /"/"/Plugins/3dsMax/ for instructions about maxscript
-        - /"/"/Plugins/AfterEffects/ for instructions about AE script
-
-    - Camera animation importing
-		- IMPORT INTERPOLATION
-			- https://discordapp.com/channels/@me/602523400518369280/676118235631845398
-			- https://discordapp.com/channels/@me/602523400518369280/700841996927107162
-		- Reset SeqAct animations for world items so all recordings will line up perfectly
-			- from glhglh and Martinn: gameWrapper->ExecuteUnrealCommand("SET SeqAct_Interp Position 0.0");
-		- Animation while the replay is paused
-			- This would just be an output of a list of frames not tied to any particular replay timestamp
-				- Maybe it should have an output of the timestamp it was saved at so it can go to that exact replay frame
-			- Still use the chrono delta for these frames
-*/
-
-/*
-    FINAL #TODO: Look for all TODO tags in VA Hashtags and finish them. Also look for all "TESTS - REMOVE WHEN DONE" and remove them.
 */
 
 BAKKESMOD_PLUGIN(CinematicsBuddy, "Capture camera, ball, and car animation", PLUGIN_VERSION, PLUGINTYPE_REPLAY)
