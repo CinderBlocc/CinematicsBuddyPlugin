@@ -11,21 +11,22 @@
 /*
     #TODO
 
-    - Add a README with instructions in these folders:
-        - /data/CinematicsBuddy/ for overall instructions about the plugin
-        - /"/"/Plugins/3dsMax/ for instructions about maxscript
-        - /"/"/Plugins/AfterEffects/ for instructions about AE script
+    - Make notifier to kill camera momentum
+        - Name that "Freeze" and rename the current Freeze to "Block Inputs"
 
+    - Make "BetaCleanup" class
 
     BETA FILES TO DELETE:                                       << Compare against "_Beta_cleanup" folder in /_EXTRA/Media/CinematicsBuddy/Extra/ one you've updated everything in _MAIN_REPO
         - /plugins/settings/cinematicsbuddy0.9.4c.set
         - /data/CinematicsBuddy/Plugins/3dsMax/CinematicsBuddyMaxscript0.9.4c.ms
         - /data/CinematicsBuddy/Plugins/3dsMax/Assets/      <<< DELETE THE ENTIRE FOLDER
 
-    - SUBMODULES TO REMOVE
-        - RenderingTools
-
     - Add a checkbox to save dollycam path with the same name as the CinematicsBuddy file
+
+    - Add a README with instructions in these folders:
+        - /data/CinematicsBuddy/ for overall instructions about the plugin
+        - /"/"/Plugins/3dsMax/ for instructions about maxscript
+        - /"/"/Plugins/AfterEffects/ for instructions about AE script
 
     - Camera animation importing
 		- IMPORT INTERPOLATION
