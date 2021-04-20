@@ -1,6 +1,7 @@
 #include "CinematicsBuddy.h"
 #include "bakkesmod/wrappers/includes.h"
 #include "SupportFiles/MacrosStructsEnums.h"
+#include "SupportFiles/BetaCleanup.h"
 #include "DataCollectors/FrameInfo.h"
 #include "Importing/AnimationImporter.h"
 #include "Exporting/AnimationExporter.h"
@@ -10,17 +11,6 @@
 
 /*
     #TODO
-
-    - Make notifier to kill camera momentum
-        - Name that "Freeze" and rename the current Freeze to "Block Inputs"
-
-    - Re-save default camera configs to make sure Block Inputs is added
-
-    - Make "BetaCleanup" class
-        - FILES TO DELETE:
-            - /plugins/settings/cinematicsbuddy0.9.4c.set
-            - /data/CinematicsBuddy/Plugins/3dsMax/CinematicsBuddyMaxscript0.9.4c.ms
-            - /data/CinematicsBuddy/Plugins/3dsMax/Assets/      <<<    DELETE THE ENTIRE FOLDER
 
     - Add a checkbox to save dollycam path with the same name as the CinematicsBuddy file
 */
@@ -48,6 +38,10 @@ void CinematicsBuddy::onLoad()
 
     //Dynamically generate the UI
     UI->GenerateSettingsFile();
+
+    //Clean out the old beta files to avoid confusion for the end user
+    //Eventually this should be deleted
+    BetaCleanup::RemoveBetaFiles();
 }
 void CinematicsBuddy::onUnload(){}
 

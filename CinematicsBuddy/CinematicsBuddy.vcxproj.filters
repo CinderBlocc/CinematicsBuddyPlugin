@@ -84,6 +84,9 @@
     <ClCompile Include="Source\SupportFiles\CBMatrix3.cpp">
       <Filter>Source\Support Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\SupportFiles\BetaCleanup.cpp">
+      <Filter>Source\Support Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Main\CinematicsBuddy.h">
@@ -135,6 +138,9 @@
       <Filter>Source\Classes\Camera</Filter>
     </ClInclude>
     <ClInclude Include="Source\SupportFiles\CBMatrix3.h">
+      <Filter>Source\Support Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\SupportFiles\BetaCleanup.h">
       <Filter>Source\Support Files</Filter>
     </ClInclude>
   </ItemGroup>
