@@ -16,6 +16,7 @@ extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 //Mutual recording cvars
 #define CVAR_INCREMENT_FILES     "CB_bIncrementFileNames"
 #define CVAR_SET_SPECIAL_PATH    "CB_bSetFilePath"
+#define CVAR_SAVE_DOLLY_PATH     "CB_bSaveDollycamPath"
 #define CVAR_SPECIAL_PATH        "CB_FilePath"
 #define CVAR_FILE_NAME           "CB_FileName"
 #define CVAR_CAMERA_NAME         "CB_CameraName"

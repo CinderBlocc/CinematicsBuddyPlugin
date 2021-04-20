@@ -9,12 +9,6 @@
 #include "Camera/CameraManager.h"
 #include "UI/UIManager.h"
 
-/*
-    #TODO
-
-    - Add a checkbox to save dollycam path with the same name as the CinematicsBuddy file
-*/
-
 BAKKESMOD_PLUGIN(CinematicsBuddy, "Capture camera, ball, and car animation", PLUGIN_VERSION, PLUGINTYPE_REPLAY)
 
 std::shared_ptr<CVarManagerWrapper> GlobalCvarManager;

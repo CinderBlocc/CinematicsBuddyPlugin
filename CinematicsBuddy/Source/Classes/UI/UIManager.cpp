@@ -58,6 +58,8 @@ void UIManager::GenerateSettingsFile()
         nl3(EUI::GrayedBegin, CVAR_IS_RECORDING_ACTIVE, true);
             label("NORMAL RECORDING");
             nl2(EUI::Checkbox, CVAR_INCREMENT_FILES);
+            sameline;
+            nl2(EUI::Checkbox, CVAR_SAVE_DOLLY_PATH);
             nl2(EUI::Textbox, CVAR_FILE_NAME);
             nl2(EUI::Textbox, CVAR_CAMERA_NAME);
             nl2(EUI::Checkbox, CVAR_SET_SPECIAL_PATH);

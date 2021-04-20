@@ -35,6 +35,7 @@ protected:
     std::shared_ptr<bool> bIsFileWriting      = std::make_shared<bool>(false);
     std::shared_ptr<bool> bIncrementFileNames = std::make_shared<bool>(true);
     std::shared_ptr<bool> bSetSpecialPath     = std::make_shared<bool>(false);
+    std::shared_ptr<bool> bSaveDollycamPath   = std::make_shared<bool>(false);
     std::shared_ptr<std::string> SpecialPath  = std::make_shared<std::string>("");
     std::shared_ptr<std::string> FileName     = std::make_shared<std::string>("");
     std::shared_ptr<std::string> CameraName   = std::make_shared<std::string>("");
@@ -57,4 +58,6 @@ protected:
     float GetRecordingDuration(RecordingParam TheRecording);
     float GetAverageFPS(RecordingParam TheRecording);
     bool GetbWasWholeRecordingInSameReplay(RecordingParam TheRecording);
+    void SaveDollycamPath(std::filesystem::path OutputFilePath);
+    void FillDollycamOutputDirectory(std::filesystem::path InPath, std::string& OutFolderPath, std::string& OutFileName);
 };

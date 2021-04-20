@@ -18,6 +18,7 @@ AnimationRecorder::AnimationRecorder(std::shared_ptr<UIManager> TheUI)
         UI->AddElement({bIsFileWriting,      CVAR_IS_FILE_WRITING,  "##IsFileWriting",   "Handle UI state if file is writing", -1000001, -1000001, false, false});
         UI->AddElement({bIncrementFileNames, CVAR_INCREMENT_FILES,  "Automatically increment file names", "Automatically append a unique number to file names" });
         UI->AddElement({bSetSpecialPath,     CVAR_SET_SPECIAL_PATH, "##UseSpecialPath",  "Enable if you want to use a non-default path"                        });
+        UI->AddElement({bSaveDollycamPath,   CVAR_SAVE_DOLLY_PATH,  "Save current dollycam path", "Saves current dollycam path next to the recording"          });
         UI->AddElement({SpecialPath,         CVAR_SPECIAL_PATH,     "##SpecialPath",     "Set the special export file path. Leave blank for default"           });
         UI->AddElement({FileName,            CVAR_FILE_NAME,        "File Name##Export", "Set the export file name"                                            });
         UI->AddElement({CameraName,          CVAR_CAMERA_NAME,      "Camera Name",       "Set the camera name"                                                 });
@@ -28,6 +29,7 @@ AnimationRecorder::AnimationRecorder(std::shared_ptr<UIManager> TheUI)
         GlobalCvarManager->getCvar(CVAR_IS_FILE_WRITING).bindTo(bIsFileWriting);
         GlobalCvarManager->getCvar(CVAR_INCREMENT_FILES).bindTo(bIncrementFileNames);
         GlobalCvarManager->getCvar(CVAR_SET_SPECIAL_PATH).bindTo(bSetSpecialPath);
+        GlobalCvarManager->getCvar(CVAR_SAVE_DOLLY_PATH).bindTo(bSaveDollycamPath);
         GlobalCvarManager->getCvar(CVAR_SPECIAL_PATH).bindTo(SpecialPath);
         GlobalCvarManager->getCvar(CVAR_FILE_NAME).bindTo(FileName);
         GlobalCvarManager->getCvar(CVAR_CAMERA_NAME).bindTo(CameraName);
@@ -84,6 +86,12 @@ bool AnimationRecorder::WriteFile(StringParam InPathName, StringParam InFileName
         return false;
     }
     OutputFilePath = CBUtils::GetFinalFileName(OutputFilePath, InFileName, (*bIncrementFileNames ? 0 : -1));
+
+    //Save current dollycam path next to the output file with the same name
+    if(*bSaveDollycamPath)
+    {
+        SaveDollycamPath(OutputFilePath);
+    }
 
     //Create a copy of the data to work from in the async task
     std::deque<FrameInfo> RecordedDataCopy = RecordedData;
@@ -298,4 +306,44 @@ std::vector<CarSeen> AnimationRecorder::GetCarsSeenInRecording(RecordingParam Th
     }
 
     return CarsSeenInRecording;
+}
+
+void AnimationRecorder::SaveDollycamPath(std::filesystem::path OutputFilePath)
+{
+    //Split OutputFilePath into its path and its file name
+    std::string FolderPath;
+    std::string FileName;
+    FillDollycamOutputDirectory(OutputFilePath, FolderPath, FileName);
+
+    //Store current value in dolly_path_directory, then assign the new path
+    std::string PreviousDirectoryValue;
+    CVarWrapper DollyDirectoryCvar = GlobalCvarManager->getCvar("dolly_path_directory");
+    bool bDoesCvarExist = DollyDirectoryCvar.IsNull();
+    if(bDoesCvarExist)
+    {
+        PreviousDirectoryValue = DollyDirectoryCvar.getStringValue();
+        DollyDirectoryCvar.setValue(FolderPath);
+    }
+    
+    //Call dolly_path_save with the file name
+    GlobalCvarManager->executeCommand("dolly_path_save " + FileName);
+    
+    //Restore previous dolly_path_directory value
+    if(bDoesCvarExist)
+    {
+        DollyDirectoryCvar.setValue(PreviousDirectoryValue);
+    }
+}
+
+void AnimationRecorder::FillDollycamOutputDirectory(std::filesystem::path InPath, std::string& OutFolderPath, std::string& OutFileName)
+{
+    //Get the file name including the extension
+    OutFileName = InPath.filename().u8string();
+
+    //Remove the file name and extension from the end of the path
+    std::string FullPathString = InPath.u8string();
+    OutFolderPath = FullPathString.substr(0, FullPathString.size() - OutFileName.size());
+
+    //Remove the extension from the file name
+    OutFileName = OutFileName.substr(0, OutFileName.size() - std::string(EXTENSION_RECORDING).size());
 }
