@@ -41,11 +41,12 @@ extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 
 //Camera override cvars
 #define CVAR_ENABLE_CAM_OVERRIDE "CB_Camera_bUseCamOverrides"
+#define CVAR_CAM_FREEZE          "CB_Camera_bFreeze"
+#define CVAR_CAM_LOCAL_MOMENTUM  "CB_Camera_bLocalMomentum"
 #define CVAR_CAM_LOCAL_MOVEMENT  "CB_Camera_bUseLocalMovement"
 #define CVAR_CAM_LOCAL_ROTATION  "CB_Camera_bUseLocalRotation"
 #define CVAR_CAM_HARD_FLOORS     "CB_Camera_bHardFloors"
 #define CVAR_INVERT_PITCH        "CB_Camera_InvertControllerPitch"
-#define CVAR_CAM_LOCAL_MOMENTUM  "CB_Camera_bLocalMomentum"
 #define CVAR_CAM_FLOOR_HEIGHT    "CB_Camera_FloorHeight"
 #define CVAR_CAM_MOVEMENT_SPEED  "CB_Camera_MovementSpeed"
 #define CVAR_CAM_MOVEMENT_ACCEL  "CB_Camera_MovementAccel"
@@ -63,7 +64,6 @@ extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 #define CVAR_ROLL_SWAP           "CB_Camera_RollSwap"
 #define CVAR_FOV_BINDING         "CB_Camera_FOVBinding"
 #define CVAR_FOV_SWAP            "CB_Camera_FOVSwap"
-#define CVAR_CAM_FREEZE          "CB_Camera_Freeze"
 #define NOTIFIER_CAM_RESET       "CBCameraReset"
 
 //Camera config cvars and notifiers
