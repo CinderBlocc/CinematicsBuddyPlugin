@@ -6,7 +6,7 @@ extern std::shared_ptr<class CVarManagerWrapper> GlobalCvarManager;
 extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 
 // MACROS //
-#define PLUGIN_VERSION "0.9.9"
+#define PLUGIN_VERSION "0.9.9a"
 
 //Generic defines
 #define EXTENSION_RECORDING ".txt"
