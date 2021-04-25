@@ -318,7 +318,7 @@ void AnimationRecorder::SaveDollycamPath(std::filesystem::path OutputFilePath)
     //Store current value in dolly_path_directory, then assign the new path
     std::string PreviousDirectoryValue;
     CVarWrapper DollyDirectoryCvar = GlobalCvarManager->getCvar("dolly_path_directory");
-    bool bDoesCvarExist = DollyDirectoryCvar.IsNull();
+    bool bDoesCvarExist = !DollyDirectoryCvar.IsNull();
     if(bDoesCvarExist)
     {
         PreviousDirectoryValue = DollyDirectoryCvar.getStringValue();
