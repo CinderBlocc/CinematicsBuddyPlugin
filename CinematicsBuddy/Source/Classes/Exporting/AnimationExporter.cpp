@@ -9,7 +9,7 @@ AnimationExporter::AnimationExporter(std::shared_ptr<UIManager> TheUI)
     : AnimationRecorder(TheUI)
 {
     //Register cvars
-    UI->AddElement({RecordSize,         CVAR_MAX_RECORD_LENGTH,   "Max recording length (seconds)", "Number of seconds to record",        0,        1000                 });
+    UI->AddElement({RecordSize,         CVAR_MAX_RECORD_LENGTH,   "Max Recording Length (Seconds)", "Number of seconds to record",        0,        1000                 });
     UI->AddElement({bIsRecordingActive, CVAR_IS_RECORDING_ACTIVE, "##RecordingActive", "Internal info about the state of the recording", -1000001, -1000001, false, false});
     
     //Bind an addOnValueChanged function to the recording time cvar

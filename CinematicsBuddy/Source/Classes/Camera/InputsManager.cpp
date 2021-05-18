@@ -8,20 +8,23 @@ InputsManager::InputsManager(std::shared_ptr<UIManager> TheUI)
     UI = TheUI;
 
     //Register cvars
-    UI->AddElement({bInvertPitch,   CVAR_INVERT_PITCH, "Invert Pitch (Controller)", "Inverts pitch values for the controller"  });
-    UI->AddElement({RollBinding,    CVAR_ROLL_BINDING, "Toggle Roll Binding",       "Modifier to swap an input axis with roll" });
-    UI->AddElement({FOVBinding,     CVAR_FOV_BINDING,  "Toggle FOV Binding",        "Modifier to swap an input axis with FOV"  });
-    UI->AddElement({RollSwapChoice, CVAR_ROLL_SWAP,    "Roll Input Swap",           "Which axis to swap with Roll"             });
-    UI->AddElement({FOVSwapChoice,  CVAR_FOV_SWAP,     "FOV Input Swap",            "Which axis to swap with FOV"              });
-    UI->AddElement({bFreeze,        CVAR_CAM_FREEZE,   "Freeze",                    "Block inputs to camera"                   });
+    UI->AddElement({bInvertPitch,    CVAR_INVERT_PITCH,        "Invert Pitch (Controller)", "Inverts pitch values for the controller"                   });
+    UI->AddElement({RollBinding,     CVAR_ROLL_BINDING,        "Toggle Roll Binding",       "Modifier to swap an input axis with roll"                  });
+    UI->AddElement({FOVBinding,      CVAR_FOV_BINDING,         "Toggle FOV Binding",        "Modifier to swap an input axis with FOV"                   });
+    UI->AddElement({RollSwapChoice,  CVAR_ROLL_SWAP,           "Roll Input Swap",           "Which axis to swap with Roll"                              });
+    UI->AddElement({FOVSwapChoice,   CVAR_FOV_SWAP,            "FOV Input Swap",            "Which axis to swap with FOV"                               });
+    UI->AddElement({bFreeze,         CVAR_CAM_FREEZE,          "Freeze",                    "Block inputs to camera"                                    });
+    UI->AddElement({bFreezeExternal, CVAR_CAM_FREEZE_EXTERNAL, "##FreezeExternal",          "Sync freeze with other plugins", -1000001, -1000001, false });
 
     //Add options to dropdown menus
     SetBindingOptions();
     SetInputSwapOptions();
 
     //Bind addOnValueChanged functions to the input bindings
+    ON_CVAR_CHANGED(CVAR_CAM_FREEZE_EXTERNAL, InputsManager::OnFreezeExternalChanged);
     ON_CVAR_CHANGED(CVAR_ROLL_BINDING, InputsManager::CacheRollBinding);
     ON_CVAR_CHANGED(CVAR_FOV_BINDING, InputsManager::CacheFOVBinding);
+    ON_CVAR_CHANGED(CVAR_CAM_FREEZE, InputsManager::OnFreezeChanged);
     ON_CVAR_CHANGED(CVAR_ROLL_SWAP, InputsManager::CacheRollSwap);
     ON_CVAR_CHANGED(CVAR_FOV_SWAP, InputsManager::CacheFOVSwap);
     CacheRollBinding();
@@ -36,12 +39,16 @@ void InputsManager::PlayerInputTick(float Delta)
     PlayerControllerWrapper Controller = GlobalGameWrapper->GetPlayerController();
 	if(Controller.IsNull()) return;
 
-    if(!*bFreeze)
+    if(*bFreeze)
+    {
+        NullifyStoredInputs();
+    }
+    else
     {
         GetInputs(Controller);
     }
 
-    NullifyInputs(Controller);
+    NullifyGameInputs(Controller);
 }
 
 void InputsManager::GetInputs(PlayerControllerWrapper Controller)
@@ -91,15 +98,49 @@ void InputsManager::GetInputs(PlayerControllerWrapper Controller)
     }
 }
 
-void InputsManager::NullifyInputs(PlayerControllerWrapper Controller)
+void InputsManager::NullifyGameInputs(PlayerControllerWrapper Controller)
 {
-    //Reset the inputs that cause movement or rotation
     Controller.SetAForward(0.f);
     Controller.SetAStrafe(0.f);
     Controller.SetAUp(0.f);
     Controller.SetALookUp(0.f);
     Controller.SetATurn(0.f);
     Controller.SetALookRoll(0.f);
+}
+
+void InputsManager::NullifyStoredInputs()
+{
+    Forward = 0.f;
+    Right   = 0.f;
+    Up      = 0.f;
+    Pitch   = 0.f;
+    Yaw     = 0.f;
+    Roll    = 0.f;
+    FOV     = 0.f;
+}
+
+void InputsManager::OnFreezeChanged()
+{
+    //Don't notify other plugins about the change if it was modified externally
+    if(bWasFreezeExternallyChanged)
+    {
+        bWasFreezeExternallyChanged = false;
+        return;
+    }
+
+    //Sync camera freeze with CameraLock plugin
+    CVarWrapper CameraLockSync = GlobalCvarManager->getCvar("CameraLock_Enable_EXTERNAL");
+    if(!CameraLockSync.IsNull())
+    {
+        CameraLockSync.setValue(*bFreeze);
+    }
+}
+
+void InputsManager::OnFreezeExternalChanged()
+{
+    //To avoid infinitely changing values back and forth, only have external plugins set this cvar
+    bWasFreezeExternallyChanged = true;
+    GlobalCvarManager->getCvar(CVAR_CAM_FREEZE).setValue(*bFreezeExternal);
 }
 
 

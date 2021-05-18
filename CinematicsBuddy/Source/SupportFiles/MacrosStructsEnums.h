@@ -42,6 +42,7 @@ extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 //Camera override cvars
 #define CVAR_ENABLE_CAM_OVERRIDE "CB_Camera_bUseCamOverrides"
 #define CVAR_CAM_FREEZE          "CB_Camera_bFreeze"
+#define CVAR_CAM_FREEZE_EXTERNAL "CB_Camera_bFreeze_EXTERNAL"
 #define CVAR_CAM_LOCAL_MOMENTUM  "CB_Camera_bLocalMomentum"
 #define CVAR_CAM_LOCAL_MOVEMENT  "CB_Camera_bUseLocalMovement"
 #define CVAR_CAM_LOCAL_ROTATION  "CB_Camera_bUseLocalRotation"

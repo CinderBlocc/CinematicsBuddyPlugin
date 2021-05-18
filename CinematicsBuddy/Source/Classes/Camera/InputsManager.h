@@ -42,7 +42,10 @@ private:
 
     //Get and manipulate input values from game
     void GetInputs(PlayerControllerWrapper Controller);
-    void NullifyInputs(PlayerControllerWrapper Controller);
+    void NullifyGameInputs(PlayerControllerWrapper Controller);
+    void NullifyStoredInputs();
+    void OnFreezeChanged();
+    void OnFreezeExternalChanged();
 
     //Inputs read from game (and modified)
     float Forward = 0.f;
@@ -55,8 +58,10 @@ private:
     bool  bUsingGamepad = false;
 
     //Variables for input swapping and manipulation
-    std::shared_ptr<bool> bInvertPitch = std::make_shared<bool>(false);
-    std::shared_ptr<bool> bFreeze      = std::make_shared<bool>(false);
+    std::shared_ptr<bool> bInvertPitch    = std::make_shared<bool>(false);
+    std::shared_ptr<bool> bFreeze         = std::make_shared<bool>(false);
+    std::shared_ptr<bool> bFreezeExternal = std::make_shared<bool>(false);
+    bool bWasFreezeExternallyChanged = false;
     std::shared_ptr<std::string> RollBinding    = std::make_shared<std::string>("XboxTypeS_RightShoulder");
     std::shared_ptr<std::string> FOVBinding     = std::make_shared<std::string>("XboxTypeS_LeftShoulder");
     std::shared_ptr<std::string> RollSwapChoice = std::make_shared<std::string>("Yaw");

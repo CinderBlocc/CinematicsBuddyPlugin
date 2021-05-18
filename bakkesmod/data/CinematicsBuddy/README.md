@@ -14,21 +14,21 @@ Each of the settings described below follows this format: `Setting UI name` - `S
 ## EXPORTING
 
 ###### NORMAL RECORDING
-- `Automatically increment file names` - `CB_bIncrementFileNames` *(true, -, -)* Appends a number to the end of a file name when a recording is saved with the same name as an existing recording. This is to prevent overwriting existing recordings. For example, file names would be as follows: MyRecording, MyRecording_02, MyRecording_03, etc.
-- `Save current dollycam path` - `CB_bSaveDollycamPath` *(false, -, -)* If there is a currently active dollycam path, it will be saved next to the recording file. Requires Dollycam 2.1 or later.
+- `Automatically Increment File Names` - `CB_bIncrementFileNames` *(true, -, -)* Appends a number to the end of a file name when a recording is saved with the same name as an existing recording. This is to prevent overwriting existing recordings. For example, file names would be as follows: MyRecording, MyRecording_02, MyRecording_03, etc.
+- `Save Current Dollycam Path` - `CB_bSaveDollycamPath` *(false, -, -)* If there is a currently active dollycam path, it will be saved next to the recording file. Requires Dollycam 2.1 or later.
 - `File Name` - `CB_FileName` *("", -, -)* The name given to the recording file when it is saved.
 - `Camera Name` - `CB_CameraName` *("", -, -)* The name given to the camera. **Camera Name does not increment along with the file name.**
 - `Special Path` - `Checkbox: CB_bSetFilePath` *(false, -, -) Refer to the next "Special Path" description.*
 - `Special Path` - `Textbox: CB_FilePath` *("", -, -)* Allows the user to override the default export path of /bakkesmod/data/CinematicsBuddy/AnimationExports/. The checkbox must be enabled before an override path can be added. A **full path** must be provided. For example: `C:\MyProjectFolder\Recordings\CinematicsBuddyCaptures`. A trailing slash is no longer necessary and backslashes should hopefully work as well as forward slashes, even if they get duplicated.
 - `Start Recording` - `CBRecordingStart` *(-, -, -)* Starts the recording. **File Name** and **Camera Name** must have text in the textboxes, and **Special Path** must either be empty, or have a valid full path.
 - `Stop Recording` - `CBRecordingStop` *(-, -, -)* Stops the recording and immediately saves the file. The file is written in a separate thread and the UI will be greyed out until it has finished.
-- `Max recording length (seconds)` - `CB_Recording_MaxLength` *(300, 0, 1000)* Automatically stops and saves the recording after the specified length of time.
+- `Max Recording Length (Seconds)` - `CB_Recording_MaxLength` *(300, 0, 1000)* Automatically stops and saves the recording after the specified length of time.
 
 ###### BUFFER RECORDING
 - `Enable Buffer` - `CB_Buffer_bEnabled` *(false, -, -)* Enables constantly recording buffer. Buffer will store the last X seconds of animation history - X is defined by **Max buffer length (seconds)**.
 - `Capture Buffer` - `CBBufferCapture` *(-, -, -)* Saves all the data from the buffer to a recording file.
 - `Clear Buffer` - `CBBufferClear` *(-, -, -)* Empties all the data out of the buffer.
-- `Max buffer length (seconds)` - `CB_Buffer_MaxLength` *(30, 0, 1000)* How much history to save in the buffer.
+- `Max Buffer Length (Seconds)` - `CB_Buffer_MaxLength` *(30, 0, 1000)* How much history to save in the buffer.
 
 
 ## CAMERA OVERRIDES

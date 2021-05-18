@@ -16,9 +16,9 @@ AnimationRecorder::AnimationRecorder(std::shared_ptr<UIManager> TheUI)
     {
         //Register and bind cvars
         UI->AddElement({bIsFileWriting,      CVAR_IS_FILE_WRITING,  "##IsFileWriting",   "Handle UI state if file is writing", -1000001, -1000001, false, false});
-        UI->AddElement({bIncrementFileNames, CVAR_INCREMENT_FILES,  "Automatically increment file names", "Automatically append a unique number to file names" });
+        UI->AddElement({bIncrementFileNames, CVAR_INCREMENT_FILES,  "Automatically Increment File Names", "Automatically append a unique number to file names" });
         UI->AddElement({bSetSpecialPath,     CVAR_SET_SPECIAL_PATH, "##UseSpecialPath",  "Enable if you want to use a non-default path"                        });
-        UI->AddElement({bSaveDollycamPath,   CVAR_SAVE_DOLLY_PATH,  "Save current dollycam path", "Saves current dollycam path next to the recording"          });
+        UI->AddElement({bSaveDollycamPath,   CVAR_SAVE_DOLLY_PATH,  "Save Current Dollycam Path", "Saves current dollycam path next to the recording"          });
         UI->AddElement({SpecialPath,         CVAR_SPECIAL_PATH,     "##SpecialPath",     "Set the special export file path. Leave blank for default"           });
         UI->AddElement({FileName,            CVAR_FILE_NAME,        "File Name##Export", "Set the export file name"                                            });
         UI->AddElement({CameraName,          CVAR_CAMERA_NAME,      "Camera Name",       "Set the camera name"                                                 });

@@ -10,7 +10,7 @@ AnimationBuffer::AnimationBuffer(std::shared_ptr<UIManager> TheUI)
 {
     //Register cvars
     UI->AddElement({bIsBufferActive, CVAR_BUFFER_ENABLED,    "Enable Buffer",               "Enable constant recording buffer"    });
-    UI->AddElement({BufferSize,      CVAR_MAX_BUFFER_LENGTH, "Max buffer length (seconds)", "Number of seconds to buffer", 0, 1000});
+    UI->AddElement({BufferSize,      CVAR_MAX_BUFFER_LENGTH, "Max Buffer Length (Seconds)", "Number of seconds to buffer", 0, 1000});
     
     //Bind addOnValueChanged functions to the enabled and recording time cvars
     ON_CVAR_CHANGED(CVAR_BUFFER_ENABLED, AnimationBuffer::OnBufferEnabledChanged);
