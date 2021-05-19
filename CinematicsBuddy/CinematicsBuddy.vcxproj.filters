@@ -37,6 +37,12 @@
     <Filter Include="Source\Classes\UI">
       <UniqueIdentifier>{4741e19a-de5f-41b2-b638-ce4c1b808f13}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Classes\Misc\UnitConversion">
+      <UniqueIdentifier>{d2f236d2-7fb7-40d0-b5a6-fc62b17ec8ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Classes\Misc\UnitConversion\ExternalPrograms">
+      <UniqueIdentifier>{60e9cf05-3282-442e-82d3-d1331670cc34}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Main\CinematicsBuddy.cpp">
@@ -86,6 +92,15 @@
     </ClCompile>
     <ClCompile Include="Source\SupportFiles\BetaCleanup.cpp">
       <Filter>Source\Support Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Classes\Misc\UnitConversion\UnitConverter.cpp">
+      <Filter>Source\Classes\Misc\UnitConversion</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Classes\Misc\UnitConversion\ExternalPrograms\UnitConverter_3dsMax.cpp">
+      <Filter>Source\Classes\Misc\UnitConversion\ExternalPrograms</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Classes\Misc\UnitConversion\ExternalPrograms\UnitConverter_AfterEffects.cpp">
+      <Filter>Source\Classes\Misc\UnitConversion\ExternalPrograms</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -142,6 +157,18 @@
     </ClInclude>
     <ClInclude Include="Source\SupportFiles\BetaCleanup.h">
       <Filter>Source\Support Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Classes\Misc\UnitConversion\UnitConverter.h">
+      <Filter>Source\Classes\Misc\UnitConversion</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Classes\Misc\UnitConversion\ExternalPrograms\IUnitConverter.h">
+      <Filter>Source\Classes\Misc\UnitConversion\ExternalPrograms</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Classes\Misc\UnitConversion\ExternalPrograms\UnitConverter_3dsMax.h">
+      <Filter>Source\Classes\Misc\UnitConversion\ExternalPrograms</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Classes\Misc\UnitConversion\ExternalPrograms\UnitConverter_AfterEffects.h">
+      <Filter>Source\Classes\Misc\UnitConversion\ExternalPrograms</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
