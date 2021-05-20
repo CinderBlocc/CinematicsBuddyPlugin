@@ -28,35 +28,38 @@ UnitConverter::~UnitConverter()
 
 void UnitConverter::ConvertUnits()
 {
+    std::string LogOutput, ClipboardOutput;
+
     CameraWrapper Camera = GlobalGameWrapper->GetCamera();
-    if(Camera.IsNull())
+    if(!Camera.IsNull())
     {
-        GlobalCvarManager->log("Couldn't convert units. Camera does not exist.");
-        return;
+        Vector Location = Camera.GetLocation();
+        LogOutput = "Converted units:\n";
+
+        for(const auto& Converter : Converters)
+        {
+            ClipboardOutput += Converter->GetProgramName() + ": " + CBUtils::PrintVector(Converter->ConvertLocation(Location), 3, true) + "\n";
+        }
+
+        ClipboardOutput.pop_back();
+    }
+    else
+    {
+        ClipboardOutput = "Could not convert units. Camera does not exist.";
     }
 
-    Vector Location = Camera.GetLocation();
-    std::string Output = "Converted units:\n";
-    std::string OutputUnits;
-
-    for(const auto& Converter : Converters)
-    {
-        OutputUnits += Converter->GetProgramName() + ": " + CBUtils::PrintVector(Converter->ConvertLocation(Location), 3, true) + "\n";
-    }
-
-    OutputUnits.pop_back();
-    GlobalCvarManager->log(Output + OutputUnits);
+    GlobalCvarManager->log(LogOutput + ClipboardOutput);
 
     //Copy output to the clipboard
     OpenClipboard(nullptr);
     EmptyClipboard();
-    HGLOBAL hg = GlobalAlloc(GMEM_MOVEABLE, OutputUnits.size());
+    HGLOBAL hg = GlobalAlloc(GMEM_MOVEABLE, ClipboardOutput.size());
     if(!hg)
     {
         CloseClipboard();
         return;
     }
-    memcpy(GlobalLock(hg), OutputUnits.c_str(), OutputUnits.size());
+    memcpy(GlobalLock(hg), ClipboardOutput.c_str(), ClipboardOutput.size());
     GlobalUnlock(hg);
     SetClipboardData(CF_TEXT, hg);
     CloseClipboard();
