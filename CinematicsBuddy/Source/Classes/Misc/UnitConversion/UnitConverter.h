@@ -7,9 +7,10 @@ class UnitConverter
 {
 public:
     UnitConverter();
+    ~UnitConverter();
 
-    void ConvertUnits(Vector InLocation, Rotator InRotation);
+    void ConvertUnits();
 
 private:
-    std::vector<IUnitConverter> Converters;
+    std::vector<IUnitConverter*> Converters;
 };

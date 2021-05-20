@@ -13,6 +13,9 @@ extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 #define EXTENSION_CONFIG    ".cfg"
 #define NO_SELECTION        "-- NONE --"
 
+//Unit conversion notifier
+#define NOTIFIER_UNIT_CONVERT    "CBConvertUnits"
+
 //Mutual recording cvars
 #define CVAR_INCREMENT_FILES     "CB_bIncrementFileNames"
 #define CVAR_SET_SPECIAL_PATH    "CB_bSetFilePath"

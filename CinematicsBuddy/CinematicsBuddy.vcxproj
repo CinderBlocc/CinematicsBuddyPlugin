@@ -63,8 +63,6 @@
     <ClCompile Include="Source\Classes\Exporting\AnimationRecorder.cpp" />
     <ClCompile Include="Source\Classes\Importing\AnimationImporter.cpp" />
     <ClCompile Include="Source\Classes\Misc\CBTimer.cpp" />
-    <ClCompile Include="Source\Classes\Misc\UnitConversion\Converters\UnitConverter_3dsMax.cpp" />
-    <ClCompile Include="Source\Classes\Misc\UnitConversion\Converters\UnitConverter_AfterEffects.cpp" />
     <ClCompile Include="Source\Classes\Misc\UnitConversion\UnitConverter.cpp" />
     <ClCompile Include="Source\Classes\UI\UIElement.cpp" />
     <ClCompile Include="Source\Classes\UI\UIManager.cpp" />

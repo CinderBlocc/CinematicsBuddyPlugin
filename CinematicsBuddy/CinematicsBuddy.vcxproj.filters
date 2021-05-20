@@ -96,12 +96,6 @@
     <ClCompile Include="Source\Classes\Misc\UnitConversion\UnitConverter.cpp">
       <Filter>Source\Classes\Misc\UnitConversion</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Classes\Misc\UnitConversion\Converters\UnitConverter_3dsMax.cpp">
-      <Filter>Source\Classes\Misc\UnitConversion\Converters</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Classes\Misc\UnitConversion\Converters\UnitConverter_AfterEffects.cpp">
-      <Filter>Source\Classes\Misc\UnitConversion\Converters</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Main\CinematicsBuddy.h">

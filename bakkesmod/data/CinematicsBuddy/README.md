@@ -30,11 +30,20 @@ Each of the settings described below follows this format: `Setting UI name` - `S
 - `Clear Buffer` - `CBBufferClear` *(-, -, -)* Empties all the data out of the buffer.
 - `Max Buffer Length (Seconds)` - `CB_Buffer_MaxLength` *(30, 0, 1000)* How much history to save in the buffer.
 
+###### HIDDEN
+- There is a notifier that isn't in the UI - `CBConvertUnits` - that you can use to determine where to place objects in a third party program. To use this, move the camera to the location you want to place an object, use the command (either via a keybind, or by typing into the console), and it will copy the converted location to your clipboard. Paste that information into something like notepad, then use that info to set the location of the object.
+
+Example unit conversion output:
+
+    ROCKET LEAGUE: -2280.818, 3792.814, 1229.952
+    3DS MAX: -2280.818, -3792.814, 1229.952
+    AFTER EFFECTS: 9633.748, -3124.078, -5793.27
+
 
 ## CAMERA OVERRIDES
 
 ###### HIDDEN
-- There is a notifier that isn't in the UI - `CBCameraReset` - that you can use to set all the acceleration and velocity values to zero. A good example for when to use this would be when setting the camera to a specific location using the [SpectatorControls plugin](https://bakkesplugins.com/plugins/view/107).
+- There is another notifier that isn't in the UI - `CBCameraReset` - that you can use to set all the acceleration and velocity values to zero. A good example for when to use this would be when setting the camera to a specific location using the [SpectatorControls plugin](https://bakkesplugins.com/plugins/view/107).
 
 ###### CHECKBOXES
 - `Enable Overrides` - `CB_Camera_bUseCamOverrides` *(false, -, -)* Globally enables or disables the camera overrides feature.

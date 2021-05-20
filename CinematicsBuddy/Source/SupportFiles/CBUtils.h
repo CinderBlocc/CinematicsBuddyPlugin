@@ -7,7 +7,7 @@ struct Quat;
 namespace CBUtils
 {
     std::string PrintFloat(float InFloat, int MaxDecimals = 2);
-    std::string PrintVector(const Vector& InVector, int MaxDecimals = 2);
+    std::string PrintVector(const Vector& InVector, int MaxDecimals = 2, bool bPrintSpaces = false);
     std::string PrintQuat(const Quat& InQuat, int MaxDecimals = 5);
     std::string PrintDoubleDigit(int InValue);
 

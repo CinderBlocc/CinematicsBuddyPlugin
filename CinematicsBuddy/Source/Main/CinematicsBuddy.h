@@ -11,6 +11,7 @@ private:
     std::shared_ptr<class AnimationBuffer>   Buffer;
     std::shared_ptr<class CameraManager>     Camera;
     std::shared_ptr<class UIManager>         UI;
+    std::shared_ptr<class UnitConverter>     Converter;
 
 public:
 	void onLoad() override;

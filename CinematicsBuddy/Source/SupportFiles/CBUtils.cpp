@@ -40,12 +40,14 @@ std::string CBUtils::PrintFloat(float InFloat, int MaxDecimals)
 	return Output.str();
 }
 
-std::string CBUtils::PrintVector(const Vector& InVector, int MaxDecimals)
+std::string CBUtils::PrintVector(const Vector& InVector, int MaxDecimals, bool bPrintSpaces)
 {
     std::string Output;
     
-    Output = PrintFloat(InVector.X, MaxDecimals) + ","
-           + PrintFloat(InVector.Y, MaxDecimals) + ","
+    std::string Separator = bPrintSpaces ? ", " : ",";
+
+    Output = PrintFloat(InVector.X, MaxDecimals) + Separator
+           + PrintFloat(InVector.Y, MaxDecimals) + Separator
            + PrintFloat(InVector.Z, MaxDecimals);
 
 	return Output;

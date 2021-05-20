@@ -6,43 +6,61 @@
 #include "Converters/UnitConverter_3dsMax.h"
 #include "Converters/UnitConverter_AfterEffects.h"
 
-/*
-
-    TODO:
-        - Register notifier to convert units
-        - Copy all output to clipboard and also print to console
-            - In console print "Copied to clipboard!"
-        - Create this class as a std::shared_ptr in CinematicsBuddy.cpp so it's constructor can be called
-        - Add the PrintRotator function
-            - Add enum to CBUtils near that function to choose whether to print as unreal units, degrees, or radians
-
-*/
-
 UnitConverter::UnitConverter()
 {
-    Converters.emplace_back(UnitConverter_RL());
-    Converters.emplace_back(UnitConverter_3dsMax());
-    Converters.emplace_back(UnitConverter_AfterEffects());
+    Converters.emplace_back(new UnitConverter_RL());
+    Converters.emplace_back(new UnitConverter_3dsMax());
+    Converters.emplace_back(new UnitConverter_AfterEffects());
+
+    MAKE_NOTIFIER(NOTIFIER_UNIT_CONVERT, ConvertUnits, "Prints current location of camera in each program's units");
 }
 
-void UnitConverter::ConvertUnits(Vector InLocation, Rotator InRotation)
+UnitConverter::~UnitConverter()
 {
+    for(auto& Converter : Converters)
+    {
+        delete Converter;
+        Converter = nullptr;
+    }
+
+    Converters.clear();
+}
+
+void UnitConverter::ConvertUnits()
+{
+    CameraWrapper Camera = GlobalGameWrapper->GetCamera();
+    if(Camera.IsNull())
+    {
+        GlobalCvarManager->log("Couldn't convert units. Camera does not exist.");
+        return;
+    }
+
+    Vector Location = Camera.GetLocation();
     std::string Output = "Converted units:\n";
+    std::string OutputUnits;
 
     for(const auto& Converter : Converters)
     {
-        Output += "\n" + Converter.GetProgramName() + "\n";
-        Output += "\tLocation " + CBUtils::PrintVector(Converter.ConvertLocation(InLocation), 3) + "\n";
-        Output += "\tRotation " + CBUtils::PrintRotator(Converter.ConvertRotation(InRotation), 3);
+        OutputUnits += Converter->GetProgramName() + ": " + CBUtils::PrintVector(Converter->ConvertLocation(Location), 3, true) + "\n";
     }
 
-    GlobalCvarManager->log(Output);
+    OutputUnits.pop_back();
+    GlobalCvarManager->log(Output + OutputUnits);
 
-    /*
-    
-        COPY TO CLIPBOARD
-    
-    */
+    //Copy output to the clipboard
+    OpenClipboard(nullptr);
+    EmptyClipboard();
+    HGLOBAL hg = GlobalAlloc(GMEM_MOVEABLE, OutputUnits.size());
+    if(!hg)
+    {
+        CloseClipboard();
+        return;
+    }
+    memcpy(GlobalLock(hg), OutputUnits.c_str(), OutputUnits.size());
+    GlobalUnlock(hg);
+    SetClipboardData(CF_TEXT, hg);
+    CloseClipboard();
+    GlobalFree(hg);
 
     GlobalCvarManager->log("Copied to clipboard!");
 }

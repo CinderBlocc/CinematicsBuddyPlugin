@@ -1,9 +1,17 @@
 #pragma once
 #include "IUnitConverter.h"
 
+//This class exists for ease of iteration with the other converters
 class UnitConverter_RL : public IUnitConverter
 {
-    std::string GetProgramName() const override { return "ROCKET LEAGUE"; }
-    Vector  ConvertLocation(Vector  Location) const override { return Location; }
-    Rotator ConvertRotation(Rotator Rotation) const override { return Rotation; }
+public:
+    std::string GetProgramName() const override
+    {
+        return "ROCKET LEAGUE";
+    }
+
+    Vector ConvertLocation(Vector Location) const override
+    {
+        return Location;
+    }
 };
