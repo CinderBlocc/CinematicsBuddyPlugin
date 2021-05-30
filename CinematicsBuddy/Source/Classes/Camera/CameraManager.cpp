@@ -389,8 +389,6 @@ float CameraManager::GetInvertedPerc(float InPerc)
 
 float CameraManager::GetWeightedPerc(float InPerc)
 {
-    //return InPerc;
-
     //Some ease functions don't like negative values
     //Preserve the negative status for later and use absolute value
     float NegativeMult = InPerc < 0.f ? -1.f : 1.f;
