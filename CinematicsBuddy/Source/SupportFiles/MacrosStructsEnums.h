@@ -6,7 +6,7 @@ extern std::shared_ptr<class CVarManagerWrapper> GlobalCvarManager;
 extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 
 // MACROS //
-#define PLUGIN_VERSION "0.9.9d"
+#define PLUGIN_VERSION "0.9.9e"
 
 //Generic defines
 #define EXTENSION_RECORDING ".txt"
@@ -49,8 +49,8 @@ extern std::shared_ptr<class GameWrapper>        GlobalGameWrapper;
 #define CVAR_CAM_LOCAL_MOMENTUM  "CB_Camera_bLocalMomentum"
 #define CVAR_CAM_LOCAL_MOVEMENT  "CB_Camera_bUseLocalMovement"
 #define CVAR_CAM_LOCAL_ROTATION  "CB_Camera_bUseLocalRotation"
+#define CVAR_INVERT_PITCH        "CB_Camera_bInvertControllerPitch"
 #define CVAR_CAM_HARD_FLOORS     "CB_Camera_bHardFloors"
-#define CVAR_INVERT_PITCH        "CB_Camera_InvertControllerPitch"
 #define CVAR_CAM_FLOOR_HEIGHT    "CB_Camera_FloorHeight"
 #define CVAR_CAM_MOVEMENT_SPEED  "CB_Camera_MovementSpeed"
 #define CVAR_CAM_MOVEMENT_ACCEL  "CB_Camera_MovementAccel"

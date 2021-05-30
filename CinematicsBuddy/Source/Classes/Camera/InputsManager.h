@@ -37,6 +37,8 @@ public:
     float GetbFOV()          { return bFOV;          }
     bool  GetbUsingGamepad() { return bUsingGamepad; }
 
+    void ResetInputs(bool bResetMomentum);
+
 private:
     std::shared_ptr<UIManager> UI;
 

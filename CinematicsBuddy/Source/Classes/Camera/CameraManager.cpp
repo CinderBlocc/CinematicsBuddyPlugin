@@ -185,6 +185,11 @@ void CameraManager::UpdateFOV(float Delta, CameraWrapper TheCamera)
 // SPEED CALCULATIONS //
 void CameraManager::ResetSpeeds()
 {
+    if(IsValidMode())
+    {
+        Inputs->ResetInputs(false);
+    }
+
     VelocityWorld   = {0, 0, 0};
     VelocityLocal   = {0, 0, 0};
     AngularVelocity = {0, 0, 0};

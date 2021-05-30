@@ -51,6 +51,16 @@ void InputsManager::PlayerInputTick(float Delta)
     NullifyGameInputs(Controller);
 }
 
+void InputsManager::ResetInputs(bool bResetMomentum)
+{
+    NullifyStoredInputs();
+
+    if(bResetMomentum)
+    {
+        GlobalCvarManager->executeCommand(NOTIFIER_CAM_RESET, false);
+    }
+}
+
 void InputsManager::GetInputs(PlayerControllerWrapper Controller)
 {
     bRoll = GlobalGameWrapper->IsKeyPressed(RollBindingIndex);
@@ -121,6 +131,9 @@ void InputsManager::NullifyStoredInputs()
 
 void InputsManager::OnFreezeChanged()
 {
+    //If freeze has been turned on, stop all momentum
+    ResetInputs(true);
+
     //Don't notify other plugins about the change if it was modified externally
     if(bWasFreezeExternallyChanged)
     {
